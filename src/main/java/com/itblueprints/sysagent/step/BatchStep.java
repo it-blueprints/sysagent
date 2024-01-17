@@ -16,9 +16,13 @@ public interface BatchStep<IN, OUT> extends Step {
 
     }
 
-    Page<IN> getNextPage(int lastPageIndex);
+    void preProcess(StepContext context) throws Exception;
 
-    OUT process(IN item);
+    Page<IN> getPageOfItems(int pageNum, StepContext context) throws Exception;
 
-    void savePage(List<OUT> page);
+    OUT processItem(IN item, StepContext context) throws Exception;
+
+    void saveOutputItems(List<OUT> items, StepContext context) throws Exception;
+
+    void postProcess(StepContext context) throws Exception;
 }
