@@ -3,9 +3,9 @@ package com.itblueprints.sysagent.step;
 import com.itblueprints.sysagent.ThreadManager;
 import org.springframework.data.domain.Page;
 
-import java.util.Optional;
+import java.util.List;
 
-public interface BatchStep<T> extends Step {
+public interface BatchStep<IN, OUT> extends Step {
 
     @Override
     default void execute(StepContext context){
@@ -16,9 +16,9 @@ public interface BatchStep<T> extends Step {
 
     }
 
-    Optional<Page<T>> getNextPage(Optional<Page<T>> previousPage);
+    Page<IN> getNextPage(int lastPageIndex);
 
-    T process(T item);
+    OUT process(IN item);
 
-    void savePage(Page<T> page);
+    void savePage(List<OUT> page);
 }
