@@ -18,11 +18,11 @@ public interface BatchStep<IN, OUT> extends Step {
 
     void preProcess(StepContext context) throws Exception;
 
-    Page<IN> getPageOfItems(int pageNum, StepContext context) throws Exception;
+    Page<IN> getChunkOfInputItems(int pageNum, StepContext context) throws Exception;
 
     OUT processItem(IN item, StepContext context) throws Exception;
 
-    void saveOutputItems(List<OUT> items, StepContext context) throws Exception;
+    void saveChunkOfOutputItems(List<OUT> items, StepContext context) throws Exception;
 
     void postProcess(StepContext context) throws Exception;
 }
