@@ -10,10 +10,6 @@ public interface BatchStep<IN, OUT> extends Step {
         throw new UnsupportedOperationException();
     }
 
-    default void execute(StepContext context, ThreadManager threadManager){
-
-    }
-
     void preProcess(StepContext context) throws Exception;
 
     Page<IN> getPageOfInputItems(int pageNum, StepContext context) throws Exception;
