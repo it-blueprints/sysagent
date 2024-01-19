@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [[ "$1" == "lib" ]]
+then
+
+    if [[ "$2" == "install" ]]
+    then
+        ./mvnw clean package install
+        OK=1
+    fi
+
+    if [[ "$2" == "mvnw" ]]
+    then
+        mvn -N wrapper:wrapper
+        OK=1
+    fi
+fi
+
+if [[ "$1" == "" ]]
+then
+    echo run
+    echo "    lib"
+    echo "        install             Build and install the library"
+    echo "        mvnw                Install the maven wrapper"
+    OK=1
+fi
+
+if [[ $OK != 1 ]]
+then
+    echo "Invalid command - run $1 $2"
+fi
