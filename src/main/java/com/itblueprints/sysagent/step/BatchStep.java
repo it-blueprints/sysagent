@@ -3,8 +3,6 @@ package com.itblueprints.sysagent.step;
 import com.itblueprints.sysagent.ThreadManager;
 import org.springframework.data.domain.Page;
 
-import java.util.List;
-
 public interface BatchStep<IN, OUT> extends Step {
 
     @Override
@@ -18,11 +16,11 @@ public interface BatchStep<IN, OUT> extends Step {
 
     void preProcess(StepContext context) throws Exception;
 
-    Page<IN> getChunkOfInputItems(int pageNum, StepContext context) throws Exception;
+    Page<IN> getPageOfInputItems(int pageNum, StepContext context) throws Exception;
 
     OUT processItem(IN item, StepContext context) throws Exception;
 
-    void saveChunkOfOutputItems(List<OUT> items, StepContext context) throws Exception;
+    void savePageOfOutputItems(Page<OUT> items, StepContext context) throws Exception;
 
     void postProcess(StepContext context) throws Exception;
 }

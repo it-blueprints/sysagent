@@ -11,18 +11,10 @@ import java.util.LinkedList;
 @Getter
 public class JobPipeline {
 
-    //-------------------------------------------
-    private Arguments arguments = new Arguments();
-
-    private JobPipeline(){}
+   private JobPipeline(){}
 
     public static JobPipeline create(){
         return new JobPipeline();
-    }
-
-    public JobPipeline withArgument(String key, Object value){
-        arguments.put(key, value);
-        return this;
     }
 
     //-------------------------------------------

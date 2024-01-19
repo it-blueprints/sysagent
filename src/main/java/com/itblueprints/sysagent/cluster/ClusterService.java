@@ -1,5 +1,6 @@
 package com.itblueprints.sysagent.cluster;
 
+import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.SystemAgentException;
 import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.job.JobService;
@@ -28,31 +29,30 @@ public class ClusterService {
     private final SchedulerService schedulerService;
     private final JobService jobService;
     private final StepService stepService;
+    private final Config config;
 
     //-------------------------
     private NodeState nodeState;
     private NodeState managerNodeState;
 
-    //Should never be more than 15
-    public static final int HEARTBEAT_SECS = 10;
-
     //------------------------------------------
     @PostConstruct
     void init() {
 
+        val hb = config.getHeartBeatSecs();
         nodeState = new NodeState();
         nodeState.setStartedAt(System.currentTimeMillis());
 
-        final Runnable heartBeat = () -> {
+        final Runnable r = () -> {
             try {
-                onHeartBeat();
+                onHeartBeat(hb);
             }
             catch (Exception e){
                 e.printStackTrace();
                 throw new SystemAgentException("Error on heartbeat", e);
             }
         };
-        hearbeatHandle = scheduler.scheduleAtFixedRate(heartBeat, HEARTBEAT_SECS, HEARTBEAT_SECS, TimeUnit.SECONDS);
+        hearbeatHandle = scheduler.scheduleAtFixedRate(r, hb, hb, TimeUnit.SECONDS);
     }
 
     private final ScheduledExecutorService scheduler =
@@ -61,8 +61,8 @@ public class ClusterService {
     private ScheduledFuture<?> hearbeatHandle;
 
     //------------------------------
-    void onHeartBeat(){
-        val nodeInfo = computeNodeInfo();
+    void onHeartBeat(int heartBeatSecs){
+        val nodeInfo = computeNodeInfo(heartBeatSecs);
         if(!isInitialised) {
             if(nodeInfo.isManager) {
                 schedulerService.initialise(nodeInfo);
@@ -84,15 +84,15 @@ public class ClusterService {
     private boolean isInitialised = false;
 
     //----------------------------------------
-    private NodeInfo computeNodeInfo(){
+    private NodeInfo computeNodeInfo(int heartBeatSecs){
         val timeNow = System.currentTimeMillis();
         //extend life
-        nodeState.setAliveTill(timeNow + HEARTBEAT_SECS*1000);
+        nodeState.setAliveTill(timeNow + heartBeatSecs*1000);
         mongoTemplate.save(nodeState);
         val leaderNs = mongoTemplate.findById(MANAGER_ID, NodeState.class);
         if(leaderNs == null){ //No leader record
             //create one. Only one will succeed as the id is constant and it has a unique constraint
-            managerNodeState = newManagerNodeState(nodeState.getId(), timeNow);
+            managerNodeState = newManagerNodeState(nodeState.getId(), timeNow, heartBeatSecs);
             mongoTemplate.save(managerNodeState);
         }
         else {  //Leader record exists
@@ -101,7 +101,7 @@ public class ClusterService {
 
             if(isManager()){ //This is the leader node
                 //Extend lease
-                managerNodeState.setManagerLeaseTill(timeNow + HEARTBEAT_SECS*2000);
+                managerNodeState.setManagerLeaseTill(timeNow + heartBeatSecs*2000);
                 mongoTemplate.save(managerNodeState);
 
             }
@@ -120,7 +120,7 @@ public class ClusterService {
 
                     //if was successful in obtaining the lock
                     if(lockedLeaderNS != null) {
-                        setNewManager(managerNodeState, nodeState.getId(), timeNow); //Set this as the leader
+                        setNewManager(managerNodeState, nodeState.getId(), timeNow, heartBeatSecs); //Set this as the leader
                         mongoTemplate.save(managerNodeState);
                     }
                 }
@@ -142,19 +142,19 @@ public class ClusterService {
 
 
     //----------------------------------------------
-    private void setNewManager(NodeState mgrNode, String nodeId, long atTime){
+    private void setNewManager(NodeState mgrNode, String nodeId, long atTime, int heartBeatSecs){
         mgrNode.setManagerId(nodeId);
         mgrNode.setManagerSince(atTime);
-        mgrNode.setManagerLeaseTill(atTime + HEARTBEAT_SECS*2000);
+        mgrNode.setManagerLeaseTill(atTime + heartBeatSecs*2000);
         mgrNode.setLocked(false);
     }
 
     //-----------------------------------------------------
-    private NodeState newManagerNodeState(String nodeId, long timeNow){
+    private NodeState newManagerNodeState(String nodeId, long timeNow, int heartBeatSecs){
         val mgr = new NodeState();
         mgr.setId(MANAGER_ID);
         mgr.setManagerId(nodeId);
-        mgr.setManagerLeaseTill(timeNow+HEARTBEAT_SECS*2000); //lease for 2 heart beats
+        mgr.setManagerLeaseTill(timeNow+heartBeatSecs*2000); //lease for 2 heart beats
         return mgr;
     }
 

@@ -24,6 +24,7 @@ public class SchedulerService {
     private final ThreadManager threadManager;
     private final MongoTemplate mongoTemplate;
     private final JobService jobService;
+    private final Config config;
 
     private final List<ScheduledJobItem> scheduledJobItems = new ArrayList<>();
 
@@ -31,9 +32,11 @@ public class SchedulerService {
     public void onHeartBeat(NodeInfo nodeInfo) {
 
         val now = LocalDateTime.now();
+        val heartBeatSecs = config.getHeartBeatSecs();
+
         for(val item : scheduledJobItems){
             //Look at jobs due since the last 3 heart beats. This should cover a previous manager failure
-            val nextRunAt = item.cronExp.next(now.minusSeconds(ClusterService.HEARTBEAT_SECS * 3));
+            val nextRunAt = item.cronExp.next(now.minusSeconds(heartBeatSecs * 3));
             val gap = ChronoUnit.SECONDS.between(LocalDateTime.now(), nextRunAt);
             Dbg.p("gap", gap);
 
@@ -44,7 +47,7 @@ public class SchedulerService {
                 if(rec != null && rec.getLastRunAt().isBefore(nextRunAt)) doRun = true;
             }
             //Normal stuff
-            else if(gap >= 0 && gap < ClusterService.HEARTBEAT_SECS) doRun = true;
+            else if(gap >= 0 && gap < heartBeatSecs) doRun = true;
 
             if(doRun)
             {
@@ -72,6 +75,7 @@ public class SchedulerService {
     //-------------------------------------------------
     public void initialise(NodeInfo nodeInfo){
 
+        val heartBeatSecs = config.getHeartBeatSecs();
         val beanFactory = appContext.getBeanFactory();
         val scheduledJobBeanNames = beanFactory.getBeanNamesForType(ScheduledJob.class);
 
@@ -90,7 +94,7 @@ public class SchedulerService {
             val item = new ScheduledJobItem();
             item.jobName = schJobBean.getName();
             item.cronExp = cronExp;
-            val lastRunAt = nodeInfo.timeNow.minusSeconds(ClusterService.HEARTBEAT_SECS);
+            val lastRunAt = nodeInfo.timeNow.minusSeconds(heartBeatSecs);
             item.lastRunAt = lastRunAt;
 
             var rec = mongoTemplate.findById(schJobBean.getName(), JobScheduleRecord.class);

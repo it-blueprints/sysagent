@@ -10,6 +10,8 @@ public class StepContext {
 
     private Arguments arguments = new Arguments();
 
+    private StepData stepData;
+
     private CheckPointState checkPointState;
 
     private Integer partitionNum;

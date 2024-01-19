@@ -54,11 +54,11 @@ public class JobService {
         jobRecord = mongoTemplate.save(jobRecord);
 
         val pipeline = item.pipeline;
-        jobArgs.add(item.pipeline.getArguments());
+        item.job.addToJobArguments(jobArgs);
         val firstStep = pipeline.getSteps().getFirst();
         val step = firstStep.step;
 
-        val partArgs = step.getPartitionArguments();
+        val partArgs = step.getPartitionArguments(jobArgs);
 
         int totalPartitions = 1;
         if(partArgs!=null && !partArgs.isEmpty()){

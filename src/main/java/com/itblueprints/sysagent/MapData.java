@@ -35,6 +35,10 @@ public abstract class MapData {
         return (LocalDate) get(key);
     }
 
+    public <T> T asType(String key, Class<T> clazz){
+        return (T) get(key);
+    }
+
     private Object get(String key) {
         if(!data.containsKey(key)) throw new RuntimeException("Key "+key+" not present");
         return data.get(key);

@@ -6,9 +6,9 @@ import java.util.List;
 
 public interface Step {
 
-    void execute(StepContext context);
+    void execute(StepContext context) throws Exception;
 
-    List<Arguments> getPartitionArguments();
+    List<Arguments> getPartitionArguments(Arguments jobArguments);
 
     //-----------------------------------
     default String getName(){
