@@ -37,15 +37,20 @@ public class StepService {
                 ctx.setTotalPartitions(stepRec.getTotalPartitions());
             }
 
-            threadManager.submit(() -> {
-                try {
-                    step.execute(ctx);
-                }
-                catch (Exception e){
-                    e.printStackTrace();
-                    throw new SystemAgentException("Error running step job "+step.getName(), e);
-                }
-            });
+            if(step instanceof BatchStep<?,?>){
+                val batchStep = (BatchStep<?,?>) step;
+                batchStep.execute(ctx, threadManager);
+            }
+            else {
+                threadManager.submit(() -> {
+                    try {
+                        step.execute(ctx);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new SystemAgentException("Error running step job " + step.getName(), e);
+                    }
+                });
+            }
 
         }
     }
