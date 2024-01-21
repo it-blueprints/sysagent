@@ -1,13 +1,13 @@
 package com.itblueprints.sysagent.job;
 
 import com.itblueprints.sysagent.Arguments;
-import com.itblueprints.sysagent.Dbg;
 import com.itblueprints.sysagent.SystemAgentException;
 import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.step.Step;
 import com.itblueprints.sysagent.step.StepRecord;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -18,6 +18,7 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JobService {
 
     private final ConfigurableApplicationContext appContext;
@@ -43,7 +44,7 @@ public class JobService {
     //--------------------------------------------------------------
     public void runJob(String jobName, Arguments jobArgs, NodeInfo nodeInfo) {
 
-        Dbg.p("Running "+jobName);
+        log.debug("Running "+jobName);
 
         val item = jobsMap.get(jobName);
         val runAt = jobArgs.asTime(SchedulerService.runAt);
@@ -99,7 +100,7 @@ public class JobService {
             jobsMap.put(jobBean.getName(), item);
         }
 
-        Dbg.p("JobService inited");
+        log.debug("JobService inited");
     }
 
     //-----------------------------------------

@@ -4,6 +4,7 @@ import com.itblueprints.sysagent.*;
 import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.job.JobService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class SchedulerService {
 
     private final ConfigurableApplicationContext appContext;
@@ -37,7 +39,7 @@ public class SchedulerService {
             //Look at jobs due since the last 3 heart beats. This should cover a previous manager failure
             val nextRunAt = item.cronExp.next(now.minusSeconds(heartBeatSecs * 3));
             val gap = ChronoUnit.SECONDS.between(LocalDateTime.now(), nextRunAt);
-            Dbg.p("gap", gap);
+            log.debug("gap: "+gap);
 
             var doRun = false;
             //Execute any missed jobs from another manager that has now failed
@@ -55,7 +57,7 @@ public class SchedulerService {
                         Utils.sleepFor(gap < 0 ? 0 : (gap+1)*1000);
                         val args = new Arguments();
                         args.put(runAt, nextRunAt);
-                        Dbg.p("Here 1");
+                        log.debug("Here 1");
                         jobService.runJob(item.jobName, args, nodeInfo);
                     }
                     catch (Exception e){
