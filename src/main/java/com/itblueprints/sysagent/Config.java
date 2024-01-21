@@ -11,5 +11,5 @@ import org.springframework.context.annotation.Configuration;
 public class Config {
 
     private int heartBeatSecs;
-    private int batchPageSize;
+    private int batchChunkSize;
 }       

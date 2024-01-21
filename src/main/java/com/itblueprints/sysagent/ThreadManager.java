@@ -3,11 +3,8 @@ package com.itblueprints.sysagent;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.*;
 
 @Component
@@ -17,6 +14,7 @@ public class ThreadManager {
     private final Config config;
 
     private ExecutorService executor;
+
     private ExecutorCompletionService<Boolean> completionService;
 
     //-----------------------------
@@ -36,21 +34,14 @@ public class ThreadManager {
     //-------------------------------------------
     public int waitTillComplete(int tasksSubmitted){
         int successCount = 0;
-        for(int i=0; i < tasksSubmitted; i++){
-            try {
-                val ok = completionService.take().get();
-                if(ok) successCount ++;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
+
         return successCount;
     }
 
     //-----------------------------------------
     @PostConstruct
     void init(){
-        batchPageSize = config.getBatchPageSize();
+        batchPageSize = config.getBatchChunkSize();
 
         executor  = new ThreadPoolExecutor(
                 Runtime.getRuntime().availableProcessors(),
@@ -58,8 +49,6 @@ public class ThreadManager {
                 1000L,
                 TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(batchPageSize));
-
-        completionService = new ExecutorCompletionService<>(executor);
 
     }
 }
