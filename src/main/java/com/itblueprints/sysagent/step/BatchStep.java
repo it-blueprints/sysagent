@@ -1,5 +1,6 @@
 package com.itblueprints.sysagent.step;
 
+import com.itblueprints.sysagent.SystemAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import lombok.val;
 import org.springframework.data.domain.Page;
@@ -35,24 +36,14 @@ public abstract class BatchStep<IN, OUT> implements Step {
                 if(totalPages == 0) totalPages = pg_in.getTotalPages();
                 int count = 0;
                 for(val item : pg_in){
-                    threadManager.submit(() -> {
-                        try {
-                            processItem(item, context);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+                    threadManager.submit(() -> processItem(item, context));
                     count++;
                 }
 
                 List<OUT> results = new ArrayList<>();
                 for(int i=0; i < count; i++){
-                    try {
-                        val result = completionService.take().get();
-                        results.add(result);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
+                    val result = completionService.take().get();
+                    results.add(result);
                 }
                 writeChunkOfItems(results, context);
                 pgNum++;
@@ -61,17 +52,18 @@ public abstract class BatchStep<IN, OUT> implements Step {
         }
         catch (Exception e){
             e.printStackTrace();
+            throw new SystemAgentException("Batch step "+getName()+" failed", e);
         }
     }
 
 
-    public abstract void preProcess(StepContext context) throws Exception;
+    public abstract void preProcess(StepContext context);
 
-    public abstract Page<IN> readChunkOfItems(Pageable pageRequest, StepContext context) throws Exception;
+    public abstract Page<IN> readChunkOfItems(Pageable pageRequest, StepContext context);
 
-    public abstract OUT processItem(IN item, StepContext context) throws Exception;
+    public abstract OUT processItem(IN item, StepContext context);
 
-    public abstract void writeChunkOfItems(Collection<OUT> items, StepContext context) throws Exception;
+    public abstract void writeChunkOfItems(Collection<OUT> items, StepContext context);
 
-    public abstract void postProcess(StepContext context) throws Exception;
+    public abstract void postProcess(StepContext context);
 }
