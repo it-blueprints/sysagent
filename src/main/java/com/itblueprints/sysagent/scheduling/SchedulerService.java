@@ -62,7 +62,7 @@ public class SchedulerService {
                     }
                     catch (Exception e){
                         e.printStackTrace();
-                        throw new SystemAgentException("Error running scheduled job "+item.jobName, e);
+                        throw new SysAgentException("Error running scheduled job "+item.jobName, e);
                     }
                 });
                 val rec = mongoTemplate.findById(item.jobName, JobScheduleRecord.class);
@@ -89,7 +89,7 @@ public class SchedulerService {
                 cronExp = CronExpression.parse(cron);
             }
             catch (IllegalArgumentException e) {
-                throw new SystemAgentException("Invalid CRON expression " + schJobBean.getCron(), e);
+                throw new SysAgentException("Invalid CRON expression " + schJobBean.getCron(), e);
             }
 
             val item = new ScheduledJobItem();

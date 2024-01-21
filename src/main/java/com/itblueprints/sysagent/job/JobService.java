@@ -1,7 +1,7 @@
 package com.itblueprints.sysagent.job;
 
 import com.itblueprints.sysagent.Arguments;
-import com.itblueprints.sysagent.SystemAgentException;
+import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.step.Step;
 import com.itblueprints.sysagent.step.StepRecord;
@@ -35,9 +35,9 @@ public class JobService {
                 val step = jobItem.stepsMap.get(stepName);
                 return step;
             }
-            else throw new SystemAgentException("Step "+stepName+" not found for Job "+jobName);
+            else throw new SysAgentException("Step "+stepName+" not found for Job "+jobName);
         }
-        else throw new SystemAgentException("Job "+jobName+" not found");
+        else throw new SysAgentException("Job "+jobName+" not found");
     }
 
 
@@ -63,7 +63,7 @@ public class JobService {
 
         int totalPartitions = 1;
         if(partArgs!=null && !partArgs.isEmpty()){
-            if(partArgs.size() < 2) throw new SystemAgentException("Minimum partitions is 2");
+            if(partArgs.size() < 2) throw new SysAgentException("Minimum partitions is 2");
             totalPartitions = partArgs.size();
         }
 

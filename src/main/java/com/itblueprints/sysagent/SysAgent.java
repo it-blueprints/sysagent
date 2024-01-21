@@ -8,5 +8,5 @@ import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
 @ComponentScan("com.itblueprints.sysagent")
-public @interface SystemAgent {
+public @interface SysAgent {
 }

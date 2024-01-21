@@ -1,7 +1,7 @@
 package com.itblueprints.sysagent.cluster;
 
 import com.itblueprints.sysagent.Config;
-import com.itblueprints.sysagent.SystemAgentException;
+import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.job.JobService;
 import com.itblueprints.sysagent.step.StepService;
@@ -49,7 +49,7 @@ public class ClusterService {
             }
             catch (Exception e){
                 e.printStackTrace();
-                throw new SystemAgentException("Error on heartbeat", e);
+                throw new SysAgentException("Error on heartbeat", e);
             }
         };
         hearbeatHandle = scheduler.scheduleAtFixedRate(r, hb, hb, TimeUnit.SECONDS);

@@ -1,6 +1,6 @@
 package com.itblueprints.sysagent.step;
 
-import com.itblueprints.sysagent.SystemAgentException;
+import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.job.JobService;
@@ -49,7 +49,7 @@ public class StepService {
             }
             catch (Exception e){
                 e.printStackTrace();
-                throw new SystemAgentException("Batch step "+step.getName()+" failed", e);
+                throw new SysAgentException("Batch step "+step.getName()+" failed", e);
             }
         }
     }
