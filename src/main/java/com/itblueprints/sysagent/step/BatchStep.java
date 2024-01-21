@@ -20,11 +20,11 @@ public abstract class BatchStep<IN, OUT> implements Step {
     }
 
     private ExecutorCompletionService<OUT> completionService;
-    public void init(ExecutorService executor){
-        completionService = new ExecutorCompletionService<>(executor);
-    }
 
     public void execute(StepContext context, ThreadManager threadManager){
+
+        completionService = new ExecutorCompletionService<>(threadManager.getExecutor());
+
         try {
             preProcess(context);
             int pgNum = 0;

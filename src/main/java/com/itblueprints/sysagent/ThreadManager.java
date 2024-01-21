@@ -13,6 +13,7 @@ public class ThreadManager {
 
     private final Config config;
 
+    @Getter
     private ExecutorService executor;
 
     private ExecutorCompletionService<Boolean> completionService;
