@@ -1,6 +1,7 @@
 package com.itblueprints.sysagent.step;
 
 import com.itblueprints.sysagent.ThreadManager;
+import lombok.Setter;
 import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,16 +15,14 @@ import java.util.concurrent.ExecutorCompletionService;
 
 public abstract class BatchStep<IN, OUT> implements Step {
 
-    @Override
-    public void execute(StepContext context){
-        throw new UnsupportedOperationException();
-    }
+    @Setter
+    private ThreadManager threadManager;
 
     private ExecutorCompletionService<OUT> completionService;
 
     //-------------------------------------------------------------------
-    public void execute(StepContext context, ThreadManager threadManager)
-            throws InterruptedException, ExecutionException {
+    @Override
+    public void execute(StepContext context) {
 
         completionService = new ExecutorCompletionService<>(threadManager.getExecutor());
 
@@ -42,8 +41,13 @@ public abstract class BatchStep<IN, OUT> implements Step {
 
             List<OUT> results = new ArrayList<>();
             for(int i=0; i < count; i++){
-                val result = completionService.take().get();
-                results.add(result);
+                try {
+                    val result = completionService.take().get();
+                    results.add(result);
+                }
+                catch (Exception e){
+                    throw new RuntimeException(e);
+                }
             }
             writeChunkOfItems(results, context);
             pgNum++;

@@ -40,7 +40,8 @@ public class StepService {
             try {
                 if(step instanceof BatchStep){
                     val batchStep = (BatchStep) step;
-                    batchStep.execute(ctx, threadManager);
+                    batchStep.setThreadManager(threadManager);
+                    batchStep.execute(ctx);
                 }
                 else {
                     threadManager.submit(() -> step.execute(ctx));
