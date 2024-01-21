@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 
 public abstract class BatchStep<IN, OUT> implements Step {
@@ -31,7 +30,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
         int pgNum = 0;
         int totalPages = 0;
         do {
-            val pageRequest = PageRequest.of(pgNum, threadManager.getBatchPageSize());
+            val pageRequest = PageRequest.of(pgNum, threadManager.getBatchChunkSize());
             val pg_in = readChunkOfItems(pageRequest, context);
             if(totalPages == 0) totalPages = pg_in.getTotalPages();
             int count = 0;

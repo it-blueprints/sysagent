@@ -21,7 +21,7 @@ public class ThreadManager {
 
     //-----------------------------
     @Getter
-    private int batchPageSize;
+    private int batchChunkSize;
 
     //--------------------------------------
     public void submit(Runnable task){
@@ -31,14 +31,14 @@ public class ThreadManager {
     //-----------------------------------------
     @PostConstruct
     void init(){
-        batchPageSize = config.getBatchChunkSize();
+        batchChunkSize = config.getBatchChunkSize();
 
         executor  = new ThreadPoolExecutor(
                 Runtime.getRuntime().availableProcessors(),
                 Runtime.getRuntime().availableProcessors(),
                 1000L,
                 TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(batchPageSize));
+                new LinkedBlockingQueue<>(batchChunkSize));
 
     }
 }

@@ -10,6 +10,6 @@ import org.springframework.context.annotation.Configuration;
 @Getter @Setter
 public class Config {
 
-    private int heartBeatSecs;
-    private int batchChunkSize;
+    private Integer heartBeatSecs;
+    private Integer batchChunkSize;
 }       
