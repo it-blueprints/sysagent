@@ -5,7 +5,10 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -16,8 +19,6 @@ public class ThreadManager {
     @Getter
     private ExecutorService executor;
 
-    private ExecutorCompletionService<Boolean> completionService;
-
     //-----------------------------
     @Getter
     private int batchPageSize;
@@ -25,11 +26,6 @@ public class ThreadManager {
     //--------------------------------------
     public void submit(Runnable task){
         executor.submit(task);
-    }
-
-    //-------------------------------------------
-    public void submit(Callable<Boolean> batchTask){
-        completionService.submit(batchTask);
     }
 
     //-----------------------------------------
