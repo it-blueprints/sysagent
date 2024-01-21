@@ -27,6 +27,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
         completionService = new ExecutorCompletionService<>(threadManager.getExecutor());
 
         preProcess(context);
+
         int pgNum = 0;
         int totalPages = 0;
         do {
