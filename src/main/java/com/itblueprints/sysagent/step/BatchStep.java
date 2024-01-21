@@ -40,17 +40,18 @@ public abstract class BatchStep<IN, OUT> implements Step {
                 count++;
             }
 
-            List<OUT> results = new ArrayList<>();
-            for(int i=0; i < count; i++){
-                try {
-                    val result = completionService.take().get();
-                    results.add(result);
+            if(count > 0) {
+                List<OUT> results = new ArrayList<>();
+                for (int i = 0; i < count; i++) {
+                    try {
+                        val result = completionService.take().get();
+                        results.add(result);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
-                catch (Exception e){
-                    throw new RuntimeException(e);
-                }
+                writeChunkOfItems(results, context);
             }
-            writeChunkOfItems(results, context);
             pgNum++;
         } while (pgNum < totalPages);
 
