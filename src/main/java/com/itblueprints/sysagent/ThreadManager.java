@@ -32,13 +32,6 @@ public class ThreadManager {
         completionService.submit(batchTask);
     }
 
-    //-------------------------------------------
-    public int waitTillComplete(int tasksSubmitted){
-        int successCount = 0;
-
-        return successCount;
-    }
-
     //-----------------------------------------
     @PostConstruct
     void init(){
