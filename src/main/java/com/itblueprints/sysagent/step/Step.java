@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface Step {
 
-    void execute(StepContext context) throws Exception;
+    void execute(StepContext context);
 
     List<Arguments> getPartitionArguments(Arguments jobArguments);
 
