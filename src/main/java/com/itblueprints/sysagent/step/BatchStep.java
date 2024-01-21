@@ -57,7 +57,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
         }
     }
 
-
+    //----------------------------------------------------
     public abstract void preProcess(StepContext context);
 
     public abstract Page<IN> readChunkOfItems(Pageable pageRequest, StepContext context);
