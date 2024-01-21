@@ -37,8 +37,8 @@ public class StepService {
                 ctx.setTotalPartitions(stepRec.getTotalPartitions());
             }
 
-            if(step instanceof BatchStep<?,?>){
-                val batchStep = (BatchStep<?,?>) step;
+            if(step instanceof BatchStep){
+                val batchStep = (BatchStep) step;
                 batchStep.execute(ctx, threadManager);
             }
             else {

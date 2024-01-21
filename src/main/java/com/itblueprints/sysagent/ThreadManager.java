@@ -1,5 +1,9 @@
 package com.itblueprints.sysagent;
 
+import jakarta.annotation.PostConstruct;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -7,20 +11,55 @@ import java.util.List;
 import java.util.concurrent.*;
 
 @Component
+@RequiredArgsConstructor
 public class ThreadManager {
 
-    private final static int MAX_QUEUE_SIZE = 100;
-    private final static int MAX_POOL_SIZE = 5;
+    private final Config config;
 
+    private ExecutorService executor;
+    private ExecutorCompletionService<Boolean> completionService;
 
-    private final ExecutorService executor =
-            new ThreadPoolExecutor(1, MAX_POOL_SIZE, 1000L,
-                    TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>(MAX_QUEUE_SIZE));
+    //-----------------------------
+    @Getter
+    private int batchPageSize;
 
-    private List<Future> taskHandles = new ArrayList<>();
-
+    //--------------------------------------
     public void submit(Runnable task){
-        taskHandles.add(executor.submit(task));
+        executor.submit(task);
+    }
+
+    //-------------------------------------------
+    public void submit(Callable<Boolean> batchTask){
+        completionService.submit(batchTask);
+    }
+
+    //-------------------------------------------
+    public int waitTillComplete(int tasksSubmitted){
+        int successCount = 0;
+        for(int i=0; i < tasksSubmitted; i++){
+            try {
+                val ok = completionService.take().get();
+                if(ok) successCount ++;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return successCount;
+    }
+
+    //-----------------------------------------
+    @PostConstruct
+    void init(){
+        batchPageSize = config.getBatchPageSize();
+
+        executor  = new ThreadPoolExecutor(
+                Runtime.getRuntime().availableProcessors(),
+                Runtime.getRuntime().availableProcessors(),
+                1000L,
+                TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(batchPageSize));
+
+        completionService = new ExecutorCompletionService<>(executor);
+
     }
 }

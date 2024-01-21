@@ -3,8 +3,10 @@ package com.itblueprints.sysagent.step;
 import com.itblueprints.sysagent.ThreadManager;
 import lombok.val;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
-public interface BatchStep<IN, OUT> extends Step {
+public interface BatchStep<T> extends Step {
 
     @Override
     default void execute(StepContext context){
@@ -14,43 +16,33 @@ public interface BatchStep<IN, OUT> extends Step {
     default void execute(StepContext context, ThreadManager threadManager){
         try {
             preProcess(context);
-            val pg1_in = getPageOfInputItems(0, context);
-            val pg1_out = pg1_in.map( itm -> _processItemWrapper(itm, context));
-            savePageOfOutputItems(pg1_out, context);
-
-            if(pg1_in.getTotalPages() > 1){
-                for(int i = 1; i < pg1_in.getTotalPages(); i++){
-                    val pg_in = getPageOfInputItems(i, context);
-                    val pg_out = pg_in.map( itm -> _processItemWrapper(itm, context));
-                    savePageOfOutputItems(pg_out, context);
+            int pgNum = 0;
+            int totalPages = 0;
+            do {
+                val pageRequest = PageRequest.of(pgNum, threadManager.getBatchPageSize());
+                val pg_in = getPageOfItems(pageRequest, context);
+                if(totalPages == 0) totalPages = pg_in.getTotalPages();
+                int count = 0;
+                for(val item : pg_in){
+                    threadManager.submit(() -> processItem(item, context));
+                    count++;
                 }
-            }
+                int successCount = threadManager.waitTillComplete(count);
+                pgNum++;
+            } while (pgNum < totalPages);
             postProcess(context);
-
         }
         catch (Exception e){
             e.printStackTrace();
         }
-    }
-
-    default OUT _processItemWrapper(IN item, StepContext context){
-        try {
-            processItem(item, context);
-        }
-        catch (Exception e){
-            e.printStackTrace();
-        }
-        return null;
     }
 
 
     void preProcess(StepContext context) throws Exception;
 
-    Page<IN> getPageOfInputItems(int pageNum, StepContext context) throws Exception;
+    Page<T> getPageOfItems(Pageable pageRequest, StepContext context) throws Exception;
 
-    OUT processItem(IN item, StepContext context) throws Exception;
-
-    void savePageOfOutputItems(Page<OUT> items, StepContext context) throws Exception;
+    boolean processItem(T item, StepContext context) throws Exception;
 
     void postProcess(StepContext context) throws Exception;
 }

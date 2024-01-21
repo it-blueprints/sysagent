@@ -1,7 +1,6 @@
 package com.itblueprints.sysagent.scheduling;
 
 import com.itblueprints.sysagent.*;
-import com.itblueprints.sysagent.cluster.ClusterService;
 import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.job.JobService;
 import lombok.RequiredArgsConstructor;
