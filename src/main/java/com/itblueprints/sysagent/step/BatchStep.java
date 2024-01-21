@@ -1,6 +1,5 @@
 package com.itblueprints.sysagent.step;
 
-import com.itblueprints.sysagent.SystemAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import lombok.val;
 import org.springframework.data.domain.Page;
@@ -12,7 +11,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
 
 public abstract class BatchStep<IN, OUT> implements Step {
 
