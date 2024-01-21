@@ -48,6 +48,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
                 writeChunkOfItems(results, context);
                 pgNum++;
             } while (pgNum < totalPages);
+
             postProcess(context);
         }
         catch (Exception e){
