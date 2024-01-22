@@ -5,6 +5,7 @@ import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.job.JobService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class StepService {
     private final MongoTemplate mongoTemplate;
     private final JobService jobService;
@@ -23,6 +25,8 @@ public class StepService {
 
     //----------------------------------------------
     public void onHeartBeat(NodeInfo nodeInfo) {
+
+        log.debug("Loooking for next step to execute");
         val stepRec = getNextStepToWorkOn(nodeInfo.thisNodeId);
         if(stepRec != null) {
             stepRec.setStatus(StepRecord.Status.Executing);
@@ -37,15 +41,18 @@ public class StepService {
                 ctx.setTotalPartitions(stepRec.getTotalPartitions());
             }
 
+            log.debug("Executing step '"+stepRec.getStepName() + "' with arguments "+ctx.getArguments());
+
             try {
                 if(step instanceof BatchStep){
-                    val batchStep = (BatchStep) step;
-                    batchStep.setThreadManager(threadManager);
-                    batchStep.execute(ctx);
+                    ((BatchStep) step).setThreadManager(threadManager);
                 }
-                else {
-                    threadManager.submit(() -> step.execute(ctx));
-                }
+                val future = threadManager.submit(() -> step.execute(ctx));
+                future.thenRun(() -> {
+                    stepRec.setStatus(StepRecord.Status.Completed);
+                    stepRec.setCompletedAt(LocalDateTime.now());
+                    mongoTemplate.save(stepRec);
+                });
             }
             catch (Exception e){
                 e.printStackTrace();
@@ -59,7 +66,8 @@ public class StepService {
         //Read leader record with lock
         val query = new Query();
         query.addCriteria(Criteria
-                .where("claimed").is(false));
+                .where("claimed").is(false)
+        );
 
         val update = new Update();
         update.set("claimed", true);

@@ -8,6 +8,7 @@ import com.itblueprints.sysagent.step.StepService;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ClusterService {
 
     private final MongoTemplate mongoTemplate;
@@ -52,6 +54,7 @@ public class ClusterService {
                 throw new SysAgentException("Error on heartbeat", e);
             }
         };
+        log.debug("Starting cluster service with hearbeat = "+hb);
         hearbeatHandle = scheduler.scheduleAtFixedRate(r, hb, hb, TimeUnit.SECONDS);
     }
 
@@ -63,6 +66,7 @@ public class ClusterService {
     //------------------------------
     void onHeartBeat(int heartBeatSecs){
         val nodeInfo = computeNodeInfo(heartBeatSecs);
+        log.debug("Current nodeInfo = "+nodeInfo);
         if(!isInitialised) {
             if(nodeInfo.isManager) {
                 schedulerService.initialise(nodeInfo);

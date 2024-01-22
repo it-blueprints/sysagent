@@ -2,6 +2,7 @@ package com.itblueprints.sysagent.step;
 
 import com.itblueprints.sysagent.ThreadManager;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorCompletionService;
 
+@Slf4j
 public abstract class BatchStep<IN, OUT> implements Step {
 
     @Setter
@@ -25,16 +27,21 @@ public abstract class BatchStep<IN, OUT> implements Step {
 
         completionService = new ExecutorCompletionService<>(threadManager.getExecutor());
 
+        log.debug("Executing preProcess");
         preProcess(context);
 
         int pgNum = 0;
         int totalPages = 0;
         do {
             val pageRequest = PageRequest.of(pgNum, threadManager.getBatchChunkSize());
-            val pg_in = readChunkOfItems(pageRequest, context);
-            if(totalPages == 0) totalPages = pg_in.getTotalPages();
+            val pgIn = readChunkOfItems(pageRequest, context);
+            if(totalPages == 0) {
+                totalPages = pgIn.getTotalPages();
+                log.debug("Total chunks = "+totalPages);
+            }
             int count = 0;
-            for(val item : pg_in){
+            log.debug("Processing " + pgIn.getTotalElements() + " items");
+            for(val item : pgIn){
                 threadManager.submit(() -> processItem(item, context));
                 count++;
             }
@@ -49,11 +56,13 @@ public abstract class BatchStep<IN, OUT> implements Step {
                         throw new RuntimeException(e);
                     }
                 }
+                log.debug("Writing chunk");
                 writeChunkOfItems(results, context);
             }
             pgNum++;
         } while (pgNum < totalPages);
 
+        log.debug("Executing postProcess");
         postProcess(context);
 
     }

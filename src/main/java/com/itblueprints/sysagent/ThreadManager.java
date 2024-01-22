@@ -3,12 +3,10 @@ package com.itblueprints.sysagent;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.val;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Component
 @RequiredArgsConstructor
@@ -24,8 +22,8 @@ public class ThreadManager {
     private int batchChunkSize;
 
     //--------------------------------------
-    public void submit(Runnable task){
-        executor.submit(task);
+    public CompletableFuture submit(Runnable task){
+        return CompletableFuture.runAsync(task, executor);
     }
 
     //-----------------------------------------

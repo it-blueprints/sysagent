@@ -67,6 +67,7 @@ public class JobService {
             totalPartitions = partArgs.size();
         }
 
+        log.debug("Total partitions = "+totalPartitions);
         for(int i=0; i < totalPartitions; i++){
             val stepRecord = new StepRecord();
             stepRecord.setJobRecordId(jobRecord.getId());
@@ -100,7 +101,7 @@ public class JobService {
             jobsMap.put(jobBean.getName(), item);
         }
 
-        log.debug("JobService inited");
+        log.debug("JobService initialised");
     }
 
     //-----------------------------------------
