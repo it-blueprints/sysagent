@@ -88,5 +88,11 @@ class SchedulerService_onHeartBeat_Test {
         schedulerService.onHeartBeat(nodeInfo, now4);
         totalInvocations++;
         verify(threadManager, times(totalInvocations)).submit(any());
+        jsi.setLastRunAt(LocalDateTime.of(2024, 1, 12, 0,0,0));
+
+        //Next day 19 secs after schedule
+        val now5 = LocalDateTime.of(2024, 1, 12, 0,0,19);
+        schedulerService.onHeartBeat(nodeInfo, now5);
+        verify(threadManager, times(totalInvocations)).submit(any());
     }
 }
