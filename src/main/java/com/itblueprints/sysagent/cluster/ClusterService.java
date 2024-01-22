@@ -34,15 +34,14 @@ public class ClusterService {
     private final Config config;
 
     //-------------------------
-    private NodeState nodeState;
-    private NodeState managerNodeState;
+    NodeState nodeState = new NodeState();
+    NodeState managerNodeState;
 
     //------------------------------------------
     @PostConstruct
     void init() {
 
         val hb = config.getHeartBeatSecs();
-        nodeState = new NodeState();
         nodeState.setStartedAt(System.currentTimeMillis());
 
         final Runnable r = () -> {
@@ -65,7 +64,8 @@ public class ClusterService {
 
     //------------------------------
     void onHeartBeat(int heartBeatSecs){
-        val nodeInfo = computeNodeInfo(heartBeatSecs);
+        val timeNow = System.currentTimeMillis();
+        val nodeInfo = computeNodeInfo(heartBeatSecs, timeNow);
         log.debug("Current nodeInfo = "+nodeInfo);
         if(!isInitialised) {
             if(nodeInfo.isManager) {
@@ -88,25 +88,29 @@ public class ClusterService {
     private boolean isInitialised = false;
 
     //----------------------------------------
-    private NodeInfo computeNodeInfo(int heartBeatSecs){
-        val timeNow = System.currentTimeMillis();
+    NodeInfo computeNodeInfo(int heartBeatSecs, long timeNow){
+
         //extend life
         nodeState.setAliveTill(timeNow + heartBeatSecs*1000);
-        mongoTemplate.save(nodeState);
-        val leaderNs = mongoTemplate.findById(MANAGER_ID, NodeState.class);
-        if(leaderNs == null){ //No leader record
+        nodeState = mongoTemplate.save(nodeState);
+        val savedMgrNS = mongoTemplate.findById(MANAGER_ID, NodeState.class);
+        if(savedMgrNS == null){ //No leader record
             //create one. Only one will succeed as the id is constant and it has a unique constraint
-            managerNodeState = newManagerNodeState(nodeState.getId(), timeNow, heartBeatSecs);
-            mongoTemplate.save(managerNodeState);
+            val mgrNS = new NodeState();
+            mgrNS.setId(MANAGER_ID);
+            mgrNS.setManagerId(nodeState.getId());
+            mgrNS.setManagerSince(timeNow);
+            mgrNS.setManagerLeaseTill(timeNow+heartBeatSecs*2000); //lease for 2 heart beats
+            managerNodeState = mongoTemplate.save(mgrNS);
         }
         else {  //Leader record exists
             //update state held
-            managerNodeState = leaderNs;
+            managerNodeState = savedMgrNS;
 
             if(isManager()){ //This is the leader node
                 //Extend lease
                 managerNodeState.setManagerLeaseTill(timeNow + heartBeatSecs*2000);
-                mongoTemplate.save(managerNodeState);
+                managerNodeState = mongoTemplate.save(managerNodeState);
 
             }
             else { //Another node is the leader
@@ -124,8 +128,12 @@ public class ClusterService {
 
                     //if was successful in obtaining the lock
                     if(lockedLeaderNS != null) {
-                        setNewManager(managerNodeState, nodeState.getId(), timeNow, heartBeatSecs); //Set this as the leader
-                        mongoTemplate.save(managerNodeState);
+                        //Set this as the manager
+                        managerNodeState.setManagerId(nodeState.getId());
+                        managerNodeState.setManagerSince(timeNow);
+                        managerNodeState.setManagerLeaseTill(timeNow + heartBeatSecs*2000);
+                        managerNodeState.setLocked(false);
+                        managerNodeState = mongoTemplate.save(managerNodeState);
                     }
                 }
             }
@@ -142,24 +150,6 @@ public class ClusterService {
     //----------------------
     public boolean isManager(){
         return managerNodeState.getManagerId().equals(nodeState.getId());
-    }
-
-
-    //----------------------------------------------
-    private void setNewManager(NodeState mgrNode, String nodeId, long atTime, int heartBeatSecs){
-        mgrNode.setManagerId(nodeId);
-        mgrNode.setManagerSince(atTime);
-        mgrNode.setManagerLeaseTill(atTime + heartBeatSecs*2000);
-        mgrNode.setLocked(false);
-    }
-
-    //-----------------------------------------------------
-    private NodeState newManagerNodeState(String nodeId, long timeNow, int heartBeatSecs){
-        val mgr = new NodeState();
-        mgr.setId(MANAGER_ID);
-        mgr.setManagerId(nodeId);
-        mgr.setManagerLeaseTill(timeNow+heartBeatSecs*2000); //lease for 2 heart beats
-        return mgr;
     }
 
     public static final String MANAGER_ID = "M";
