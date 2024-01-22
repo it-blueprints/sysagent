@@ -27,23 +27,22 @@ public class SchedulerService {
     private final JobService jobService;
     private final Config config;
 
-    private final List<ScheduledJobItem> scheduledJobItems = new ArrayList<>();
+    final List<ScheduledJobItem> scheduledJobItems = new ArrayList<>();
 
-    //--------------------------------------------
-    public void onHeartBeat(NodeInfo nodeInfo) {
+    //------------------------------------------------------------
+    public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
 
-        val now = LocalDateTime.now();
         val heartBeatSecs = config.getHeartBeatSecs();
 
         for(val item : scheduledJobItems){
             //Look at jobs due since the last 3 heart beats. This should cover a previous manager failure
             val nextRunAt = item.cronExp.next(now.minusSeconds(heartBeatSecs * 3));
-            val gap = ChronoUnit.SECONDS.between(LocalDateTime.now(), nextRunAt);
+            val gap = ChronoUnit.SECONDS.between(nextRunAt, now);
             log.debug("gap: "+gap);
 
             var doRun = false;
             //Execute any missed jobs from another manager that has now failed
-            if(gap < 0 && !item.lastRunAt.equals(nextRunAt)){
+            if((gap < 0 && gap > heartBeatSecs * -3) && !item.lastRunAt.equals(nextRunAt)){
                 val rec = mongoTemplate.findById(item.jobName, JobScheduleRecord.class);
                 if(rec != null && rec.getLastRunAt().isBefore(nextRunAt)) doRun = true;
             }
@@ -112,7 +111,7 @@ public class SchedulerService {
     static class ScheduledJobItem{
         public String jobName;
         public CronExpression cronExp;
-        public LocalDateTime lastRunAt;
+        public LocalDateTime lastRunAt = LocalDateTime.MIN;
     }
 
     public static final String runAt = "_runAt";

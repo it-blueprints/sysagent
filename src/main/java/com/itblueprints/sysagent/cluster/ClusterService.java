@@ -16,6 +16,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -77,7 +78,7 @@ public class ClusterService {
         else {
 
             if (nodeInfo.isManager) {
-                schedulerService.onHeartBeat(nodeInfo);
+                schedulerService.onHeartBeat(nodeInfo, LocalDateTime.now());
             }
             jobService.onHeartBeat(nodeInfo);
             stepService.onHeartBeat(nodeInfo);

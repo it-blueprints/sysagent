@@ -29,10 +29,11 @@ class ClusterService_computeNodeInfo_Test {
     @Mock StepService stepService;
     @Mock Config config;
 
-    private ClusterService clusterService1;
-    private ClusterService clusterService2;
-    private ClusterService clusterService3;
+    ClusterService clusterService1;
+    ClusterService clusterService2;
+    ClusterService clusterService3;
 
+    //-------------------------------------
     @BeforeEach
     void beforeEach() {
         clusterService1 = new ClusterService(mongoTemplate, schedulerService, jobService, stepService, config);
