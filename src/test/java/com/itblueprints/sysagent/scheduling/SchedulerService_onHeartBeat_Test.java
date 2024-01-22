@@ -74,30 +74,30 @@ class SchedulerService_onHeartBeat_Test {
         val nodeInfo = new NodeInfo();
         val now1 = LocalDateTime.of(2024, 1, 10, 23,0,0);
         schedulerService.onHeartBeat(nodeInfo, now1);
-        //verify(threadManager, times(totalInvocations)).submitRunnable(any());
+        verify(threadManager, times(totalInvocations)).getExecutor();
 
         //20 secs before schedule
         val now2 = LocalDateTime.of(2024, 1, 10, 23,59,40);
         schedulerService.onHeartBeat(nodeInfo, now2);
         totalInvocations++;
-        //verify(threadManager, times(totalInvocations)).submitRunnable(any());
+        verify(threadManager, times(totalInvocations)).getExecutor();
         jsi.setLastRunAt(LocalDateTime.of(2024, 1, 11, 0,0,0));
 
         //Next day 31 secs before schedule
         val now3 = LocalDateTime.of(2024, 1, 11, 23,59,29);
         schedulerService.onHeartBeat(nodeInfo, now3);
-        //verify(threadManager, times(totalInvocations)).submitRunnable(any());
+        verify(threadManager, times(totalInvocations)).getExecutor();
 
         //Next day 9 secs after schedule
         val now4 = LocalDateTime.of(2024, 1, 11, 0,0,9);
         schedulerService.onHeartBeat(nodeInfo, now4);
         totalInvocations++;
-        //verify(threadManager, times(totalInvocations)).submitRunnable(any());
+        verify(threadManager, times(totalInvocations)).getExecutor();
         jsi.setLastRunAt(LocalDateTime.of(2024, 1, 12, 0,0,0));
 
         //19 secs after schedule
         val now5 = LocalDateTime.of(2024, 1, 12, 0,0,19);
         schedulerService.onHeartBeat(nodeInfo, now5);
-        //verify(threadManager, times(totalInvocations)).submitRunnable(any());
+        verify(threadManager, times(totalInvocations)).getExecutor();
     }
 }
