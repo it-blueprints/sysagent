@@ -11,8 +11,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
+import java.util.concurrent.Future;
 
 @Slf4j
 public abstract class BatchStep<IN, OUT> implements Step {
@@ -36,11 +35,11 @@ public abstract class BatchStep<IN, OUT> implements Step {
                 log.debug("Total chunks = "+totalPages);
             }
 
-            var futures = new ArrayList<CompletableFuture<OUT>>();
+            var futures = new ArrayList<Future<OUT>>();
             List<OUT> results = new ArrayList<>();
             for(val item : pgIn){
-                //val future = threadManager.submitSupplier(() -> processItem(item, context));
-                val future = CompletableFuture.supplyAsync(() -> processItem(item, context));
+                val future = threadManager.getExecutor().submit(() -> processItem(item, context));
+                //val future = CompletableFuture.supplyAsync(() -> processItem(item, context));
 
                 futures.add(future);
                 if(futures.size() == threadManager.getBatchQueueSize()){
@@ -59,11 +58,11 @@ public abstract class BatchStep<IN, OUT> implements Step {
     }
 
     //-----------------------------------------------------------------------
-    private List<OUT> getFutureResults(List<CompletableFuture<OUT>> futures){
+    private List<OUT> getFutureResults(List<Future<OUT>> futures){
         val results = new ArrayList<OUT>();
         try {
-            for (val f : futures) {
-                results.add(f.join());
+            for (val future : futures) {
+                results.add(future.get());
             }
         }catch (Exception e) {
             e.printStackTrace();

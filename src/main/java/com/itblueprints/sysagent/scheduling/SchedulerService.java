@@ -51,7 +51,7 @@ public class SchedulerService {
 
             if(doRun)
             {
-                threadManager.submitRunnable(() -> {
+                threadManager.getExecutor().submit(() -> {
                     try {
                         Utils.sleepFor(gap < 0 ? 0 : (gap+1)*1000);
                         val args = new Arguments();

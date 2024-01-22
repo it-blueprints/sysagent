@@ -20,13 +20,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class StepServiceTest_onHeartBeat_Test {
@@ -49,6 +48,8 @@ class StepServiceTest_onHeartBeat_Test {
         when(threadManager.getBatchQueueSize()).thenReturn(10);
 
         stepService = new StepService(mongoTemplate, jobService, threadManager);
+
+        when(threadManager.getExecutor()).thenReturn(executor);
     }
 
     //-------------------------------------

@@ -6,8 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.*;
-import java.util.function.Supplier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -23,16 +25,6 @@ public class ThreadManager {
     private int batchChunkSize;
     @Getter
     private int batchQueueSize;
-
-    //--------------------------------------
-    public CompletableFuture submitRunnable(Runnable task){
-        return CompletableFuture.runAsync(task, executor);
-    }
-
-    //--------------------------------------
-    public <T> CompletableFuture submitSupplier(Supplier<T> task){
-        return CompletableFuture.supplyAsync(task, executor);
-    }
 
     //-----------------------------------------
     @PostConstruct
