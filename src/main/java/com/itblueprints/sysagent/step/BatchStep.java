@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -27,7 +28,6 @@ public abstract class BatchStep<IN, OUT> implements Step {
 
         completionService = new ExecutorCompletionService<>(threadManager.getExecutor());
 
-        log.debug("Executing preProcess");
         preProcess(context);
 
         int pgNum = 0;
@@ -40,7 +40,6 @@ public abstract class BatchStep<IN, OUT> implements Step {
                 log.debug("Total chunks = "+totalPages);
             }
             int count = 0;
-            log.debug("Processing " + pgIn.getTotalElements() + " items");
             for(val item : pgIn){
                 threadManager.submit(() -> processItem(item, context));
                 count++;
@@ -56,13 +55,13 @@ public abstract class BatchStep<IN, OUT> implements Step {
                         throw new RuntimeException(e);
                     }
                 }
-                log.debug("Writing chunk");
-                writeChunkOfItems(results, context);
+
+                val pgOut = new PageImpl<>(results, pageRequest, results.size());
+                writeChunkOfItems(pgOut, context);
             }
             pgNum++;
         } while (pgNum < totalPages);
 
-        log.debug("Executing postProcess");
         postProcess(context);
 
     }
@@ -74,7 +73,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
 
     public abstract OUT processItem(IN item, StepContext context);
 
-    public abstract void writeChunkOfItems(Collection<OUT> items, StepContext context);
+    public abstract void writeChunkOfItems(Page<OUT> page, StepContext context);
 
     public abstract void postProcess(StepContext context);
 }

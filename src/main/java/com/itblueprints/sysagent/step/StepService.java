@@ -26,7 +26,7 @@ public class StepService {
     //----------------------------------------------
     public void onHeartBeat(NodeInfo nodeInfo) {
 
-        log.debug("Loooking for next step to execute");
+        log.debug("Looking for next step to execute");
         val stepRec = getNextStepToWorkOn(nodeInfo.thisNodeId);
         if(stepRec != null) {
             stepRec.setStatus(StepRecord.Status.Executing);
