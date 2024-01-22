@@ -65,8 +65,8 @@ public class StepService {
     private StepRecord getNextStepToWorkOn(String nodeId){
         //Read leader record with lock
         val query = new Query();
-        query.addCriteria(Criteria
-                .where("claimed").is(false)
+        query.addCriteria(
+                Criteria.where("claimed").is(false)
         );
 
         val update = new Update();
