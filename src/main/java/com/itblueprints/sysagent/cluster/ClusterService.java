@@ -76,12 +76,11 @@ public class ClusterService {
             isInitialised = true;
         }
         else {
-
             if (nodeInfo.isManager) {
                 schedulerService.onHeartBeat(nodeInfo, LocalDateTime.now());
             }
-            jobService.onHeartBeat(nodeInfo);
-            stepService.onHeartBeat(nodeInfo);
+            jobService.onHeartBeat(nodeInfo, LocalDateTime.now());
+            stepService.onHeartBeat(nodeInfo, LocalDateTime.now());
         }
 
     }

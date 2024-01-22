@@ -13,6 +13,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -104,7 +105,7 @@ public class JobService {
         log.debug("JobService initialised");
     }
 
-    //-----------------------------------------
-    public void onHeartBeat(NodeInfo nodeInfo) {
+    //------------------------------------------------------------
+    public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
     }
 }

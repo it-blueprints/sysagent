@@ -23,14 +23,14 @@ public class StepService {
     private final JobService jobService;
     private final ThreadManager threadManager;
 
-    //----------------------------------------------
-    public void onHeartBeat(NodeInfo nodeInfo) {
+    //-------------------------------------------------------------
+    public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
 
         log.debug("Looking for next step to execute");
         val stepRec = getNextStepToWorkOn(nodeInfo.thisNodeId);
         if(stepRec != null) {
             stepRec.setStatus(StepRecord.Status.Executing);
-            stepRec.setStartedAt(LocalDateTime.now());
+            stepRec.setStartedAt(now);
 
             val step = jobService.getStep(stepRec.getJobName(), stepRec.getStepName());
             val ctx = new StepContext();
@@ -47,12 +47,10 @@ public class StepService {
                 if(step instanceof BatchStep){
                     ((BatchStep) step).setThreadManager(threadManager);
                 }
-                val future = threadManager.submit(() -> step.execute(ctx));
-                future.thenRun(() -> {
-                    stepRec.setStatus(StepRecord.Status.Completed);
-                    stepRec.setCompletedAt(LocalDateTime.now());
-                    mongoTemplate.save(stepRec);
-                });
+                step.execute(ctx);
+                stepRec.setStatus(StepRecord.Status.Completed);
+                stepRec.setCompletedAt(LocalDateTime.now());
+                mongoTemplate.save(stepRec);
             }
             catch (Exception e){
                 e.printStackTrace();
