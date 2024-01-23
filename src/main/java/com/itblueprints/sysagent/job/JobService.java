@@ -55,14 +55,14 @@ public class JobService {
         jRec.setJobName(jobName);
         jRec.setJobStartedAt(jobStartedAt);
         jRec.setStatus(JobRecord.Status.Executing);
-        var jobRecord = mongoTemplate.save(jRec);
+        var jobRec = mongoTemplate.save(jRec);
 
         val jobItem = jobsMap.get(jobName);
         val firstStep = jobItem.firstStep;
         jobItem.job.addToJobArguments(jobArgs);
 
-        sendStepExecutionInstruction(firstStep, jobArgs, jobRecord);
-
+        sendStepExecutionInstruction(firstStep, jobArgs, jobRec);
+        mongoTemplate.save(jobRec);
     }
 
     public void runJob(String jobName) {
