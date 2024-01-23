@@ -58,6 +58,7 @@ public class ClusterService {
         hearbeatHandle = scheduler.scheduleAtFixedRate(r, hb, hb, TimeUnit.SECONDS);
     }
 
+    //------------------------------
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
 
@@ -85,6 +86,7 @@ public class ClusterService {
         }
     }
 
+    //----------------------------------------
     private boolean isInitialised = false;
 
     //----------------------------------------
