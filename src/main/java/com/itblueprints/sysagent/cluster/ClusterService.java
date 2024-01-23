@@ -44,6 +44,7 @@ public class ClusterService {
 
         val hb = config.getHeartBeatSecs();
         nodeState.setStartedAt(System.currentTimeMillis());
+        mongoTemplate.save(nodeState);
 
         final Runnable r = () -> {
             try {
@@ -70,12 +71,13 @@ public class ClusterService {
         val nodeInfo = computeNodeInfo(heartBeatSecs, timeNow);
         log.debug("Current nodeInfo = "+nodeInfo);
 
-        if (!isInitialised) {
+        if (!nodeState.isInitialised()) {
             if (nodeInfo.isManager) {
                 schedulerService.initialise(nodeInfo);
             }
             jobService.initialise(nodeInfo);
-            isInitialised = true;
+            nodeState.setInitialised(true);
+            mongoTemplate.save(nodeState);
         } else {
             val now = LocalDateTime.now();
             if (nodeInfo.isManager) {
@@ -87,10 +89,17 @@ public class ClusterService {
     }
 
     //----------------------------------------
-    private boolean isInitialised = false;
-
-    //----------------------------------------
     NodeInfo computeNodeInfo(int heartBeatSecs, long timeNow){
+
+        //check if cluster has been reset
+        val query = new Query();
+        query.addCriteria(Criteria
+                .where("id").is(nodeState.getId()));
+        val ns = mongoTemplate.findOne(query, NodeState.class);
+        if(ns == null){
+            nodeState.setInitialised(false);
+            mongoTemplate.save(nodeState);
+        }
 
         //extend life
         nodeState.setAliveTill(timeNow + heartBeatSecs*1000);
@@ -120,13 +129,13 @@ public class ClusterService {
                 //If lease has expired
                 if(managerNodeState.getManagerLeaseTill() < timeNow){
                     //Read leader record with lock
-                    val query = new Query();
-                    query.addCriteria(Criteria
+                    val mgrQuery = new Query();
+                    mgrQuery.addCriteria(Criteria
                             .where("id").is(MANAGER_ID)
                             .and("locked").is(false));
                     val update = new Update();
                     update.set("locked", true);
-                    val lockedLeaderNS = mongoTemplate.findAndModify(query, update, NodeState.class);
+                    val lockedLeaderNS = mongoTemplate.findAndModify(mgrQuery, update, NodeState.class);
 
                     //if was successful in obtaining the lock
                     if(lockedLeaderNS != null) {

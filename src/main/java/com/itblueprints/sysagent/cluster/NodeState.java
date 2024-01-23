@@ -24,5 +24,7 @@ public class NodeState {
     private long managerLeaseTill;
 
     private boolean locked;
+
+    private boolean initialised;
     
 }

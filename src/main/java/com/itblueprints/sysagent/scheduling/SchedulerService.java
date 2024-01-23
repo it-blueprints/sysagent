@@ -107,6 +107,7 @@ public class SchedulerService {
             }
             scheduledJobItems.add(item);
         }
+        log.debug("SchedulerService initialised");
     }
 
     private final LocalDateTime MIN_TIME = LocalDateTime.of(1900,1,1,0,0,0);
