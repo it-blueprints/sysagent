@@ -27,7 +27,9 @@ public class JobRecord {
 
     private String currentStepName;
 
-    private int currentStepPartitionCount = 0;
+    private int partitionCount = 0;
+
+    private int partitionsCompletedCount = 0;
 
     //------------------
     public enum Status {
