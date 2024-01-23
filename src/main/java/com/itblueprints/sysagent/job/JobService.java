@@ -65,10 +65,6 @@ public class JobService {
         mongoTemplate.save(jobRec);
     }
 
-    public void runJob(String jobName) {
-        runJob(jobName, new Arguments());
-    }
-
     //------------------------------------------------------------
     public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
         val query = new Query();
