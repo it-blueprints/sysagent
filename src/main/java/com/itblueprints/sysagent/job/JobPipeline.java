@@ -25,6 +25,7 @@ public class JobPipeline {
         }
         firstStep = new PipelineStep();
         firstStep.step = step;
+        firstStep.stepName = step.getName();
         currentStep = firstStep;
         return this;
     }
@@ -36,6 +37,7 @@ public class JobPipeline {
         }
         val pStep = new PipelineStep();
         pStep.step = step;
+        pStep.stepName = step.getName();
         currentStep.nextPipelineStep = pStep;
         currentStep = pStep;
         return this;
