@@ -56,7 +56,7 @@ public class SchedulerService {
                         Utils.sleepFor(gap < 0 ? 0 : (gap+1)*1000);
                         val args = new Arguments();
                         args.put(JobService.jobStartedAt, nextRunAt);
-                        jobService.runJob(item.jobName, args, nodeInfo);
+                        jobService.runJob(item.jobName, args);
                     }
                     catch (Exception e){
                         e.printStackTrace();

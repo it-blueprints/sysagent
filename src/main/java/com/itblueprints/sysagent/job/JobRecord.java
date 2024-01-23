@@ -19,17 +19,21 @@ public class JobRecord {
     @Indexed
     private String jobName;
 
-    @Indexed
     private LocalDateTime jobStartedAt;
 
-    private int totalPartitions = 0;
-
+    @Indexed
     private Status status = Status.New;
 
+    private LocalDateTime jobCompletedAt;
+
+    private String currentStepName;
+
+    private int currentStepPartitionCount = 0;
+
+    //------------------
     public enum Status {
         New,
         Executing,
-        Failed,
         Completed
     }
 }

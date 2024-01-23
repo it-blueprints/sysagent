@@ -91,7 +91,7 @@ class StepServiceTest_onHeartBeat_Test {
         prtArgs.put("partition", 0);
         stepRec.setPartitionArguments(prtArgs);
         stepRec.setPartitionNum(0);
-        stepRec.setTotalPartitions(10);
+        stepRec.setPartitionCount(10);
         return stepRec;
     }
 

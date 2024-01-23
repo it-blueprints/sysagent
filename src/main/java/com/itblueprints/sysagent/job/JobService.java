@@ -44,7 +44,7 @@ public class JobService {
 
 
     //--------------------------------------------------------------
-    public void runJob(String jobName, Arguments jobArgs, NodeInfo nodeInfo) {
+    public void runJob(String jobName, Arguments jobArgs) {
 
         log.debug("Running "+jobName);
 
@@ -55,16 +55,24 @@ public class JobService {
         val item = jobsMap.get(jobName);
         val jobStartedAt = jobArgs.asTime(JobService.jobStartedAt);
 
-        val jr = new JobRecord();
-        jr.setJobName(jobName);
-        jr.setJobStartedAt(jobStartedAt);
-        var jobRecord = mongoTemplate.save(jr);
+        val jRec = new JobRecord();
+        jRec.setJobName(jobName);
+        jRec.setJobStartedAt(jobStartedAt);
+        jRec.setStatus(JobRecord.Status.Executing);
+        var jobRecord = mongoTemplate.save(jRec);
 
-        val pipeline = item.pipeline;
+        val firstStep = item.pipeline.getFirstStep();
         item.job.addToJobArguments(jobArgs);
-        val firstStep = pipeline.getSteps().getFirst();
-        val step = firstStep.step;
+        fireStepRecords(firstStep, jobArgs, jobRecord);
 
+    }
+
+    //----------------------------------------------------------------------
+    private void fireStepRecords(PipelineStep pipelineStep,
+                                 Arguments jobArgs,
+                                 JobRecord jobRecord){
+        //Get the partitions for the step
+        val step = pipelineStep.getStep();
         val partArgs = step.getPartitionArguments(jobArgs);
 
         int totalPartitions = 1;
@@ -77,22 +85,21 @@ public class JobService {
         for(int i=0; i < totalPartitions; i++){
             val stepRecord = new StepRecord();
             stepRecord.setJobRecordId(jobRecord.getId());
-            stepRecord.setJobName(jobName);
+            stepRecord.setJobName(jobRecord.getJobName());
             stepRecord.setStepName(step.getName());
             stepRecord.setJobArguments(jobArgs);
             if(totalPartitions > 1) {
                 val partArg = partArgs.get(i);
                 stepRecord.setPartitionArguments(partArg);
                 stepRecord.setPartitionNum(i);
-                stepRecord.setTotalPartitions(totalPartitions);
+                stepRecord.setPartitionCount(totalPartitions);
             }
             mongoTemplate.save(stepRecord);
         }
 
-        jobRecord.setStatus(JobRecord.Status.Executing);
-        jobRecord.setTotalPartitions(totalPartitions);
-        jobRecord = mongoTemplate.save(jobRecord);
-
+        jobRecord.setCurrentStepName(step.getName());
+        jobRecord.setCurrentStepPartitionCount(totalPartitions);
+        mongoTemplate.save(jobRecord);
     }
 
     //------------------------------------------------------------
@@ -102,14 +109,20 @@ public class JobService {
                 .where("status").is(JobRecord.Status.Executing));
         val executingJobs = mongoTemplate.find(query, JobRecord.class);
         for(val jobRec : executingJobs){
-            log.debug("****************");
             val query2 = new Query();
             query2.addCriteria(Criteria
                     .where("jobRecordId").is(jobRec.getId())
+                    .and("")
                     .and("status").is(StepRecord.Status.Completed)
             );
-            val completedSteps = mongoTemplate.find(query2, StepRecord.class);
-            log.debug("**************** "+ completedSteps.size());
+            val completedPrtns = mongoTemplate.find(query2, StepRecord.class);
+
+            //If all partitions are complete, job is complete
+            if(completedPrtns.size() == jobRec.getCurrentStepPartitionCount()){
+                jobRec.setStatus(JobRecord.Status.Completed);
+                jobRec.setJobCompletedAt(now);
+            }
+
 
         }
     }
@@ -123,10 +136,18 @@ public class JobService {
             val jobBean = beanFactory.getBean(beanName, Job.class);
             val item = new JobItem();
             item.job = jobBean;
-            item.pipeline = jobBean.getPipeline();
-            for(val ps : item.pipeline.getSteps()){
-                item.stepsMap.put(ps.step.getName(), ps.step);
+            val pipeline = jobBean.getPipeline();
+            val firstStep = pipeline.getFirstStep();
+            if(firstStep==null){
+                throw new SysAgentException("First step is missing in pipeline for job "+jobBean.getName());
             }
+            var currStep = firstStep;
+            do {
+                item.stepsMap.put(currStep.getStep().getName(), currStep.getStep());
+                currStep = currStep.getNextPipelineStep();
+            }
+            while(currStep!=null);
+
             jobsMap.put(jobBean.getName(), item);
         }
 

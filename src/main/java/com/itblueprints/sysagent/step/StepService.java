@@ -35,10 +35,10 @@ public class StepService {
             val step = jobService.getStep(stepRec.getJobName(), stepRec.getStepName());
             val ctx = new StepContext();
             ctx.getArguments().add(stepRec.getJobArguments());
-            if(stepRec.getTotalPartitions() > 0) {
+            if(stepRec.getPartitionCount() > 0) {
                 ctx.getArguments().add(stepRec.getPartitionArguments());
                 ctx.setPartitionNum(stepRec.getPartitionNum());
-                ctx.setTotalPartitions(stepRec.getTotalPartitions());
+                ctx.setTotalPartitions(stepRec.getPartitionCount());
             }
 
             log.debug("Executing step '"+stepRec.getStepName() + "' with arguments "+ctx.getArguments());

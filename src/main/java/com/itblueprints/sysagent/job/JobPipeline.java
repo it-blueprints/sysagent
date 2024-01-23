@@ -5,9 +5,6 @@ import com.itblueprints.sysagent.step.Step;
 import lombok.Getter;
 import lombok.val;
 
-import java.util.LinkedList;
-
-@Getter
 public class JobPipeline {
 
    private JobPipeline(){}
@@ -17,32 +14,30 @@ public class JobPipeline {
     }
 
     //-------------------------------------------
-    private LinkedList<PipelineStep> steps = new LinkedList<>();
+    @Getter
+    private PipelineStep firstStep ;
 
-    public JobPipeline withFirstStep(Step step){
-        val pStep = new PipelineStep();
-        pStep.step = step;
-        if(!steps.isEmpty()){
+    private PipelineStep currentStep;
+
+    public JobPipeline firstStep(Step step){
+        if(firstStep!=null){
             throw new SysAgentException("Cannot add first step as the pipeline is not empty");
         }
-        steps.add(pStep);
+        firstStep = new PipelineStep();
+        firstStep.setStep(step);
+        currentStep = firstStep;
         return this;
     }
 
     //-------------------------------------------
-    public JobPipeline withNextStep(Step step){
-        val pStep = new PipelineStep();
-        pStep.step = step;
-        if(steps.isEmpty()){
-            throw new SysAgentException("Cannot add next step as the pipeline is empty. Use withFirstStep() first");
+    public JobPipeline nextStep(Step step){
+        if(currentStep==null){
+            throw new SysAgentException("Cannot add next step as the pipeline is empty");
         }
-        steps.add(pStep);
+        val pStep = new PipelineStep();
+        pStep.setStep(step);
+        currentStep.setNextPipelineStep(pStep);
+        currentStep = pStep;
         return this;
-    }
-
-    //============================
-    public static class PipelineStep {
-        public Step step;
-        public String onOutcome;
     }
 }

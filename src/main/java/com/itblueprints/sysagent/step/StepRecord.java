@@ -23,13 +23,14 @@ public class StepRecord {
 
     private String jobName;
 
+    @Indexed
     private String stepName;
 
     private Arguments partitionArguments;
 
     private Integer partitionNum;
 
-    private int totalPartitions = 0;
+    private int partitionCount = 0;
 
     private Arguments jobArguments;
 
