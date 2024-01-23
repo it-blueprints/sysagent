@@ -94,7 +94,8 @@ public class JobService {
 
                 val jobItem = jobsMap.get(jobRec.getJobName());
                 val jobArgs = new Arguments();
-                jobArgs.put(JobService.jobStartedAt, jobRec.getJobStartedAt());
+                val jobStartedAt = jobRec.getJobStartedAt();
+                jobArgs.put(JobService.jobStartedAt, jobStartedAt);
                 jobItem.job.addToJobArguments(jobArgs);
                 val nextPStep = jobItem.stepsMap.get(jobRec.getCurrentStepName()).nextPipelineStep;
 
@@ -147,6 +148,7 @@ public class JobService {
 
         jobRecord.setCurrentStepName(pipelineStep.stepName);
         jobRecord.setPartitionCount(totalPartitions);
+        jobRecord.setPartitionsCompletedCount(0);
         mongoTemplate.save(jobRecord);
     }
 
