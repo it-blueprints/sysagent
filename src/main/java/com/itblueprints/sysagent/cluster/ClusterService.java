@@ -140,7 +140,7 @@ public class ClusterService {
         }
 
         val clusterState = new NodeInfo();
-        clusterState.timeNow = Utils.millisToDateTime(timeNow);
+        clusterState.timeNow = Utils.toDateTime(timeNow);
         clusterState.thisNodeId = nodeState.getId();
         clusterState.isManager = isManager();
         clusterState.isBusy = false;

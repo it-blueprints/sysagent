@@ -86,18 +86,23 @@ public class JobService {
             val partitionsCompletedCount = completedPrtns.size();
             jobRec.setPartitionsCompletedCount(partitionsCompletedCount);
 
-            //If all partitions are complete, job is complete
+            log.debug("partitions completed = "+partitionsCompletedCount+" of "+jobRec.getPartitionCount());
+
+            //If all partitions of current step are complete,
             if(partitionsCompletedCount == jobRec.getPartitionCount()){
 
+                //Get next step if present
                 val jobItem = jobsMap.get(jobRec.getJobName());
-                val jobArgs = new Arguments();
-                val jobStartedAt = jobRec.getJobStartedAt();
-                jobArgs.put(JobService.jobStartedAt, jobStartedAt);
-                jobItem.job.addToJobArguments(jobArgs);
-                val nextPStep = jobItem.getStep(jobRec.getCurrentStepName());
+                val nextPStep = jobItem.getStep(jobRec.getCurrentStepName()).nextPipelineStep;
 
                 if(nextPStep != null) {
+                    //Next step
                     log.debug("Sending step execution instruction for step "+nextPStep.stepName);
+                    val jobArgs = new Arguments();
+                    val jobStartedAt = jobRec.getJobStartedAt();
+                    jobArgs.put(JobService.jobStartedAt, jobStartedAt);
+                    jobItem.job.addToJobArguments(jobArgs);
+
                     sendStepExecutionInstruction(nextPStep, jobArgs, jobRec);
                 }
                 else { //No more steps, job complete

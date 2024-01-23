@@ -54,6 +54,7 @@ class SchedulerService_onHeartBeat_Test {
 
         val jsi = new JobScheduleRecord();
         jsi.setJobName(jobName);
+        jsi.setLastRunAt(MIN_TIME);
         when(mongoTemplate.findById(jobName, JobScheduleRecord.class)).thenReturn(jsi);
 
         when(threadManager.getExecutor()).thenReturn(executor);
@@ -66,6 +67,7 @@ class SchedulerService_onHeartBeat_Test {
 
         val jsi = new JobScheduleRecord();
         jsi.setJobName(jobName);
+        jsi.setLastRunAt(MIN_TIME);
         when(mongoTemplate.findById(jobName, JobScheduleRecord.class)).thenReturn(jsi);
 
         var totalInvocations = 0;
@@ -100,4 +102,6 @@ class SchedulerService_onHeartBeat_Test {
         schedulerService.onHeartBeat(nodeInfo, now5);
         verify(threadManager, times(totalInvocations)).getExecutor();
     }
+
+    private static final LocalDateTime MIN_TIME = LocalDateTime.of(1900,1,1,0,0,0);
 }

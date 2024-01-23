@@ -6,12 +6,9 @@ import com.itblueprints.sysagent.job.JobService;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
 import com.itblueprints.sysagent.step.StepService;
 import lombok.val;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -120,7 +117,7 @@ class ClusterService_computeNodeInfo_Test {
     private void checkNodeInfo(NodeInfo info, String id, boolean isMgr, long timeNow){
         assertEquals(id, info.thisNodeId);
         assertEquals(isMgr, info.isManager);
-        assertEquals(Utils.millisToDateTime(timeNow), info.timeNow);
+        assertEquals(Utils.toDateTime(timeNow), info.timeNow);
     }
     //---------------------------------------------------------
     private void checkNodeState(ClusterService svc, String mgrId, long aliveTill){

@@ -1,9 +1,11 @@
 package com.itblueprints.sysagent;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import lombok.val;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
@@ -28,11 +30,15 @@ public abstract class MapData {
     }
 
     public LocalDateTime asTime(String key){
-        return (LocalDateTime) get(key);
+        val time = get(key);
+        if(time instanceof Date) return Utils.toDateTime((Date)time);
+        else return (LocalDateTime) get(key);
     }
 
     public LocalDate asDate(String key){
-        return (LocalDate) get(key);
+        val dt = get(key);
+        if(dt instanceof Date) return Utils.toDate((Date)dt);
+        else return (LocalDate) get(key);
     }
 
     public <T> T asType(String key, Class<T> clazz){

@@ -14,6 +14,6 @@ public class JobScheduleRecord {
     @Id
     private String jobName;
 
-    private LocalDateTime lastRunAt = LocalDateTime.MIN;
+    private LocalDateTime lastRunAt;
 
 }
