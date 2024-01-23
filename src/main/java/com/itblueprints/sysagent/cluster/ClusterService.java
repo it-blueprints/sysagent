@@ -68,27 +68,21 @@ public class ClusterService {
         val timeNow = System.currentTimeMillis();
         val nodeInfo = computeNodeInfo(heartBeatSecs, timeNow);
         log.debug("Current nodeInfo = "+nodeInfo);
-        try {
-            if (!isInitialised) {
-                if (nodeInfo.isManager) {
-                    schedulerService.initialise(nodeInfo);
-                }
-                jobService.initialise(nodeInfo);
-                isInitialised = true;
-            } else {
-                val now = LocalDateTime.now();
-                if (nodeInfo.isManager) {
-                    schedulerService.onHeartBeat(nodeInfo, now);
-                }
-                jobService.onHeartBeat(nodeInfo, now);
-                stepService.onHeartBeat(nodeInfo, now);
-            }
-        }
-        catch (Exception e){
-            e.printStackTrace();
-            throw e;
-        }
 
+        if (!isInitialised) {
+            if (nodeInfo.isManager) {
+                schedulerService.initialise(nodeInfo);
+            }
+            jobService.initialise(nodeInfo);
+            isInitialised = true;
+        } else {
+            val now = LocalDateTime.now();
+            if (nodeInfo.isManager) {
+                schedulerService.onHeartBeat(nodeInfo, now);
+            }
+            jobService.onHeartBeat(nodeInfo, now);
+            stepService.onHeartBeat(nodeInfo, now);
+        }
     }
 
     private boolean isInitialised = false;
