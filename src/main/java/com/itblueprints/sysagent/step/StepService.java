@@ -71,6 +71,10 @@ public class StepService {
         update.set("claimed", true);
         update.set("nodeId", nodeId);
         val lockedStepRec = mongoTemplate.findAndModify(query, update, StepRecord.class);
+        if(lockedStepRec!=null) { //because this is the pre update value
+            lockedStepRec.setClaimed(true);
+            lockedStepRec.setNodeId(nodeId);
+        }
         return lockedStepRec;
     }
 }
