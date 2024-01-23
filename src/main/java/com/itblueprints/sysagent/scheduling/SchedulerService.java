@@ -93,13 +93,12 @@ public class SchedulerService {
             val item = new ScheduledJobItem();
             item.jobName = schJobBean.getName();
             item.cronExp = cronExp;
-            item.lastRunAt = MIN_TIME;
+            item.lastRunAt = LocalDateTime.MIN;
 
             var rec = mongoTemplate.findById(schJobBean.getName(), JobScheduleRecord.class);
             if(rec==null){
                 rec = new JobScheduleRecord();
                 rec.setJobName(schJobBean.getName());
-                rec.setLastRunAt(MIN_TIME);
                 mongoTemplate.save(rec);
             }
             else {
@@ -108,8 +107,6 @@ public class SchedulerService {
             scheduledJobItems.add(item);
         }
     }
-
-    private static final LocalDateTime MIN_TIME = LocalDateTime.of(1900,1,1,0,0,0);
 
     //============================
     static class ScheduledJobItem{

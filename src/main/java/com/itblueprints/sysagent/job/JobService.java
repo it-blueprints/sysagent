@@ -88,6 +88,7 @@ public class JobService {
             );
             val completedPrtns = mongoTemplate.find(query2, StepRecord.class);
             val partitionsCompletedCount = completedPrtns.size();
+            jobRec.setPartitionsCompletedCount(partitionsCompletedCount);
 
             //If all partitions are complete, job is complete
             if(partitionsCompletedCount == jobRec.getPartitionCount()){
@@ -110,7 +111,6 @@ public class JobService {
                 }
             }
 
-            jobRec.setPartitionsCompletedCount(partitionsCompletedCount);
             mongoTemplate.save(jobRec);
 
         }
@@ -131,6 +131,11 @@ public class JobService {
         }
 
         log.debug("Total partitions = "+totalPartitions);
+
+        jobRecord.setCurrentStepName(pipelineStep.stepName);
+        jobRecord.setPartitionCount(totalPartitions);
+        jobRecord.setPartitionsCompletedCount(0);
+
         for(int i=0; i < totalPartitions; i++){
             val stepRecord = new StepRecord();
             stepRecord.setJobRecordId(jobRecord.getId());
@@ -145,11 +150,6 @@ public class JobService {
             }
             mongoTemplate.save(stepRecord);
         }
-
-        jobRecord.setCurrentStepName(pipelineStep.stepName);
-        jobRecord.setPartitionCount(totalPartitions);
-        jobRecord.setPartitionsCompletedCount(0);
-        mongoTemplate.save(jobRecord);
     }
 
     //-----------------------------------------------
