@@ -17,7 +17,7 @@ public class SysAgentService {
     private final JobService jobService;
 
     //--------------------------------
-    public void deleteClusterData() {
+    public void resetCluster() {
         mongoOperations.dropCollection(JobRecord.class);
         mongoOperations.dropCollection(JobScheduleRecord.class);
         mongoOperations.dropCollection(NodeState.class);
