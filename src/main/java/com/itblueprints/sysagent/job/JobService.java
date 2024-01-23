@@ -9,7 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
@@ -26,7 +28,6 @@ public class JobService {
     private final ConfigurableApplicationContext appContext;
     private final MongoTemplate mongoTemplate;
 
-
     //--------------------------------------------------------------
     private Map<String, JobItem> jobsMap = new HashMap<>();
 
@@ -34,8 +35,8 @@ public class JobService {
         if(jobsMap.containsKey(jobName)) {
             val jobItem = jobsMap.get(jobName);
             if(jobItem.stepsMap.containsKey(stepName)) {
-                val step = jobItem.stepsMap.get(stepName);
-                return step;
+                val pStep = jobItem.stepsMap.get(stepName);
+                return pStep.step;
             }
             else throw new SysAgentException("Step "+stepName+" not found for Job "+jobName);
         }
@@ -52,7 +53,6 @@ public class JobService {
             jobArgs.put(jobStartedAt, LocalDateTime.now());
         }
 
-        val item = jobsMap.get(jobName);
         val jobStartedAt = jobArgs.asTime(JobService.jobStartedAt);
 
         val jRec = new JobRecord();
@@ -61,18 +61,59 @@ public class JobService {
         jRec.setStatus(JobRecord.Status.Executing);
         var jobRecord = mongoTemplate.save(jRec);
 
-        val firstStep = item.pipeline.getFirstStep();
-        item.job.addToJobArguments(jobArgs);
-        fireStepRecords(firstStep, jobArgs, jobRecord);
+        val jobItem = jobsMap.get(jobName);
+        val firstStep = jobItem.firstStep;
+        jobItem.job.addToJobArguments(jobArgs);
+
+        sendStepExecutionInstruction(firstStep, jobArgs, jobRecord);
 
     }
 
+    public void runJob(String jobName) {
+        runJob(jobName, new Arguments());
+    }
+
+    //------------------------------------------------------------
+    public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
+        val query = new Query();
+        query.addCriteria(Criteria
+                .where("status").is(JobRecord.Status.Executing));
+        val executingJobs = mongoTemplate.find(query, JobRecord.class);
+        for(val jobRec : executingJobs){
+            val query2 = new Query();
+            query2.addCriteria(Criteria
+                    .where("jobRecordId").is(jobRec.getId())
+                    .and("stepName").is(jobRec.getCurrentStepName())
+                    .and("status").is(StepRecord.Status.Completed)
+            );
+            val completedPrtns = mongoTemplate.find(query2, StepRecord.class);
+
+            //If all partitions are complete, job is complete
+            if(completedPrtns.size() == jobRec.getCurrentStepPartitionCount()){
+
+                val jobItem = jobsMap.get(jobRec.getJobName());
+                val jobArgs = new Arguments();
+                jobArgs.put(JobService.jobStartedAt, jobRec.getJobStartedAt());
+                jobItem.job.addToJobArguments(jobArgs);
+                val nextPStep = jobItem.stepsMap.get(jobRec.getCurrentStepName());
+
+                if(nextPStep != null) {
+                    sendStepExecutionInstruction(nextPStep, jobArgs, jobRec);
+                }
+                else { //No more steps, job complete
+                    jobRec.setStatus(JobRecord.Status.Completed);
+                    jobRec.setJobCompletedAt(now);
+                }
+            }
+        }
+    }
+
     //----------------------------------------------------------------------
-    private void fireStepRecords(PipelineStep pipelineStep,
-                                 Arguments jobArgs,
-                                 JobRecord jobRecord){
+    private void sendStepExecutionInstruction(PipelineStep pipelineStep,
+                                              Arguments jobArgs,
+                                              JobRecord jobRecord){
         //Get the partitions for the step
-        val step = pipelineStep.getStep();
+        val step = pipelineStep.step;
         val partArgs = step.getPartitionArguments(jobArgs);
 
         int totalPartitions = 1;
@@ -102,31 +143,6 @@ public class JobService {
         mongoTemplate.save(jobRecord);
     }
 
-    //------------------------------------------------------------
-    public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
-        val query = new Query();
-        query.addCriteria(Criteria
-                .where("status").is(JobRecord.Status.Executing));
-        val executingJobs = mongoTemplate.find(query, JobRecord.class);
-        for(val jobRec : executingJobs){
-            val query2 = new Query();
-            query2.addCriteria(Criteria
-                    .where("jobRecordId").is(jobRec.getId())
-                    .and("")
-                    .and("status").is(StepRecord.Status.Completed)
-            );
-            val completedPrtns = mongoTemplate.find(query2, StepRecord.class);
-
-            //If all partitions are complete, job is complete
-            if(completedPrtns.size() == jobRec.getCurrentStepPartitionCount()){
-                jobRec.setStatus(JobRecord.Status.Completed);
-                jobRec.setJobCompletedAt(now);
-            }
-
-
-        }
-    }
-
     //-----------------------------------------------
     public void initialise(NodeInfo nodeInfo){
 
@@ -134,22 +150,33 @@ public class JobService {
         val jobBeanNames = beanFactory.getBeanNamesForType(Job.class);
         for (val beanName : jobBeanNames) {
             val jobBean = beanFactory.getBean(beanName, Job.class);
-            val item = new JobItem();
-            item.job = jobBean;
+            val jobItem = new JobItem();
+            jobItem.job = jobBean;
             val pipeline = jobBean.getPipeline();
-            val firstStep = pipeline.getFirstStep();
-            if(firstStep==null){
+            val firstPStep = pipeline.getFirstStep();
+            if(firstPStep==null){
                 throw new SysAgentException("First step is missing in pipeline for job "+jobBean.getName());
             }
-            var currStep = firstStep;
-            do {
-                item.stepsMap.put(currStep.getStep().getName(), currStep.getStep());
-                currStep = currStep.getNextPipelineStep();
-            }
-            while(currStep!=null);
+            jobItem.firstStep = firstPStep;
 
-            jobsMap.put(jobBean.getName(), item);
+            //Create a map of step name to pipeline step
+            var currPStep = firstPStep;
+            do {
+                jobItem.stepsMap.put(currPStep.step.getName(), currPStep);
+                currPStep = currPStep.nextPipelineStep;
+            }
+            while(currPStep!=null);
+
+            jobsMap.put(jobBean.getName(), jobItem);
         }
+
+        //MongoDB indices
+        mongoTemplate.indexOps(JobRecord.class)
+                .ensureIndex(new Index()
+                        .on("jobRecordId", Sort.Direction.ASC)
+                        .on("stepName", Sort.Direction.ASC)
+                        .on("status", Sort.Direction.ASC));
+
 
         log.debug("JobService initialised");
     }

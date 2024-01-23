@@ -16,7 +16,6 @@ public class JobRecord {
     @Id
     private String id;
 
-    @Indexed
     private String jobName;
 
     private LocalDateTime jobStartedAt;

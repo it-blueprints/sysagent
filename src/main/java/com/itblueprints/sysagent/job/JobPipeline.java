@@ -24,7 +24,7 @@ public class JobPipeline {
             throw new SysAgentException("Cannot add first step as the pipeline is not empty");
         }
         firstStep = new PipelineStep();
-        firstStep.setStep(step);
+        firstStep.step = step;
         currentStep = firstStep;
         return this;
     }
@@ -35,8 +35,8 @@ public class JobPipeline {
             throw new SysAgentException("Cannot add next step as the pipeline is empty");
         }
         val pStep = new PipelineStep();
-        pStep.setStep(step);
-        currentStep.setNextPipelineStep(pStep);
+        pStep.step = step;
+        currentStep.nextPipelineStep = pStep;
         currentStep = pStep;
         return this;
     }

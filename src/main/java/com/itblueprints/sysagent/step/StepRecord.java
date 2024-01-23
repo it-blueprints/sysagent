@@ -44,6 +44,7 @@ public class StepRecord {
 
     private LocalDateTime completedAt;
 
+    @Indexed
     private Status status = Status.New;
 
     private CheckPointState checkPointState;
