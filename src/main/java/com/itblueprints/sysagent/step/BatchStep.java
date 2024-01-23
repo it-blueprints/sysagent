@@ -1,6 +1,7 @@
 package com.itblueprints.sysagent.step;
 
 import com.itblueprints.sysagent.ThreadManager;
+import com.itblueprints.sysagent.Utils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -36,18 +37,11 @@ public abstract class BatchStep<IN, OUT> implements Step {
             }
 
             var futures = new ArrayList<Future<OUT>>();
-            List<OUT> results = new ArrayList<>();
             for(val item : pgIn){
                 val future = threadManager.getExecutor().submit(() -> processItem(item, context));
-                //val future = CompletableFuture.supplyAsync(() -> processItem(item, context));
-
                 futures.add(future);
-                if(futures.size() == threadManager.getBatchQueueSize()){
-                    results.addAll(getFutureResults(futures));
-                    futures.clear();
-                }
             }
-            results.addAll(getFutureResults(futures));
+            val results = getFutureResults(futures);
             val pgOut = new PageImpl<>(results, pageRequest, results.size());
             writeChunkOfItems(pgOut, context);
             pgNum++;
@@ -61,11 +55,16 @@ public abstract class BatchStep<IN, OUT> implements Step {
     private List<OUT> getFutureResults(List<Future<OUT>> futures){
         val results = new ArrayList<OUT>();
         try {
+            boolean done = false;
+            do {
+                val notDoneCount = futures.stream().filter(f -> !f.isDone()).count();
+                if(notDoneCount > 0) Utils.sleepFor(notDoneCount*20); //Wait 20 ms per item not done
+                else done = true;
+            } while (!done);
             for (val future : futures) {
                 results.add(future.get());
             }
-        }catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return results;

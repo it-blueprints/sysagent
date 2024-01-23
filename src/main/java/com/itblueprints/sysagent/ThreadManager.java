@@ -23,14 +23,11 @@ public class ThreadManager {
     //-----------------------------
     @Getter
     private int batchChunkSize;
-    @Getter
-    private int batchQueueSize;
 
     //-----------------------------------------
     @PostConstruct
     public void init(){
         batchChunkSize = config.getBatchChunkSize();
-        batchQueueSize = config.getBatchQueueSize();
         val numWorkerThreads = Runtime.getRuntime().availableProcessors();
 
         executor  = new ThreadPoolExecutor(

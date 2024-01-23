@@ -45,7 +45,6 @@ class StepServiceTest_onHeartBeat_Test {
     @BeforeEach
     void beforeEach() {
         when(threadManager.getBatchChunkSize()).thenReturn(100);
-        when(threadManager.getBatchQueueSize()).thenReturn(10);
 
         stepService = new StepService(mongoTemplate, jobService, threadManager);
 

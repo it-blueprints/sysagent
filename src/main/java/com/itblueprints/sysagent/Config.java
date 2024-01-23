@@ -12,5 +12,4 @@ public class Config {
 
     private Integer heartBeatSecs;
     private Integer batchChunkSize;
-    private Integer batchQueueSize;
 }       
