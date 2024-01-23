@@ -96,7 +96,7 @@ public class JobService {
                 val jobArgs = new Arguments();
                 jobArgs.put(JobService.jobStartedAt, jobRec.getJobStartedAt());
                 jobItem.job.addToJobArguments(jobArgs);
-                val nextPStep = jobItem.stepsMap.get(jobRec.getCurrentStepName());
+                val nextPStep = jobItem.stepsMap.get(jobRec.getCurrentStepName()).nextPipelineStep;
 
                 if(nextPStep != null) {
                     log.debug("Sending step execution instruction for step "+nextPStep.stepName);
