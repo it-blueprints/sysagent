@@ -98,9 +98,11 @@ public class JobService {
                 val nextPStep = jobItem.stepsMap.get(jobRec.getCurrentStepName());
 
                 if(nextPStep != null) {
+                    log.debug("Sending step execution instruction for step "+nextPStep.stepName);
                     sendStepExecutionInstruction(nextPStep, jobArgs, jobRec);
                 }
                 else { //No more steps, job complete
+                    log.debug("Job "+jobRec.getJobName()+" is complete");
                     jobRec.setStatus(JobRecord.Status.Completed);
                     jobRec.setJobCompletedAt(now);
                 }
@@ -127,7 +129,7 @@ public class JobService {
             val stepRecord = new StepRecord();
             stepRecord.setJobRecordId(jobRecord.getId());
             stepRecord.setJobName(jobRecord.getJobName());
-            stepRecord.setStepName(step.getName());
+            stepRecord.setStepName(pipelineStep.stepName);
             stepRecord.setJobArguments(jobArgs);
             if(totalPartitions > 1) {
                 val partArg = partArgs.get(i);
@@ -138,7 +140,7 @@ public class JobService {
             mongoTemplate.save(stepRecord);
         }
 
-        jobRecord.setCurrentStepName(step.getName());
+        jobRecord.setCurrentStepName(pipelineStep.stepName);
         jobRecord.setCurrentStepPartitionCount(totalPartitions);
         mongoTemplate.save(jobRecord);
     }
@@ -162,7 +164,7 @@ public class JobService {
             //Create a map of step name to pipeline step
             var currPStep = firstPStep;
             do {
-                jobItem.stepsMap.put(currPStep.step.getName(), currPStep);
+                jobItem.stepsMap.put(currPStep.stepName, currPStep);
                 currPStep = currPStep.nextPipelineStep;
             }
             while(currPStep!=null);
