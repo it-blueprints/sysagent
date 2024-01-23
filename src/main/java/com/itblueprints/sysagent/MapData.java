@@ -48,6 +48,8 @@ public abstract class MapData {
         data.put(key, value);
     }
 
+    public boolean contains(String key) { return data.contains(key); }
+
     @Override
     public String toString() {
         return data.toString();

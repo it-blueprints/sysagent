@@ -55,7 +55,7 @@ public class SchedulerService {
                     try {
                         Utils.sleepFor(gap < 0 ? 0 : (gap+1)*1000);
                         val args = new Arguments();
-                        args.put(runAt, nextRunAt);
+                        args.put(JobService.jobStartedAt, nextRunAt);
                         jobService.runJob(item.jobName, args, nodeInfo);
                     }
                     catch (Exception e){
@@ -114,5 +114,4 @@ public class SchedulerService {
         public LocalDateTime lastRunAt = LocalDateTime.MIN;
     }
 
-    public static final String runAt = "_runAt";
 }

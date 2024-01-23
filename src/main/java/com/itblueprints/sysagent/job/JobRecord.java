@@ -20,5 +20,16 @@ public class JobRecord {
     private String jobName;
 
     @Indexed
-    private LocalDateTime runAt;
+    private LocalDateTime jobStartedAt;
+
+    private int totalPartitions = 0;
+
+    private Status status = Status.New;
+
+    public enum Status {
+        New,
+        Executing,
+        Failed,
+        Completed
+    }
 }

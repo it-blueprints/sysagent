@@ -5,12 +5,13 @@ import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.step.Step;
 import com.itblueprints.sysagent.step.StepRecord;
-import com.itblueprints.sysagent.scheduling.SchedulerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -47,13 +48,17 @@ public class JobService {
 
         log.debug("Running "+jobName);
 
-        val item = jobsMap.get(jobName);
-        val runAt = jobArgs.asTime(SchedulerService.runAt);
+        if(!jobArgs.contains(jobStartedAt)){
+            jobArgs.put(jobStartedAt, LocalDateTime.now());
+        }
 
-        var jobRecord = new JobRecord();
-        jobRecord.setJobName(jobName);
-        jobRecord.setRunAt(runAt);
-        jobRecord = mongoTemplate.save(jobRecord);
+        val item = jobsMap.get(jobName);
+        val jobStartedAt = jobArgs.asTime(JobService.jobStartedAt);
+
+        val jr = new JobRecord();
+        jr.setJobName(jobName);
+        jr.setJobStartedAt(jobStartedAt);
+        var jobRecord = mongoTemplate.save(jr);
 
         val pipeline = item.pipeline;
         item.job.addToJobArguments(jobArgs);
@@ -84,6 +89,29 @@ public class JobService {
             mongoTemplate.save(stepRecord);
         }
 
+        jobRecord.setStatus(JobRecord.Status.Executing);
+        jobRecord.setTotalPartitions(totalPartitions);
+        jobRecord = mongoTemplate.save(jobRecord);
+
+    }
+
+    //------------------------------------------------------------
+    public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
+        val query = new Query();
+        query.addCriteria(Criteria
+                .where("status").is(JobRecord.Status.Executing));
+        val executingJobs = mongoTemplate.find(query, JobRecord.class);
+        for(val jobRec : executingJobs){
+            log.debug("****************");
+            val query2 = new Query();
+            query2.addCriteria(Criteria
+                    .where("jobRecordId").is(jobRec.getId())
+                    .and("status").is(StepRecord.Status.Completed)
+            );
+            val completedSteps = mongoTemplate.find(query2, StepRecord.class);
+            log.debug("**************** "+ completedSteps.size());
+
+        }
     }
 
     //-----------------------------------------------
@@ -105,7 +133,5 @@ public class JobService {
         log.debug("JobService initialised");
     }
 
-    //------------------------------------------------------------
-    public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
-    }
+    public static final String jobStartedAt = "jobStartedAt";
 }
