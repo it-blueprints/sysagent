@@ -34,11 +34,7 @@ public class JobService {
     public Step getStep(String jobName, String stepName){
         if(jobsMap.containsKey(jobName)) {
             val jobItem = jobsMap.get(jobName);
-            if(jobItem.stepsMap.containsKey(stepName)) {
-                val pStep = jobItem.stepsMap.get(stepName);
-                return pStep.step;
-            }
-            else throw new SysAgentException("Step "+stepName+" not found for Job "+jobName);
+            return jobItem.getStep(stepName).step;
         }
         else throw new SysAgentException("Job "+jobName+" not found");
     }
@@ -98,7 +94,7 @@ public class JobService {
                 val jobStartedAt = jobRec.getJobStartedAt();
                 jobArgs.put(JobService.jobStartedAt, jobStartedAt);
                 jobItem.job.addToJobArguments(jobArgs);
-                val nextPStep = jobItem.stepsMap.get(jobRec.getCurrentStepName()).nextPipelineStep;
+                val nextPStep = jobItem.getStep(jobRec.getCurrentStepName());
 
                 if(nextPStep != null) {
                     log.debug("Sending step execution instruction for step "+nextPStep.stepName);
@@ -171,7 +167,7 @@ public class JobService {
             //Create a map of step name to pipeline step
             var currPStep = firstPStep;
             do {
-                jobItem.stepsMap.put(currPStep.stepName, currPStep);
+                jobItem.putStep(currPStep.stepName, currPStep);
                 currPStep = currPStep.nextPipelineStep;
             }
             while(currPStep!=null);
