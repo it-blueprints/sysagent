@@ -44,7 +44,7 @@ public class StepRecord {
 
     private LocalDateTime completedAt;
 
-    private long batchItemsProcessed;
+    private long batchItemsProcessed = -1;
 
     @Indexed
     private Status status = Status.New;

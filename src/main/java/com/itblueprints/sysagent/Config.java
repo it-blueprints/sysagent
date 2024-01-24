@@ -11,4 +11,5 @@ import org.springframework.context.annotation.Configuration;
 public class Config {
 
     private Integer heartBeatSecs;
+    private boolean managerDoesWork;
 }       

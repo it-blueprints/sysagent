@@ -75,16 +75,21 @@ public class ClusterService {
             if (nodeInfo.isManager) {
                 schedulerService.initialise(nodeInfo);
             }
-            jobService.initialise(nodeInfo);
+            jobService.initialise(nodeInfo); //All nodes need this to load up steps
             nodeState.setInitialised(true);
             mongoTemplate.save(nodeState);
         } else {
             val now = LocalDateTime.now();
             if (nodeInfo.isManager) {
                 schedulerService.onHeartBeat(nodeInfo, now);
+                jobService.onHeartBeat(nodeInfo, now);
+                if(config.isManagerDoesWork()){
+                    stepService.onHeartBeat(nodeInfo, now);
+                }
             }
-            jobService.onHeartBeat(nodeInfo, now);
-            stepService.onHeartBeat(nodeInfo, now);
+            else {
+                stepService.onHeartBeat(nodeInfo, now);
+            }
         }
     }
 
