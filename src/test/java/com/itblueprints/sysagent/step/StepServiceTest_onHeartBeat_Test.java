@@ -58,7 +58,6 @@ class StepServiceTest_onHeartBeat_Test {
         when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(stepRec);
 
         val step = new MockStep();
-        step.setThreadManager(threadManager);
         when(jobService.getStep(jobName, stepName)).thenReturn(step);
 
         val now = LocalDateTime.of(2024, 1, 10, 0,0,0);
@@ -93,7 +92,7 @@ class StepServiceTest_onHeartBeat_Test {
     }
 
     //--------------------------------
-    static class MockStep extends BatchStep<String, String> {
+    static class MockStep implements BatchStep<String, String> {
 
         public boolean preProcessCalled;
         public boolean postProcessCalled;
