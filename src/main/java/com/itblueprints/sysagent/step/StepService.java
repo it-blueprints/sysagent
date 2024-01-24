@@ -48,6 +48,7 @@ public class StepService {
                     ((BatchStep) step).setThreadManager(threadManager);
                 }
                 step.execute(ctx);
+                stepRec.setBatchItemsProcessed(ctx.getItemsProcessed());
                 stepRec.setStatus(StepRecord.Status.Completed);
                 stepRec.setCompletedAt(LocalDateTime.now());
                 mongoTemplate.save(stepRec);

@@ -3,7 +3,6 @@ package com.itblueprints.sysagent;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.val;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ExecutorService;
@@ -15,27 +14,38 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class ThreadManager {
 
-    private final Config config;
-
     @Getter
     private ExecutorService executor;
+
+    private LinkedBlockingQueue<Runnable> taskQueue;
 
     //-----------------------------
     @Getter
     private int batchChunkSize;
 
+    @Getter
+    private int numWorkerThreads;
+
+    @Getter
+    private int taskQueuSize;
+
     //-----------------------------------------
     @PostConstruct
     public void init(){
-        batchChunkSize = config.getBatchChunkSize();
-        val numWorkerThreads = Runtime.getRuntime().availableProcessors();
+        numWorkerThreads = Runtime.getRuntime().availableProcessors();
+        taskQueuSize = numWorkerThreads * CAPACITY_FACTOR;
+        batchChunkSize = taskQueuSize * CAPACITY_FACTOR;
 
-        executor  = new ThreadPoolExecutor(
+        taskQueue = new LinkedBlockingQueue<>(taskQueuSize+10);
+
+        executor = new ThreadPoolExecutor(
                 numWorkerThreads,
                 numWorkerThreads,
                 1000L,
                 TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(numWorkerThreads*10));
+                taskQueue);
 
     }
+
+    private static final int CAPACITY_FACTOR = 20;
 }

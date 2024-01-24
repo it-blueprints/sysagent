@@ -17,4 +17,12 @@ public class StepContext {
     private Integer partitionNum;
 
     private Integer totalPartitions;
+
+    private long itemsProcessed;
+    void setItemsProcessed(long itemsProcessed) {
+        this.itemsProcessed = itemsProcessed;
+    }
+
+
+
 }
