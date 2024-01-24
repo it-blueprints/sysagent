@@ -58,20 +58,18 @@ public class ClusterService {
             }
         };
         log.debug("Starting cluster service with hearbeat = "+hb);
-        hearbeatHandle = scheduler.scheduleAtFixedRate(r, hb, hb, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(r, hb, hb, TimeUnit.SECONDS);
     }
 
     //------------------------------
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
 
-    private ScheduledFuture<?> hearbeatHandle;
-
     //------------------------------
     void onHeartBeat(int heartBeatSecs){
         val timeNow = System.currentTimeMillis();
         val nodeInfo = computeNodeInfo(heartBeatSecs, timeNow);
-        log.debug("Current nodeInfo = "+nodeInfo);
+        log.debug("***** Current nodeInfo = "+nodeInfo);
 
         if (!nodeState.isInitialised()) {
             if (nodeInfo.isManager) {
@@ -129,7 +127,6 @@ public class ClusterService {
                 //Extend lease
                 managerNodeState.setManagerLeaseTill(timeNow + heartBeatSecs*2000);
                 managerNodeState = mongoTemplate.save(managerNodeState);
-
             }
             else { //Another node is the leader
 

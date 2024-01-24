@@ -26,49 +26,15 @@ public abstract class BatchStep<IN, OUT> implements Step {
 
         int lotSize = threadManager.getWorkerTaskQueuSize();
         preProcess(context);
-        if(isResultSetFixed())executeOnFixedResultSet(context, lotSize);
-        else executeOnChangingResultSet(context, lotSize);
-        postProcess(context);
-    }
 
-    //----------------------------------------------------------------------
-    private void executeOnChangingResultSet(StepContext context, int lotSize){
-        long itemsProcessed = 0;
-        val pageRequest = PageRequest.of(0, threadManager.getBatchPageSize());
-        var pgIn = readPageOfItems(pageRequest, context);
-        while(pgIn.getTotalElements() > 0) {
-
-            var futures = new ArrayList<Future<OUT>>();
-            val results = new ArrayList<OUT>();
-            for(val item : pgIn){
-                val future = threadManager.getExecutor().submit(() -> processItem(item, context));
-                futures.add(future);
-                if(futures.size() == lotSize){
-                    results.addAll(getFutureResults(futures));
-                    futures.clear();
-                }
-            }
-            results.addAll(getFutureResults(futures));
-            val pgOut = new PageImpl<>(results, pageRequest, results.size());
-            writePageOfItems(pgOut, context);
-            itemsProcessed += results.size();
-
-            pgIn = readPageOfItems(pageRequest, context);
-        }
-
-        log.debug("Num items processed = "+itemsProcessed);
-        context.setItemsProcessed(itemsProcessed);
-    }
-
-    //---------------------------------------------------------------------
-    private void executeOnFixedResultSet(StepContext context, int lotSize){
         long itemsProcessed = 0;
         int pgNum = 0;
         int totalPages = 0;
 
-        do {
-            val pageRequest = PageRequest.of(pgNum, threadManager.getBatchPageSize());
-            val pgIn = readPageOfItems(pageRequest, context);
+        var pageRequest = PageRequest.of(pgNum, threadManager.getBatchPageSize());
+        var pgIn = readPageOfItems(pageRequest, context);
+        while(true) {
+
             if(totalPages == 0) {
                 totalPages = pgIn.getTotalPages();
                 log.debug("Total pages = "+totalPages+", pageSize = "+threadManager.getBatchPageSize());
@@ -88,11 +54,23 @@ public abstract class BatchStep<IN, OUT> implements Step {
             val pgOut = new PageImpl<>(results, pageRequest, results.size());
             writePageOfItems(pgOut, context);
             itemsProcessed += results.size();
-            pgNum++;
-        } while (pgNum < totalPages);
+
+            if(isResultSetFixed()){
+                pgNum++;
+                if(pgNum == totalPages) break;
+            }
+
+            pageRequest = PageRequest.of(pgNum, threadManager.getBatchPageSize());
+            pgIn = readPageOfItems(pageRequest, context);
+
+            if(pgIn.getTotalElements() == 0) break;
+
+        }
 
         log.debug("Num items processed = "+itemsProcessed);
         context.setItemsProcessed(itemsProcessed);
+
+        postProcess(context);
     }
 
     //-------------------------------------------------------------

@@ -44,11 +44,9 @@ class StepServiceTest_onHeartBeat_Test {
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
-        when(threadManager.getBatchPageSize()).thenReturn(100);
-
-        stepService = new StepService(mongoTemplate, jobService, threadManager);
-
+        when(threadManager.getBatchPageSize()).thenReturn(4);
         when(threadManager.getExecutor()).thenReturn(executor);
+        stepService = new StepService(mongoTemplate, jobService, threadManager);
     }
 
     //-------------------------------------
@@ -132,6 +130,11 @@ class StepServiceTest_onHeartBeat_Test {
         @Override
         public void postProcess(StepContext context) {
             postProcessCalled = true;
+        }
+
+        @Override
+        public boolean isResultSetFixed() {
+            return true;
         }
 
         @Override
