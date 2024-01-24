@@ -24,45 +24,65 @@ public abstract class BatchStep<IN, OUT> implements Step {
     @Override
     public void execute(StepContext context) {
 
+        //This is the number future submissions allowed at a time
         int lotSize = threadManager.getWorkerTaskQueuSize();
+
+        //Call pre process()
         preProcess(context);
 
         long itemsProcessed = 0;
         int pgNum = 0;
-        int totalPages = 0;
+        int totalPages = -1;
 
+        //Make the first page request i.e. page num = 0
         var pageRequest = PageRequest.of(pgNum, threadManager.getBatchPageSize());
         var pgIn = readPageOfItems(pageRequest, context);
         while(true) {
 
-            if(totalPages == 0) {
+            //If total pages not initialised, get the value from the first page response
+            if(totalPages == -1) {
                 totalPages = pgIn.getTotalPages();
                 log.debug("Total pages = "+totalPages+", pageSize = "+threadManager.getBatchPageSize());
             }
 
+
             var futures = new ArrayList<Future<OUT>>();
             val results = new ArrayList<OUT>();
+
+            //For each input item in the page
             for(val item : pgIn){
+                //Submit a future computation by calling process item()
                 val future = threadManager.getExecutor().submit(() -> processItem(item, context));
                 futures.add(future);
+
+                //If futures submission limit reached
                 if(futures.size() == lotSize){
+                    //Wait for futures to finish and collect the results
                     results.addAll(getFutureResults(futures));
                     futures.clear();
                 }
             }
+            //Collect the remaining results
             results.addAll(getFutureResults(futures));
+
+            //Put the results in a page and call  write page ()
             val pgOut = new PageImpl<>(results, pageRequest, results.size());
             writePageOfItems(pgOut, context);
             itemsProcessed += results.size();
 
+            //If this a fixed selection, then advance the page num
             if(isSelectionFixed()){
                 pgNum++;
+                //End the loop if this was the last page
                 if(pgNum == totalPages) break;
             }
+            //else i.e. in case of dynamic selection, page num is left at 0
 
+            //Make the next page request
             pageRequest = PageRequest.of(pgNum, threadManager.getBatchPageSize());
             pgIn = readPageOfItems(pageRequest, context);
 
+            //End the eloop if no more items to process
             if(pgIn.getTotalElements() == 0) break;
 
         }
@@ -70,6 +90,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
         log.debug("Num items processed = "+itemsProcessed);
         context.setItemsProcessed(itemsProcessed);
 
+        //Call post process()
         postProcess(context);
     }
 
