@@ -18,7 +18,7 @@ import java.util.concurrent.Future;
 public abstract class BatchStep<IN, OUT> implements Step {
 
     @Setter
-    private ThreadManager threadManager;
+    protected ThreadManager threadManager;
 
     //-------------------------------------------------------------------
     @Override
@@ -61,7 +61,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
     }
 
     //-----------------------------------------------------------------------
-    private List<OUT> getFutureResults(List<Future<OUT>> futures){
+    protected List<OUT> getFutureResults(List<Future<OUT>> futures){
         val results = new ArrayList<OUT>();
         try {
             boolean done = false;
