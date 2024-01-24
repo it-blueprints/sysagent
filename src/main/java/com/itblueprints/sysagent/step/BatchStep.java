@@ -54,7 +54,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
             itemsProcessed += results.size();
             pgNum++;
         } while (pgNum < totalPages);
-
+        log.debug("Num items processed = "+itemsProcessed);
         context.setItemsProcessed(itemsProcessed);
         postProcess(context);
 
