@@ -43,7 +43,7 @@ public class StepService {
     }
 
     //-------------------------------------------------------------
-    private void processStep(StepRecord stepRec, LocalDateTime now){
+    void processStep(StepRecord stepRec, LocalDateTime now){
         threadManager.setNodeBusy(true);
         stepRec.setStatus(StepRecord.Status.Executing);
         stepRec.setStartedAt(now);
@@ -79,7 +79,7 @@ public class StepService {
     }
 
     //----------------------------------------------------------------------
-    private <IN, OUT> void executeBatchStep(BatchStep<IN, OUT> batchStep, StepContext context){
+    <IN, OUT> void executeBatchStep(BatchStep<IN, OUT> batchStep, StepContext context){
         //This is the number future submissions allowed at a time
         int lotSize = threadManager.getWorkerTaskQueuSize();
 

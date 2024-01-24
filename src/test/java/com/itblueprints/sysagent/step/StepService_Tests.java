@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class StepServiceTest_onHeartBeat_Test {
+class StepService_Tests {
 
     @Mock MongoTemplate mongoTemplate;
     @Mock JobService jobService;
@@ -37,8 +37,8 @@ class StepServiceTest_onHeartBeat_Test {
 
     StepService stepService;
 
-    private final String jobName = "com.itblueprints.payments.ProcessPaymentsJob";
-    private final String stepName = "com.itblueprints.payments.Step1_ProcessRecs";
+    private final String jobName = "Job";
+    private final String stepName = "Step";
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     //-------------------------------------
@@ -46,6 +46,8 @@ class StepServiceTest_onHeartBeat_Test {
     void beforeEach() {
         when(threadManager.getBatchPageSize()).thenReturn(4);
         when(threadManager.getExecutor()).thenReturn(executor);
+        when(threadManager.getWorkerTaskQueuSize()).thenReturn(4);
+
         stepService = new StepService(mongoTemplate, jobService, threadManager);
     }
 
@@ -64,12 +66,12 @@ class StepServiceTest_onHeartBeat_Test {
         stepService.onHeartBeat(nodeInfo, now);
 
         assertEquals(StepRecord.Status.Completed, stepRec.getStatus());
-        assertEquals(1, step.totalPages);
+        assertEquals(3, step.totalPages);
         assertEquals(true, step.preProcessCalled);
         assertEquals(true, step.postProcessCalled);
-        assertEquals(1, step.readChunkOfItems_TimesCalled);
-        assertEquals(4, step.processItem_TimesCalled);
-        assertEquals(List.of("A_X", "B_X", "C_X", "D_X"), step.result);
+        assertEquals(3, step.readChunkOfItems_TimesCalled);
+        assertEquals(11, step.processItem_TimesCalled);
+        assertEquals(List.of("A_X", "B_X", "C_X", "D_X", "E_X", "F_X", "G_X", "H_X", "I_X", "J_X", "K_X"), step.result);
     }
 
     //------------------------------------
@@ -84,7 +86,7 @@ class StepServiceTest_onHeartBeat_Test {
         stepRec.setJobArguments(jobArgs);
         val prtArgs = new Arguments();
         prtArgs.put("custProfile", "resident_GB");
-        prtArgs.put("partition", 0);
+        prtArgs.put("partition", 1);
         stepRec.setPartitionArguments(prtArgs);
         stepRec.setPartitionNum(0);
         stepRec.setPartitionCount(10);
@@ -109,9 +111,21 @@ class StepServiceTest_onHeartBeat_Test {
         @Override
         public Page<String> readPageOfItems(Pageable pageRequest, StepContext context) {
             readChunkOfItems_TimesCalled++;
-            val items = List.of("A","B", "C", "D");
-            val pg = new PageImpl<>(items, pageRequest, 4);
-            return pg;
+            if(pageRequest.getPageNumber() == 0) {
+                val items = List.of("A", "B", "C", "D");
+                val pg = new PageImpl<>(items, pageRequest, 11);
+                return pg;
+            }
+            else if(pageRequest.getPageNumber() == 1){
+                val items = List.of("E", "F", "G", "H");
+                val pg = new PageImpl<>(items, pageRequest, 11);
+                return pg;
+            }
+            else {
+                val items = List.of("I", "J", "K");
+                val pg = new PageImpl<>(items, pageRequest, 11);
+                return pg;
+            }
         }
 
         @Override
@@ -122,7 +136,7 @@ class StepServiceTest_onHeartBeat_Test {
 
         @Override
         public void writePageOfItems(Page<String> page, StepContext context) {
-            result = page.toList();
+            result.addAll(page.toList());
             totalPages = page.getTotalPages();
         }
 
@@ -139,6 +153,11 @@ class StepServiceTest_onHeartBeat_Test {
         @Override
         public List<Arguments> getPartitionArguments(Arguments jobArguments) {
             return List.of();
+        }
+
+        @Override
+        public String getName(){
+            return "Step";
         }
     }
 
