@@ -2,6 +2,7 @@ package com.itblueprints.sysagent.job;
 
 import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.SysAgentException;
+import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.step.Step;
 import com.itblueprints.sysagent.step.StepRecord;
@@ -27,6 +28,7 @@ public class JobService {
 
     private final ConfigurableApplicationContext appContext;
     private final MongoTemplate mongoTemplate;
+    private final ThreadManager threadManager;
 
     //--------------------------------------------------------------
     private Map<String, JobItem> jobsMap = new HashMap<>();
@@ -40,7 +42,9 @@ public class JobService {
     }
 
 
-    //--------------------------------------------------------------
+    //--------------------------------------------------------
+    // Starts off a Job
+    // Called either by the SchedulerService on by a API
     public void runJob(String jobName, Arguments jobArgs) {
 
         log.debug("Running "+jobName);
@@ -72,45 +76,58 @@ public class JobService {
                 .where("status").is(JobRecord.Status.Executing));
         val executingJobs = mongoTemplate.find(query, JobRecord.class);
         for(val jobRec : executingJobs){
-            val query2 = new Query();
-            query2.addCriteria(Criteria
-                    .where("jobRecordId").is(jobRec.getId())
-                    .and("stepName").is(jobRec.getCurrentStepName())
-                    .and("status").is(StepRecord.Status.Completed)
-            );
-            val completedPrtns = mongoTemplate.find(query2, StepRecord.class);
-            val partitionsCompletedCount = completedPrtns.size();
-            jobRec.setPartitionsCompletedCount(partitionsCompletedCount);
 
-            log.debug("partitions completed = "+partitionsCompletedCount+" of "+jobRec.getPartitionCount());
-
-            //If all partitions of current step are complete,
-            if(partitionsCompletedCount == jobRec.getPartitionCount()){
-
-                //Get next step if present
-                val jobItem = jobsMap.get(jobRec.getJobName());
-                val nextPStep = jobItem.getStep(jobRec.getCurrentStepName()).nextPipelineStep;
-
-                if(nextPStep != null) {
-                    //Next step
-                    log.debug("Sending step execution instruction for step "+nextPStep.stepName);
-                    val jobArgs = new Arguments();
-                    val jobStartedAt = jobRec.getJobStartedAt();
-                    jobArgs.put(JobService.jobStartedAt, jobStartedAt);
-                    jobItem.job.addToJobArguments(jobArgs);
-
-                    sendStepExecutionInstruction(nextPStep, jobArgs, jobRec);
+            threadManager.getExecutor().submit(() -> {
+                try {
+                    processExecutingJob(jobRec, now);
                 }
-                else { //No more steps, job complete
-                    log.debug("Job "+jobRec.getJobName()+" is complete");
-                    jobRec.setStatus(JobRecord.Status.Completed);
-                    jobRec.setJobCompletedAt(now);
+                catch (Exception e){
+                    e.printStackTrace();
+                    throw new SysAgentException("Error processing executing job "+jobRec.getJobName(), e);
                 }
-            }
-
-            mongoTemplate.save(jobRec);
-
+            });
         }
+    }
+
+    //--------------------------------------------------------------------
+    private void processExecutingJob(JobRecord jobRec, LocalDateTime now) {
+        val query2 = new Query();
+        query2.addCriteria(Criteria
+                .where("jobRecordId").is(jobRec.getId())
+                .and("stepName").is(jobRec.getCurrentStepName())
+                .and("status").is(StepRecord.Status.Completed)
+        );
+        val completedPrtns = mongoTemplate.find(query2, StepRecord.class);
+        val partitionsCompletedCount = completedPrtns.size();
+        jobRec.setPartitionsCompletedCount(partitionsCompletedCount);
+
+        log.debug("partitions completed = "+partitionsCompletedCount+" of "+jobRec.getPartitionCount());
+
+        //If all partitions of current step are complete,
+        if(partitionsCompletedCount == jobRec.getPartitionCount()){
+
+            //Get next step if present
+            val jobItem = jobsMap.get(jobRec.getJobName());
+            val nextPStep = jobItem.getStep(jobRec.getCurrentStepName()).nextPipelineStep;
+
+            if(nextPStep != null) {
+                //Next step
+                log.debug("Sending step execution instruction for step "+nextPStep.stepName);
+                val jobArgs = new Arguments();
+                val jobStartedAt = jobRec.getJobStartedAt();
+                jobArgs.put(JobService.jobStartedAt, jobStartedAt);
+                jobItem.job.addToJobArguments(jobArgs);
+
+                sendStepExecutionInstruction(nextPStep, jobArgs, jobRec);
+            }
+            else { //No more steps, job complete
+                log.debug("Job "+jobRec.getJobName()+" is complete");
+                jobRec.setStatus(JobRecord.Status.Completed);
+                jobRec.setJobCompletedAt(now);
+            }
+        }
+
+        mongoTemplate.save(jobRec);
     }
 
     //----------------------------------------------------------------------

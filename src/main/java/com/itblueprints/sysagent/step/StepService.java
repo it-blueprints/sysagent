@@ -29,6 +29,7 @@ public class StepService {
         log.debug("Looking for next step to execute");
         val stepRec = getNextStepToWorkOn(nodeInfo.thisNodeId);
         if(stepRec != null) {
+            threadManager.isNodeBusy.set(true);
             stepRec.setStatus(StepRecord.Status.Executing);
             stepRec.setStartedAt(now);
 
@@ -54,9 +55,9 @@ public class StepService {
                 mongoTemplate.save(stepRec);
             }
             catch (Exception e){
-                e.printStackTrace();
                 throw new SysAgentException("Batch step "+step.getName()+" failed", e);
             }
+            threadManager.isNodeBusy.set(false);
         }
     }
 

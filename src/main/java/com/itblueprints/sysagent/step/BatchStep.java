@@ -28,7 +28,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
 
         int pgNum = 0;
         int totalPages = 0;
-        int lotSize = threadManager.getTaskQueuSize();
+        int lotSize = threadManager.getWorkerTaskQueuSize();
         long itemsProcessed = 0;
         do {
             val pageRequest = PageRequest.of(pgNum, threadManager.getBatchChunkSize());
