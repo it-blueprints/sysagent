@@ -69,7 +69,7 @@ public class ClusterService {
     void onHeartBeat(int heartBeatSecs){
         val timeNow = System.currentTimeMillis();
         val nodeInfo = computeNodeInfo(heartBeatSecs, timeNow);
-        log.debug("***** Current nodeInfo = "+nodeInfo);
+        log.debug("* HB - Current nodeInfo = "+nodeInfo);
 
         if (!nodeState.isInitialised()) {
             if (nodeInfo.isManager) {
