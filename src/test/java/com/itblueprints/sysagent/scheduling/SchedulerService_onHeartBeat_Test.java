@@ -1,15 +1,9 @@
 package com.itblueprints.sysagent.scheduling;
 
-import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.ThreadManager;
-import com.itblueprints.sysagent.cluster.ClusterService;
 import com.itblueprints.sysagent.cluster.NodeInfo;
-import com.itblueprints.sysagent.cluster.NodeState;
-import com.itblueprints.sysagent.job.Job;
-import com.itblueprints.sysagent.job.JobPipeline;
 import com.itblueprints.sysagent.job.JobService;
-import com.itblueprints.sysagent.step.StepService;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +18,6 @@ import java.time.LocalDateTime;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 

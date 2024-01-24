@@ -41,7 +41,7 @@ class ClusterService_computeNodeInfo_Test {
 
         //Save puts in an id
         when(mongoTemplate.save(any())).thenAnswer(ans -> {
-            val ns = (NodeState) ans.getArguments()[0];
+            val ns = (NodeRecord) ans.getArguments()[0];
             if(ns.getId() == null) {
                 ns.setId(nextId());
             }
@@ -56,9 +56,9 @@ class ClusterService_computeNodeInfo_Test {
 
         //Node 1 start
         val node1_time1 = 1700000000000L;
-        when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeState.class)).thenReturn(null);
+        when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeRecord.class)).thenReturn(null);
         when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(null);
-        clusterService1.nodeState.setStartedAt(node1_time1);
+        clusterService1.nodeRecord.setStartedAt(node1_time1);
         val node1_result1 = clusterService1.computeNodeInfo(10, node1_time1);
         checkNodeInfo(node1_result1, "ID_1", true, node1_time1);
         checkNodeState(clusterService1, null, node1_time1+SECS_10);
@@ -66,8 +66,8 @@ class ClusterService_computeNodeInfo_Test {
 
         //Node 1 Hb 2
         val node1_time2 = node1_time1 + SECS_10;
-        var mgrNs = clusterService1.managerNodeState;
-        when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeState.class)).thenReturn(mgrNs);
+        var mgrNs = clusterService1.managerNodeRecord;
+        when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeRecord.class)).thenReturn(mgrNs);
         when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(mgrNs);
         val node1_result2 = clusterService1.computeNodeInfo(10, node1_time2);
         checkNodeInfo(node1_result2, "ID_1", true, node1_time2);
@@ -102,12 +102,12 @@ class ClusterService_computeNodeInfo_Test {
         checkNodeState(clusterService2, null, node2_time4+SECS_10);
         checkMgrNodeState(clusterService2, 0, "ID_2", node2_time3, node2_time4+SECS_20);
 
-        mgrNs = clusterService2.managerNodeState;
-        when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeState.class)).thenReturn(mgrNs);
+        mgrNs = clusterService2.managerNodeRecord;
+        when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeRecord.class)).thenReturn(mgrNs);
 
         //Node 1 restarts
         val node1_time3 = node2_time4;
-        clusterService3.nodeState.setStartedAt(node1_time3);
+        clusterService3.nodeRecord.setStartedAt(node1_time3);
         val node1_result3 = clusterService3.computeNodeInfo(10, node1_time3);
         checkNodeInfo(node1_result3, "ID_3", false, node1_time3);
         checkNodeState(clusterService3, null, node1_time3+SECS_10);
@@ -123,18 +123,18 @@ class ClusterService_computeNodeInfo_Test {
     }
     //---------------------------------------------------------
     private void checkNodeState(ClusterService svc, String mgrId, long aliveTill){
-        assertEquals(mgrId, svc.nodeState.getManagerId());
-        assertEquals(aliveTill, svc.nodeState.getAliveTill());
-        assertEquals(0, svc.nodeState.getManagerSince());
-        assertEquals(0, svc.nodeState.getManagerLeaseTill());
+        assertEquals(mgrId, svc.nodeRecord.getManagerId());
+        assertEquals(aliveTill, svc.nodeRecord.getAliveTill());
+        assertEquals(0, svc.nodeRecord.getManagerSince());
+        assertEquals(0, svc.nodeRecord.getManagerLeaseTill());
     }
     //-------------------------------------------------------------------
     private void checkMgrNodeState(ClusterService svc, long aliveTill, String mgrId, long mgrSince, long mgrLeaseTill){
-        assertEquals("M", svc.managerNodeState.getId());
-        assertEquals(aliveTill, svc.managerNodeState.getAliveTill());
-        assertEquals(mgrId, svc.managerNodeState.getManagerId());
-        assertEquals(mgrSince, svc.managerNodeState.getManagerSince());
-        assertEquals(mgrLeaseTill, svc.managerNodeState.getManagerLeaseTill());
+        assertEquals("M", svc.managerNodeRecord.getId());
+        assertEquals(aliveTill, svc.managerNodeRecord.getAliveTill());
+        assertEquals(mgrId, svc.managerNodeRecord.getManagerId());
+        assertEquals(mgrSince, svc.managerNodeRecord.getManagerSince());
+        assertEquals(mgrLeaseTill, svc.managerNodeRecord.getManagerLeaseTill());
     }
 
     //-----------------

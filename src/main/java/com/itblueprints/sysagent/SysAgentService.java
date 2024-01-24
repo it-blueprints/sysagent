@@ -1,6 +1,6 @@
 package com.itblueprints.sysagent;
 
-import com.itblueprints.sysagent.cluster.NodeState;
+import com.itblueprints.sysagent.cluster.NodeRecord;
 import com.itblueprints.sysagent.job.JobRecord;
 import com.itblueprints.sysagent.job.JobService;
 import com.itblueprints.sysagent.scheduling.JobScheduleRecord;
@@ -20,7 +20,7 @@ public class SysAgentService {
     public void resetCluster() {
         mongoOperations.dropCollection(JobRecord.class);
         mongoOperations.dropCollection(JobScheduleRecord.class);
-        mongoOperations.dropCollection(NodeState.class);
+        mongoOperations.dropCollection(NodeRecord.class);
         mongoOperations.dropCollection(StepRecord.class);
     }
 

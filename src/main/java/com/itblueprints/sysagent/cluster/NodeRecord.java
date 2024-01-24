@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Getter
 @Setter
 @Document
-public class NodeState {
+public class NodeRecord {
 
     @Id
     private String id;
