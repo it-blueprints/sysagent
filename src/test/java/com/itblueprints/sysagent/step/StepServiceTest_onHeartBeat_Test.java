@@ -133,7 +133,7 @@ class StepServiceTest_onHeartBeat_Test {
         }
 
         @Override
-        public boolean isResultSetFixed() {
+        public boolean isSelectionFixed() {
             return true;
         }
 

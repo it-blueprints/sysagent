@@ -55,7 +55,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
             writePageOfItems(pgOut, context);
             itemsProcessed += results.size();
 
-            if(isResultSetFixed()){
+            if(isSelectionFixed()){
                 pgNum++;
                 if(pgNum == totalPages) break;
             }
@@ -103,5 +103,5 @@ public abstract class BatchStep<IN, OUT> implements Step {
 
     public abstract void postProcess(StepContext context);
 
-    public abstract boolean isResultSetFixed();
+    public abstract boolean isSelectionFixed();
 }
