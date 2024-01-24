@@ -26,7 +26,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
 
         preProcess(context);
 
-        int pgNum = 1;
+        int pgNum = 0;
         int totalPages = 0;
         int queueSize = threadManager.getBatchChunkSize()/10; //Read 1/10th of a page at a time
         long itemsProcessed = 0;
