@@ -26,9 +26,10 @@ public abstract class BatchStep<IN, OUT> implements Step {
 
         preProcess(context);
 
-        int pgNum = 0;
+        int pgNum = 1;
         int totalPages = 0;
-        int queueSize = threadManager.getBatchChunkSize()/10;
+        int queueSize = threadManager.getBatchChunkSize()/10; //Read 1/10th of a page at a time
+        long itemsProcessed = 0;
         do {
             val pageRequest = PageRequest.of(pgNum, threadManager.getBatchChunkSize());
             val pgIn = readChunkOfItems(pageRequest, context);
@@ -42,7 +43,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
             for(val item : pgIn){
                 val future = threadManager.getExecutor().submit(() -> processItem(item, context));
                 futures.add(future);
-                if(futures.size() == queueSize){ //Read 1/10th of a page at a time
+                if(futures.size() == queueSize){
                     results.addAll(getFutureResults(futures));
                     futures.clear();
                 }
@@ -50,6 +51,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
             results.addAll(getFutureResults(futures));
             val pgOut = new PageImpl<>(results, pageRequest, results.size());
             writeChunkOfItems(pgOut, context);
+            itemsProcessed += results.size();
             pgNum++;
         } while (pgNum < totalPages);
 

@@ -67,7 +67,7 @@ class StepServiceTest_onHeartBeat_Test {
         stepService.onHeartBeat(nodeInfo, now);
 
         assertEquals(StepRecord.Status.Completed, stepRec.getStatus());
-        assertEquals(1, step.totalPages);
+        assertEquals(2, step.totalPages);
         assertEquals(true, step.preProcessCalled);
         assertEquals(true, step.postProcessCalled);
         assertEquals(1, step.readChunkOfItems_TimesCalled);
