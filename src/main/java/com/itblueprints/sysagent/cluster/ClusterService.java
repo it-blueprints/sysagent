@@ -4,8 +4,8 @@ import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.job.JobService;
-import com.itblueprints.sysagent.step.StepService;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
+import com.itblueprints.sysagent.step.StepService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -150,12 +150,12 @@ public class ClusterService {
             }
         }
 
-        val clusterState = new NodeInfo();
-        clusterState.timeNow = Utils.toDateTime(timeNow);
-        clusterState.thisNodeId = nodeState.getId();
-        clusterState.isManager = isManager();
-        clusterState.isBusy = false;
-        return clusterState;
+        val nodeInfo = new NodeInfo();
+        nodeInfo.timeNow = Utils.toDateTime(timeNow);
+        nodeInfo.thisNodeId = nodeState.getId();
+        nodeInfo.isManager = isManager();
+        nodeInfo.isBusy = false;
+        return nodeInfo;
     }
 
     //----------------------
