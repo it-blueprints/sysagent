@@ -1,6 +1,7 @@
 package com.itblueprints.sysagent.cluster;
 
 import com.itblueprints.sysagent.Config;
+import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.job.JobService;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
@@ -25,6 +26,7 @@ class ClusterService_computeNodeInfo_Test {
     @Mock JobService jobService;
     @Mock StepService stepService;
     @Mock Config config;
+    @Mock ThreadManager threadManager;
 
     ClusterService clusterService1;
     ClusterService clusterService2;
@@ -33,9 +35,9 @@ class ClusterService_computeNodeInfo_Test {
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
-        clusterService1 = new ClusterService(mongoTemplate, schedulerService, jobService, stepService, config);
-        clusterService2 = new ClusterService(mongoTemplate, schedulerService, jobService, stepService, config);
-        clusterService3 = new ClusterService(mongoTemplate, schedulerService, jobService, stepService, config);
+        clusterService1 = new ClusterService(mongoTemplate, schedulerService, jobService, stepService, config, threadManager);
+        clusterService2 = new ClusterService(mongoTemplate, schedulerService, jobService, stepService, config, threadManager);
+        clusterService3 = new ClusterService(mongoTemplate, schedulerService, jobService, stepService, config, threadManager);
 
         //Save puts in an id
         when(mongoTemplate.save(any())).thenAnswer(ans -> {

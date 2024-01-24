@@ -52,7 +52,14 @@ public class ThreadManager {
 
     private static final int JOB_MANAGER_QUEUE_SIZE = 10;
 
-    //--------------------------
-    public AtomicBoolean isNodeBusy;
+    //---------------------------------------------------
+    private AtomicBoolean isNodeBusy = new AtomicBoolean(false);
+    public boolean isNodeBusy(){
+        if(!isNodeBusy.get()) {
+            isNodeBusy.set(taskQueue.size() > 0);
+        }
+        return isNodeBusy.get();
+    }
+    public void setNodeBusy(boolean busy){ isNodeBusy.set(busy);}
 
 }

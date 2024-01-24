@@ -2,6 +2,7 @@ package com.itblueprints.sysagent.cluster;
 
 import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.SysAgentException;
+import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.job.JobService;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
@@ -33,6 +34,7 @@ public class ClusterService {
     private final JobService jobService;
     private final StepService stepService;
     private final Config config;
+    private final ThreadManager threadManager;
 
     //-------------------------
     NodeState nodeState = new NodeState();
@@ -159,7 +161,7 @@ public class ClusterService {
         nodeInfo.timeNow = Utils.toDateTime(timeNow);
         nodeInfo.thisNodeId = nodeState.getId();
         nodeInfo.isManager = isManager();
-        nodeInfo.isBusy = false;
+        nodeInfo.isBusy = threadManager.isNodeBusy();
         return nodeInfo;
     }
 

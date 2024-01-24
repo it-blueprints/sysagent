@@ -26,43 +26,54 @@ public class StepService {
     //-------------------------------------------------------------
     public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
 
-        log.debug("Looking for next step to execute");
-        val stepRec = getNextStepToWorkOn(nodeInfo.thisNodeId);
-        if(stepRec != null) {
-            threadManager.isNodeBusy.set(true);
-            stepRec.setStatus(StepRecord.Status.Executing);
-            stepRec.setStartedAt(now);
-
-            val step = jobService.getStep(stepRec.getJobName(), stepRec.getStepName());
-            val ctx = new StepContext();
-            ctx.getArguments().add(stepRec.getJobArguments());
-            if(stepRec.getPartitionCount() > 0) {
-                ctx.getArguments().add(stepRec.getPartitionArguments());
-                ctx.setPartitionNum(stepRec.getPartitionNum());
-                ctx.setTotalPartitions(stepRec.getPartitionCount());
-            }
-
-            log.debug("Executing step '"+stepRec.getStepName() + "' with arguments "+ctx.getArguments());
-
-            try {
-                if(step instanceof BatchStep){
-                    ((BatchStep) step).setThreadManager(threadManager);
-                }
-                step.execute(ctx);
-                stepRec.setBatchItemsProcessed(ctx.getItemsProcessed());
-                stepRec.setStatus(StepRecord.Status.Completed);
-                stepRec.setCompletedAt(LocalDateTime.now());
-                mongoTemplate.save(stepRec);
-            }
-            catch (Exception e){
-                throw new SysAgentException("Batch step "+step.getName()+" failed", e);
-            }
-            threadManager.isNodeBusy.set(false);
+        if(nodeInfo.isBusy) {
+            log.debug("Node busy. Not taking on additional work");
+            return;
         }
+
+        log.debug("Looking for next step to execute");
+        val stepRec = getNextStepToProcess(nodeInfo.thisNodeId);
+        if(stepRec != null) processStep(stepRec, now);
+    }
+
+    //-------------------------------------------------------------
+    private void processStep(StepRecord stepRec, LocalDateTime now){
+        threadManager.setNodeBusy(true);
+        stepRec.setStatus(StepRecord.Status.Executing);
+        stepRec.setStartedAt(now);
+        mongoTemplate.save(stepRec);
+
+        val step = jobService.getStep(stepRec.getJobName(), stepRec.getStepName());
+        val ctx = new StepContext();
+        ctx.getArguments().add(stepRec.getJobArguments());
+        if(stepRec.getPartitionCount() > 0) {
+            ctx.getArguments().add(stepRec.getPartitionArguments());
+            ctx.setPartitionNum(stepRec.getPartitionNum());
+            ctx.setTotalPartitions(stepRec.getPartitionCount());
+        }
+
+        log.debug("Executing step '"+stepRec.getStepName() + "' with arguments "+ctx.getArguments());
+
+        try {
+            if(step instanceof BatchStep){
+                ((BatchStep) step).setThreadManager(threadManager);
+            }
+            step.execute(ctx);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            throw new SysAgentException("Batch step "+step.getName()+" failed", e);
+        }
+        stepRec.setBatchItemsProcessed(ctx.getItemsProcessed());
+        stepRec.setStatus(StepRecord.Status.Completed);
+        stepRec.setCompletedAt(LocalDateTime.now());
+        mongoTemplate.save(stepRec);
+
+        threadManager.setNodeBusy(false);
     }
 
     //----------------------------------------------
-    private StepRecord getNextStepToWorkOn(String nodeId){
+    private StepRecord getNextStepToProcess(String nodeId){
         //Read leader record with lock
         val query = new Query();
         query.addCriteria(
