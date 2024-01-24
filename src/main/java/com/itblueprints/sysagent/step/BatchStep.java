@@ -18,24 +18,60 @@ import java.util.concurrent.Future;
 public abstract class BatchStep<IN, OUT> implements Step {
 
     @Setter
-    protected ThreadManager threadManager;
+    private ThreadManager threadManager;
 
     //-------------------------------------------------------------------
     @Override
     public void execute(StepContext context) {
 
+        int lotSize = threadManager.getWorkerTaskQueuSize();
         preProcess(context);
+        if(isResultSetFixed())executeOnFixedResultSet(context, lotSize);
+        else executeOnChangingResultSet(context, lotSize);
+        postProcess(context);
+    }
 
+    //----------------------------------------------------------------------
+    private void executeOnChangingResultSet(StepContext context, int lotSize){
+        long itemsProcessed = 0;
+        val pageRequest = PageRequest.of(0, threadManager.getBatchPageSize());
+        var pgIn = readPageOfItems(pageRequest, context);
+        while(pgIn.getTotalElements() > 0) {
+
+            var futures = new ArrayList<Future<OUT>>();
+            val results = new ArrayList<OUT>();
+            for(val item : pgIn){
+                val future = threadManager.getExecutor().submit(() -> processItem(item, context));
+                futures.add(future);
+                if(futures.size() == lotSize){
+                    results.addAll(getFutureResults(futures));
+                    futures.clear();
+                }
+            }
+            results.addAll(getFutureResults(futures));
+            val pgOut = new PageImpl<>(results, pageRequest, results.size());
+            writePageOfItems(pgOut, context);
+            itemsProcessed += results.size();
+
+            pgIn = readPageOfItems(pageRequest, context);
+        }
+
+        log.debug("Num items processed = "+itemsProcessed);
+        context.setItemsProcessed(itemsProcessed);
+    }
+
+    //---------------------------------------------------------------------
+    private void executeOnFixedResultSet(StepContext context, int lotSize){
+        long itemsProcessed = 0;
         int pgNum = 0;
         int totalPages = 0;
-        int lotSize = threadManager.getWorkerTaskQueuSize();
-        long itemsProcessed = 0;
+
         do {
-            val pageRequest = PageRequest.of(pgNum, threadManager.getBatchChunkSize());
-            val pgIn = readChunkOfItems(pageRequest, context);
+            val pageRequest = PageRequest.of(pgNum, threadManager.getBatchPageSize());
+            val pgIn = readPageOfItems(pageRequest, context);
             if(totalPages == 0) {
                 totalPages = pgIn.getTotalPages();
-                log.debug("Total chunks = "+totalPages+", chunkSize = "+threadManager.getBatchChunkSize());
+                log.debug("Total pages = "+totalPages+", pageSize = "+threadManager.getBatchPageSize());
             }
 
             var futures = new ArrayList<Future<OUT>>();
@@ -50,18 +86,17 @@ public abstract class BatchStep<IN, OUT> implements Step {
             }
             results.addAll(getFutureResults(futures));
             val pgOut = new PageImpl<>(results, pageRequest, results.size());
-            writeChunkOfItems(pgOut, context);
+            writePageOfItems(pgOut, context);
             itemsProcessed += results.size();
             pgNum++;
         } while (pgNum < totalPages);
+
         log.debug("Num items processed = "+itemsProcessed);
         context.setItemsProcessed(itemsProcessed);
-        postProcess(context);
-
     }
 
-    //-----------------------------------------------------------------------
-    protected List<OUT> getFutureResults(List<Future<OUT>> futures){
+    //-------------------------------------------------------------
+    private List<OUT> getFutureResults(List<Future<OUT>> futures){
         val results = new ArrayList<OUT>();
         try {
             boolean done = false;
@@ -82,11 +117,13 @@ public abstract class BatchStep<IN, OUT> implements Step {
     //----------------------------------------------------
     public abstract void preProcess(StepContext context);
 
-    public abstract Page<IN> readChunkOfItems(Pageable pageRequest, StepContext context);
+    public abstract Page<IN> readPageOfItems(Pageable pageRequest, StepContext context);
 
     public abstract OUT processItem(IN item, StepContext context);
 
-    public abstract void writeChunkOfItems(Page<OUT> page, StepContext context);
+    public abstract void writePageOfItems(Page<OUT> page, StepContext context);
 
     public abstract void postProcess(StepContext context);
+
+    public abstract boolean isResultSetFixed();
 }

@@ -44,7 +44,7 @@ class StepServiceTest_onHeartBeat_Test {
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
-        when(threadManager.getBatchChunkSize()).thenReturn(100);
+        when(threadManager.getBatchPageSize()).thenReturn(100);
 
         stepService = new StepService(mongoTemplate, jobService, threadManager);
 
@@ -110,7 +110,7 @@ class StepServiceTest_onHeartBeat_Test {
         }
 
         @Override
-        public Page<String> readChunkOfItems(Pageable pageRequest, StepContext context) {
+        public Page<String> readPageOfItems(Pageable pageRequest, StepContext context) {
             readChunkOfItems_TimesCalled++;
             val items = List.of("A","B", "C", "D");
             val pg = new PageImpl<>(items, pageRequest, 4);
@@ -124,7 +124,7 @@ class StepServiceTest_onHeartBeat_Test {
         }
 
         @Override
-        public void writeChunkOfItems(Page<String> page, StepContext context) {
+        public void writePageOfItems(Page<String> page, StepContext context) {
             result = page.toList();
             totalPages = page.getTotalPages();
         }

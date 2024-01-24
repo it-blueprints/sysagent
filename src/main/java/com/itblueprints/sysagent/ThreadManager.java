@@ -25,7 +25,7 @@ public class ThreadManager {
 
     //-----------------------------
     @Getter
-    private int batchChunkSize;
+    private int batchPageSize;
 
     @Getter
     private int workerTaskQueuSize;
@@ -38,7 +38,7 @@ public class ThreadManager {
 
         val numThreads = Runtime.getRuntime().availableProcessors();
         workerTaskQueuSize = numThreads * workerCapacityFactor;
-        batchChunkSize = workerTaskQueuSize * workerCapacityFactor;
+        batchPageSize = workerTaskQueuSize * workerCapacityFactor;
 
         taskQueue = new LinkedBlockingQueue<>(workerTaskQueuSize +JOB_MANAGER_QUEUE_SIZE);
 
