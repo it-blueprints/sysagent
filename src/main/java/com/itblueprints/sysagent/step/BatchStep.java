@@ -35,7 +35,7 @@ public abstract class BatchStep<IN, OUT> implements Step {
             val pgIn = readChunkOfItems(pageRequest, context);
             if(totalPages == 0) {
                 totalPages = pgIn.getTotalPages();
-                log.debug("Total chunks = "+totalPages+", with size = "+threadManager.getBatchChunkSize());
+                log.debug("Total chunks = "+totalPages+", chunkSize = "+threadManager.getBatchChunkSize());
             }
 
             var futures = new ArrayList<Future<OUT>>();
