@@ -12,5 +12,4 @@ public class Config {
 
     private Integer heartBeatSecs;
     private int workerCapacityFactor = 5;
-    private boolean managerDoesWork = false;
 }       

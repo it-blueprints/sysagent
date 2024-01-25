@@ -82,13 +82,8 @@ public class ClusterService {
             if (nodeInfo.isManager) {
                 schedulerService.onHeartBeat(nodeInfo, now);
                 jobService.onHeartBeat(nodeInfo, now);
-                if(config.isManagerDoesWork()){
-                    stepService.onHeartBeat(nodeInfo, now);
-                }
             }
-            else {
-                stepService.onHeartBeat(nodeInfo, now);
-            }
+            stepService.onHeartBeat(nodeInfo, now);
         }
     }
 
