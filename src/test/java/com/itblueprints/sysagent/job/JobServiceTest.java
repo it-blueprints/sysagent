@@ -116,6 +116,7 @@ class JobServiceTest {
     private JobRecord createJobRecord(){
         val jobRec = new JobRecord();
         jobRec.setJobName(jobName);
+        jobRec.setCurrentStepName("Step");
         return jobRec;
     }
 
