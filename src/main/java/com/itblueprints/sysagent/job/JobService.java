@@ -61,8 +61,9 @@ public class JobService {
 
         val jRec = new JobRecord();
         jRec.setJobName(jobName);
-        jRec.setJobStartedAt(jobStartedAt);
+        jRec.setJobArguments(jobArgs);
         jRec.setStatus(JobRecord.Status.Executing);
+
         var jobRec = mongoTemplate.save(jRec);
 
         val jobItem = jobsMap.get(jobName);
@@ -117,11 +118,7 @@ public class JobService {
             if(nextPStep != null) {
                 //Next step
                 log.debug("Sending step execution instruction for step "+nextPStep.stepName);
-                val jobArgs = new Arguments();
-                val jobStartedAt = jobRec.getJobStartedAt();
-                jobArgs.put(Keys.jobStartedAt, jobStartedAt);
-                jobItem.job.addToJobArguments(jobArgs);
-
+                val jobArgs = jobRec.getJobArguments();
                 sendStepExecutionInstruction(nextPStep, jobArgs, jobRec);
             }
             else { //No more steps, job complete
