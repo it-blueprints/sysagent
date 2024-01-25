@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class SchedulerService_onHeartBeat_Test {
+class SchedulerServiceTest {
 
     @Mock ConfigurableApplicationContext appContext;
     @Mock ThreadManager threadManager;

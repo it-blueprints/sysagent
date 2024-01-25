@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
-class ClusterService_computeNodeInfo_Test {
+class ClusterServiceTest {
 
     @Mock MongoTemplate mongoTemplate;
     @Mock SchedulerService schedulerService;

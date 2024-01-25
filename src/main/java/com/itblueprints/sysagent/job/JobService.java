@@ -91,13 +91,13 @@ public class JobService {
 
     //--------------------------------------------------------------------
     private void processExecutingJob(JobRecord jobRec, LocalDateTime now) {
-        val query2 = new Query();
-        query2.addCriteria(Criteria
+        val query = new Query();
+        query.addCriteria(Criteria
                 .where("jobRecordId").is(jobRec.getId())
                 .and("stepName").is(jobRec.getCurrentStepName())
                 .and("status").is(StepRecord.Status.Completed)
         );
-        val completedPrtns = mongoTemplate.find(query2, StepRecord.class);
+        val completedPrtns = mongoTemplate.find(query, StepRecord.class);
         val partitionsCompletedCount = completedPrtns.size();
         jobRec.setPartitionsCompletedCount(partitionsCompletedCount);
 
