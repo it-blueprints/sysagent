@@ -36,10 +36,20 @@ public class StepService {
             log.debug("Node busy. Not taking on additional work");
             return;
         }
+        var stepProcessed = false;
+        do {
+            stepProcessed = tryProcessStep(nodeInfo, now);
+        } while(stepProcessed);
+    }
 
-        log.debug("Looking for next step to execute");
+    //-------------------------------------------------------------
+    boolean tryProcessStep(NodeInfo nodeInfo, LocalDateTime now){
         val stepRec = getNextStepToProcess(nodeInfo.thisNodeId);
-        if(stepRec != null) processStep(stepRec, now);
+        if (stepRec != null) {
+            processStep(stepRec, now);
+            return true;
+        }
+        else return false;
     }
 
     //-------------------------------------------------------------
@@ -69,6 +79,9 @@ public class StepService {
         catch (Exception e){
             e.printStackTrace();
             throw new SysAgentException("Batch step "+step.getName()+" failed", e);
+        }
+        finally {
+            threadManager.setNodeBusy(false);
         }
         stepRec.setBatchItemsProcessed(ctx.getItemsProcessed());
         stepRec.setStatus(StepRecord.Status.Completed);

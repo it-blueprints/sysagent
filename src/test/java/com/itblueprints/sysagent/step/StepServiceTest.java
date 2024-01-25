@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -49,7 +50,7 @@ class StepServiceTest {
 
     //-------------------------------------
     @Test
-    void onHeartBeat() {
+    void tryProcessStep() {
         val nodeInfo = new NodeInfo();
 
         val stepRec = createStepRecord();
@@ -59,8 +60,9 @@ class StepServiceTest {
         when(jobService.getStep(jobName, stepName)).thenReturn(step);
 
         val now = LocalDateTime.of(2024, 1, 10, 0,0,0);
-        stepService.onHeartBeat(nodeInfo, now);
+        val stepProcessed = stepService.tryProcessStep(nodeInfo, now);
 
+        assertTrue(stepProcessed);
         assertEquals(StepRecord.Status.Completed, stepRec.getStatus());
         assertEquals(3, step.totalPages);
         assertEquals(true, step.preProcessCalled);
