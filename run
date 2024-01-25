@@ -5,7 +5,7 @@ then
 
     if [[ "$2" == "install" ]]
     then
-        ./mvnw clean install
+        ./mvnw clean source:jar install
         OK=1
     fi
 
