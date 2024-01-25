@@ -20,6 +20,10 @@ public abstract class MapData implements TypedAccessor {
 
     public boolean contains(String key) { return data.containsKey(key); }
 
+    public void copyFrom(MapData other){
+        data = new ConcurrentHashMap<>(other.data);
+    }
+
     @Override
     public String toString() {
         return data.toString();
