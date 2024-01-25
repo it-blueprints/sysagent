@@ -47,6 +47,10 @@ public class JobService {
     // Called either by the SchedulerService on by a API
     public void runJob(String jobName, Arguments jobArgs) {
 
+        if(!jobsMap.containsKey(jobName)){
+            throw new SysAgentException("Job with name '"+jobName+"' not found");
+        }
+
         log.debug("Running "+jobName);
 
         if(!jobArgs.contains(Keys.jobStartedAt)){
