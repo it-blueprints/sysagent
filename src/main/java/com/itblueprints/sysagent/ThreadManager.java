@@ -3,6 +3,7 @@ package com.itblueprints.sysagent;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ThreadManager {
 
     private final Config config;
@@ -48,6 +50,9 @@ public class ThreadManager {
                 1000L,
                 TimeUnit.MILLISECONDS,
                 taskQueue);
+
+        log.debug("ThreadManager initialised. Available threads="+numThreads);
+
     }
 
     private static final int JOB_MANAGER_QUEUE_SIZE = 10;
