@@ -83,7 +83,7 @@ public class ClusterService {
                 schedulerService.onHeartBeat(nodeInfo, now);
                 jobService.onHeartBeat(nodeInfo, now);
             }
-            stepService.onHeartBeat(nodeInfo, now);
+            threadManager.getExecutor().submit(() -> stepService.onHeartBeat(nodeInfo, now));
         }
     }
 
