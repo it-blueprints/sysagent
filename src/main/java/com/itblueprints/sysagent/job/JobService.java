@@ -49,11 +49,11 @@ public class JobService {
 
         log.debug("Running "+jobName);
 
-        if(!jobArgs.contains(jobStartedAt)){
-            jobArgs.put(jobStartedAt, LocalDateTime.now());
+        if(!jobArgs.contains(Keys.jobStartedAt)){
+            jobArgs.put(Keys.jobStartedAt, LocalDateTime.now());
         }
 
-        val jobStartedAt = jobArgs.asTime(JobService.jobStartedAt);
+        val jobStartedAt = jobArgs.asTime(Keys.jobStartedAt);
 
         val jRec = new JobRecord();
         jRec.setJobName(jobName);
@@ -115,7 +115,7 @@ public class JobService {
                 log.debug("Sending step execution instruction for step "+nextPStep.stepName);
                 val jobArgs = new Arguments();
                 val jobStartedAt = jobRec.getJobStartedAt();
-                jobArgs.put(JobService.jobStartedAt, jobStartedAt);
+                jobArgs.put(Keys.jobStartedAt, jobStartedAt);
                 jobItem.job.addToJobArguments(jobArgs);
 
                 sendStepExecutionInstruction(nextPStep, jobArgs, jobRec);
