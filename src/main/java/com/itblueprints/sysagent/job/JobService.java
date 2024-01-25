@@ -204,5 +204,8 @@ public class JobService {
         log.debug("JobService initialised");
     }
 
-    public static final String jobStartedAt = "jobStartedAt";
+    //--------------------------
+    public static class Keys {
+        public static final String jobStartedAt = "jobStartedAt";
+    }
 }
