@@ -8,7 +8,7 @@ public interface Step {
 
     void execute(StepContext context);
 
-    List<Arguments> getPartitionArguments(Arguments jobArguments);
+    List<Arguments> getPartitionArgumentsList(Arguments jobArguments);
 
     //-----------------------------------
     default String getName(){

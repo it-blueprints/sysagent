@@ -140,7 +140,7 @@ public class JobService {
                                               JobRecord jobRecord){
         //Get the partitions for the step
         val step = pipelineStep.step;
-        val partArgs = step.getPartitionArguments(jobArgs);
+        val partArgs = step.getPartitionArgumentsList(jobArgs);
 
         int totalPartitions = 1;
         if(partArgs!=null && !partArgs.isEmpty()){

@@ -67,7 +67,7 @@ public class MockStep implements BatchStep<String, String> {
     }
 
     @Override
-    public List<Arguments> getPartitionArguments(Arguments jobArguments) {
+    public List<Arguments> getPartitionArgumentsList(Arguments jobArguments) {
         return List.of(1,2,3).stream().map(i -> {
             val arg = new Arguments();
             arg.put("partition", i);
