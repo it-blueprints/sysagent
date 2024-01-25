@@ -38,7 +38,7 @@ public class ThreadManager {
 
         val workerCapacityFactor = config.getWorkerCapacityFactor();
 
-        val numThreads = Runtime.getRuntime().availableProcessors();
+        val numThreads = config.getWorkerThreads();
         workerTaskQueuSize = numThreads * workerCapacityFactor;
         batchPageSize = workerTaskQueuSize * workerCapacityFactor;
 

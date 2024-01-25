@@ -11,5 +11,6 @@ import org.springframework.context.annotation.Configuration;
 public class Config {
 
     private Integer heartBeatSecs;
+    private int workerThreads = 2;
     private int workerCapacityFactor = 5;
 }       
