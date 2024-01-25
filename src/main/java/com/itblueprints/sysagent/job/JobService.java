@@ -169,12 +169,14 @@ public class JobService {
     //-----------------------------------------------
     public void initialise(NodeInfo nodeInfo){
 
+        log.debug("Initialising JobService");
         val beanFactory = appContext.getBeanFactory();
         val jobBeanNames = beanFactory.getBeanNamesForType(Job.class);
         for (val beanName : jobBeanNames) {
             val jobBean = beanFactory.getBean(beanName, Job.class);
             val jobItem = new JobItem();
             jobItem.job = jobBean;
+            log.debug("Loading pipeline for Job "+jobItem.job.getName());
             val pipeline = jobBean.getPipeline();
             val firstPStep = pipeline.getFirstStep();
             if(firstPStep==null){
