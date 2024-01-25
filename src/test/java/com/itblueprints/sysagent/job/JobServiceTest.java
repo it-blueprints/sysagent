@@ -32,8 +32,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class JobServiceTest {
 
-    private String jobName = "Job";
-
     @Mock ConfigurableApplicationContext appContext;
     @Mock MongoTemplate mongoTemplate;
     @Mock ThreadManager threadManager;
@@ -57,14 +55,16 @@ class JobServiceTest {
     void runJob() {
 
         val job = new MockJob();
-        val jobRec = createJobRecord();
+        val jobRec = new JobRecord();
+        jobRec.setJobName("Job");
+
         when(mongoTemplate.save(any())).thenReturn(jobRec);
 
         initialiseJobService(job, jobRec);
 
         val jobArgs = new Arguments();
         jobArgs.put("pmtProfile", "sp");
-        jobService.runJob(jobName, jobArgs);
+        jobService.runJob("Job", jobArgs);
 
         assertEquals("Step", jobRec.getCurrentStepName());
         assertEquals(3, jobRec.getPartitionCount());
@@ -73,7 +73,7 @@ class JobServiceTest {
 
         val stepRecs = stepRecC.getAllValues();
         val n = stepRecs.stream()
-                .filter(sr -> sr.getJobName().equals(jobName)
+                .filter(sr -> sr.getJobName().equals("Job")
                 && sr.getJobRecordId().equals("job1234")
                 && sr.getStepName().equals("Step")
                 && sr.getJobArguments().asString("pmtProfile").equals("sp"))
@@ -90,7 +90,10 @@ class JobServiceTest {
     @Test
     void onHeartBeat() {
         val job = new MockJob();
-        val jobRec = createJobRecord();
+        val jobRec = new JobRecord();
+        jobRec.setJobName("Job");
+        jobRec.setCurrentStepName("Step");
+
         when(mongoTemplate.find(any(), eq(JobRecord.class))).thenReturn(List.of(jobRec));
         when(threadManager.getExecutor()).thenReturn(executor);
         initialiseJobService(job, jobRec);
@@ -100,7 +103,7 @@ class JobServiceTest {
     //-----------------------------------------------------------
     private void initialiseJobService(Job job, JobRecord jobRec){
 
-        jobRec.setJobName(jobName);
+        jobRec.setJobName("Job");
         jobRec.setId("job1234");
         jobRec.setStatus(JobRecord.Status.Executing);
 
@@ -110,14 +113,6 @@ class JobServiceTest {
         when(mongoTemplate.indexOps(JobRecord.class)).thenReturn(indexOperations);
         jobService.initialise(new NodeInfo());
 
-    }
-
-    //------------------------------------
-    private JobRecord createJobRecord(){
-        val jobRec = new JobRecord();
-        jobRec.setJobName(jobName);
-        jobRec.setCurrentStepName("Step");
-        return jobRec;
     }
 
     //-----------------------------------
