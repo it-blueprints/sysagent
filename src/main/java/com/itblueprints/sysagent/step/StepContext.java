@@ -23,5 +23,6 @@ public class StepContext {
     @Setter
     private CheckPointState checkPointState;
 
+    private AuxiliaryData auxiliaryData = new AuxiliaryData();
 
 }
