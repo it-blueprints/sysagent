@@ -18,7 +18,7 @@ public abstract class MapData implements TypedAccessor {
         data.put(key, value);
     }
 
-    public boolean contains(String key) { return data.contains(key); }
+    public boolean contains(String key) { return data.containsKey(key); }
 
     @Override
     public String toString() {
