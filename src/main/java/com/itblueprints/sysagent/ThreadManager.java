@@ -42,7 +42,7 @@ public class ThreadManager {
         workerTaskQueuSize = numThreads * workerCapacityFactor;
         batchPageSize = workerTaskQueuSize * workerCapacityFactor;
 
-        taskQueue = new LinkedBlockingQueue<>(workerTaskQueuSize * 2);
+        taskQueue = new LinkedBlockingQueue<>(workerTaskQueuSize + 10);
 
         executor = new ThreadPoolExecutor(
                 numThreads,
@@ -55,14 +55,14 @@ public class ThreadManager {
 
     }
 
+    //---------------------------------------
+    public void drainWorkerTaskQueue(){
+        while(taskQueue.size() > 0) Utils.sleepFor(100);
+    }
+
     //---------------------------------------------------
     private AtomicBoolean isNodeBusy = new AtomicBoolean(false);
-    public boolean isNodeBusy(){
-        if(!isNodeBusy.get()) {
-            isNodeBusy.set(taskQueue.size() > 0);
-        }
-        return isNodeBusy.get();
-    }
+    public boolean isNodeBusy(){return isNodeBusy.get();}
     public void setNodeBusy(boolean busy){ isNodeBusy.set(busy);}
 
 }

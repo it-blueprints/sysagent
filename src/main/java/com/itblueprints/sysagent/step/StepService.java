@@ -47,6 +47,7 @@ public class StepService {
         val stepRec = getNextStepToProcess(nodeInfo.thisNodeId);
         if (stepRec != null) {
             processStep(stepRec, now);
+            threadManager.drainWorkerTaskQueue();
             return true;
         }
         else return false;
