@@ -18,6 +18,8 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -67,7 +69,7 @@ public class ClusterService {
     //------------------------------
     void onHeartBeat(int heartBeatSecs){
         val timeNow = System.currentTimeMillis();
-        val nodeInfo = computeNodeInfo(heartBeatSecs, timeNow);
+        val nodeInfo = computeClusterState(heartBeatSecs, timeNow);
         log.debug("* HB - Current nodeInfo = "+nodeInfo);
 
         if (!nodeRecord.isInitialised()) {
@@ -87,8 +89,14 @@ public class ClusterService {
         }
     }
 
+    public static final int LEASE_HEARTBEATS = 2;
+
+    private static final int CLEANUP_HEARTBEATS = 600;
+
     //----------------------------------------
-    NodeInfo computeNodeInfo(int heartBeatSecs, long timeNow){
+    ClusterState computeClusterState(int heartBeatSecs, long timeNow){
+
+        val hrtbt = heartBeatSecs * 1000;
 
         //check if cluster has been reset
         val query = new Query();
@@ -101,7 +109,7 @@ public class ClusterService {
         }
 
         //extend life
-        nodeRecord.setAliveTill(timeNow + heartBeatSecs*1000);
+        nodeRecord.setAliveTill(timeNow + hrtbt * LEASE_HEARTBEATS);
         nodeRecord = mongoTemplate.save(nodeRecord);
         val savedMgrNS = mongoTemplate.findById(MANAGER_ID, NodeRecord.class);
         if(savedMgrNS == null){ //No leader record
@@ -110,7 +118,7 @@ public class ClusterService {
             mgrNS.setId(MANAGER_ID);
             mgrNS.setManagerId(nodeRecord.getId());
             mgrNS.setManagerSince(timeNow);
-            mgrNS.setManagerLeaseTill(timeNow+heartBeatSecs*2000); //lease for 2 heart beats
+            mgrNS.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
             managerNodeRecord = mongoTemplate.save(mgrNS);
         }
         else {  //Leader record exists
@@ -119,13 +127,13 @@ public class ClusterService {
 
             if(isManager()){ //This is the leader node
                 //Extend lease
-                managerNodeRecord.setManagerLeaseTill(timeNow + heartBeatSecs*2000);
+                managerNodeRecord.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
                 managerNodeRecord = mongoTemplate.save(managerNodeRecord);
             }
             else { //Another node is the leader
 
                 //If lease has expired
-                if(managerNodeRecord.getManagerLeaseTill() < timeNow){
+                if(managerNodeRecord.getManagerLeaseTill() < timeNow - (hrtbt * LEASE_HEARTBEATS)){
                     //Read leader record with lock
                     val mgrQuery = new Query();
                     mgrQuery.addCriteria(Criteria
@@ -140,7 +148,7 @@ public class ClusterService {
                         //Set this as the manager
                         managerNodeRecord.setManagerId(nodeRecord.getId());
                         managerNodeRecord.setManagerSince(timeNow);
-                        managerNodeRecord.setManagerLeaseTill(timeNow + heartBeatSecs*2000);
+                        managerNodeRecord.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
                         managerNodeRecord.setLocked(false);
                         managerNodeRecord = mongoTemplate.save(managerNodeRecord);
                     }
@@ -148,12 +156,32 @@ public class ClusterService {
             }
         }
 
-        val nodeInfo = new NodeInfo();
-        nodeInfo.timeNow = Utils.toDateTime(timeNow);
-        nodeInfo.thisNodeId = nodeRecord.getId();
-        nodeInfo.isManager = isManager();
-        nodeInfo.isBusy = threadManager.isNodeBusy();
-        return nodeInfo;
+        List deadNodeIds = new ArrayList<String>();
+        if(isManager()) {
+            //Handle dead nodes
+            val allNodes = mongoTemplate.findAll(NodeRecord.class);
+
+            for (val node : allNodes) {
+                val nodeId = node.getId();
+                if (nodeId.equals(MANAGER_ID) || nodeId.equals(nodeRecord.getId())) continue;
+                //recently dead, notify
+                if (node.getAliveTill() < timeNow - hrtbt * LEASE_HEARTBEATS){
+                    deadNodeIds.add(nodeId);
+                }
+                //long dead, clean up
+                if (node.getAliveTill() < timeNow - hrtbt * CLEANUP_HEARTBEATS){
+                    mongoTemplate.remove(node);
+                }
+            }
+        }
+
+        val cs = new ClusterState();
+        cs.timeNow = Utils.toDateTime(timeNow);
+        cs.nodeId = nodeRecord.getId();
+        cs.isManager = isManager();
+        cs.isBusy = threadManager.isNodeBusy();
+        cs.deadNodeIds = deadNodeIds;
+        return cs;
     }
 
     //----------------------

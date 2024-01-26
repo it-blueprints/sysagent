@@ -2,7 +2,7 @@ package com.itblueprints.sysagent.job;
 
 import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.ThreadManager;
-import com.itblueprints.sysagent.cluster.NodeInfo;
+import com.itblueprints.sysagent.cluster.ClusterState;
 import com.itblueprints.sysagent.step.MockStep;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.val;
@@ -88,7 +88,7 @@ class JobExecServiceTest {
 
     //------------------------------------
     @Test
-    void onHeartBeat() {
+    void processExecutingJobs() {
         val job = new MockJob();
         val jobRec = new JobRecord();
         jobRec.setJobName("Job");
@@ -97,7 +97,13 @@ class JobExecServiceTest {
         when(mongoTemplate.find(any(), eq(JobRecord.class))).thenReturn(List.of(jobRec));
         when(threadManager.getExecutor()).thenReturn(executor);
         initialiseJobService(job, jobRec);
-        jobExecService.onHeartBeat(new NodeInfo(), LocalDateTime.now());
+        jobExecService.processExecutingJobs(LocalDateTime.now());
+    }
+
+    //------------------------------------
+    @Test
+    void releaseDeadClaims() {
+
     }
 
     //-----------------------------------------------------------
@@ -111,7 +117,7 @@ class JobExecServiceTest {
         when(beanFactory.getBeanNamesForType(Job.class)).thenReturn(new String[]{"job"});
         when(beanFactory.getBean("job", Job.class)).thenReturn(job);
         when(mongoTemplate.indexOps(JobRecord.class)).thenReturn(indexOperations);
-        jobExecService.initialise(new NodeInfo());
+        jobExecService.initialise(new ClusterState());
 
     }
 

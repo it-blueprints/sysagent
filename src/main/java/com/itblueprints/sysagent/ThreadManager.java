@@ -30,19 +30,18 @@ public class ThreadManager {
     private int batchPageSize;
 
     @Getter
-    private int workerTaskQueuSize;
+    private int taskQueueSize;
 
-    //-----------------------------------------
+    //-----------------------------------------------------
+    private static final int TASK_Q_CAPACITY_FACTOR = 10;
+
     @PostConstruct
     public void init(){
 
-        val workerCapacityFactor = config.getWorkerCapacityFactor();
-
         val numThreads = config.getWorkerThreads();
-        workerTaskQueuSize = numThreads * workerCapacityFactor;
-        batchPageSize = workerTaskQueuSize * workerCapacityFactor;
-
-        taskQueue = new LinkedBlockingQueue<>(workerTaskQueuSize + 10);
+        taskQueueSize = numThreads * TASK_Q_CAPACITY_FACTOR;
+        taskQueue = new LinkedBlockingQueue<>(taskQueueSize + 10);
+        batchPageSize = config.getBatchPageSize();
 
         executor = new ThreadPoolExecutor(
                 numThreads,

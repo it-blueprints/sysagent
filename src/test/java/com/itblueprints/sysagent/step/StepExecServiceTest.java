@@ -3,7 +3,7 @@ package com.itblueprints.sysagent.step;
 import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.ThreadManager;
-import com.itblueprints.sysagent.cluster.NodeInfo;
+import com.itblueprints.sysagent.cluster.ClusterState;
 import com.itblueprints.sysagent.job.JobExecService;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +44,7 @@ class StepExecServiceTest {
     void beforeEach() {
         when(threadManager.getBatchPageSize()).thenReturn(4);
         when(threadManager.getExecutor()).thenReturn(executor);
-        when(threadManager.getWorkerTaskQueuSize()).thenReturn(4);
+        when(threadManager.getTaskQueueSize()).thenReturn(2);
 
         stepExecService = new StepExecService(mongoTemplate, jobExecService, threadManager);
     }
@@ -52,7 +52,7 @@ class StepExecServiceTest {
     //-------------------------------------
     @Test
     void tryProcessStep() {
-        val nodeInfo = new NodeInfo();
+        val nodeInfo = new ClusterState();
 
         val stepRec = createStepRecord();
         when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(stepRec);

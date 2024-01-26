@@ -12,5 +12,5 @@ public class Config {
 
     private Integer heartBeatSecs;
     private Integer workerThreads;
-    private int workerCapacityFactor = 5;
+    private Integer batchPageSize;
 }       

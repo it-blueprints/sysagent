@@ -3,7 +3,7 @@ package com.itblueprints.sysagent.job;
 import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
-import com.itblueprints.sysagent.cluster.NodeInfo;
+import com.itblueprints.sysagent.cluster.ClusterState;
 import com.itblueprints.sysagent.step.Step;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.RequiredArgsConstructor;
@@ -75,7 +75,13 @@ public class JobExecService {
     }
 
     //------------------------------------------------------------
-    public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
+    public void onHeartBeat(ClusterState clusterState, LocalDateTime now) {
+        processExecutingJobs(now);
+        releaseDeadClaims(clusterState);
+    }
+
+    //--------------------------------------------------------------------
+    void processExecutingJobs(LocalDateTime now) {
         val query = new Query();
         query.addCriteria(Criteria
                 .where("status").is(JobRecord.Status.Executing));
@@ -167,8 +173,25 @@ public class JobExecService {
         }
     }
 
+    //-------------------------------------------------------
+    public void releaseDeadClaims(ClusterState clusterState){
+        for(val deadNodeId : clusterState.deadNodeIds){
+            val query = new Query();
+            query.addCriteria(Criteria
+                    .where("nodeId").is(deadNodeId)
+                    .and("status").is(StepRecord.Status.Executing)
+            );
+            val unworkedStepRecs = mongoTemplate.find(query, StepRecord.class);
+            for(val stepRec : unworkedStepRecs){
+                stepRec.setClaimed(false);
+                stepRec.setNodeId(null);
+                mongoTemplate.save(stepRec);
+            }
+        }
+    }
+
     //-----------------------------------------------
-    public void initialise(NodeInfo nodeInfo){
+    public void initialise(ClusterState clusterState){
 
         log.debug("Initialising JobService");
         val beanFactory = appContext.getBeanFactory();

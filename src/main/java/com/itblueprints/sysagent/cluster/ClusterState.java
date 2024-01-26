@@ -3,11 +3,13 @@ package com.itblueprints.sysagent.cluster;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @ToString
-public class NodeInfo {
+public class ClusterState {
     public LocalDateTime timeNow;
-    public String thisNodeId;
+    public String nodeId;
     public boolean isManager;
     public boolean isBusy;
+    public List<String> deadNodeIds;
 }
