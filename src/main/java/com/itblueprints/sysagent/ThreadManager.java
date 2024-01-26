@@ -42,7 +42,7 @@ public class ThreadManager {
         workerTaskQueuSize = numThreads * workerCapacityFactor;
         batchPageSize = workerTaskQueuSize * workerCapacityFactor;
 
-        taskQueue = new LinkedBlockingQueue<>(workerTaskQueuSize +JOB_MANAGER_QUEUE_SIZE);
+        taskQueue = new LinkedBlockingQueue<>(workerTaskQueuSize * 2);
 
         executor = new ThreadPoolExecutor(
                 numThreads,
@@ -54,8 +54,6 @@ public class ThreadManager {
         log.debug("ThreadManager initialised. Available threads="+numThreads);
 
     }
-
-    private static final int JOB_MANAGER_QUEUE_SIZE = 10;
 
     //---------------------------------------------------
     private AtomicBoolean isNodeBusy = new AtomicBoolean(false);

@@ -39,7 +39,6 @@ public class StepService {
         var stepProcessed = false;
         do{
             stepProcessed = tryProcessStep(nodeInfo, now);
-            Utils.sleepFor(1000);
         } while(stepProcessed);
     }
 
