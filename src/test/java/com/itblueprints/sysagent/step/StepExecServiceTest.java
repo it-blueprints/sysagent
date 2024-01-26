@@ -3,9 +3,8 @@ package com.itblueprints.sysagent.step;
 import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.ThreadManager;
-import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.cluster.NodeInfo;
-import com.itblueprints.sysagent.job.JobService;
+import com.itblueprints.sysagent.job.JobExecService;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,14 +25,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class StepServiceTest {
+class StepExecServiceTest {
 
     @Mock MongoTemplate mongoTemplate;
-    @Mock JobService jobService;
+    @Mock
+    JobExecService jobExecService;
     @Mock Config config;
     @Mock ThreadManager threadManager;
 
-    StepService stepService;
+    StepExecService stepExecService;
 
     private final String jobName = "Job";
     private final String stepName = "Step";
@@ -46,7 +46,7 @@ class StepServiceTest {
         when(threadManager.getExecutor()).thenReturn(executor);
         when(threadManager.getWorkerTaskQueuSize()).thenReturn(4);
 
-        stepService = new StepService(mongoTemplate, jobService, threadManager);
+        stepExecService = new StepExecService(mongoTemplate, jobExecService, threadManager);
     }
 
     //-------------------------------------
@@ -58,10 +58,10 @@ class StepServiceTest {
         when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(stepRec);
 
         val step = new MockStep();
-        when(jobService.getStep(jobName, stepName)).thenReturn(step);
+        when(jobExecService.getStep(jobName, stepName)).thenReturn(step);
 
         val now = LocalDateTime.of(2024, 1, 10, 0,0,0);
-        val stepProcessed = stepService.tryProcessStep(nodeInfo, now);
+        val stepProcessed = stepExecService.tryProcessStep(nodeInfo, now);
 
         assertTrue(stepProcessed);
         assertEquals(StepRecord.Status.Completed, stepRec.getStatus());

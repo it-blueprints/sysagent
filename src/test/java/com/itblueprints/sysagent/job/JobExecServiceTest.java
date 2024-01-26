@@ -30,7 +30,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class JobServiceTest {
+class JobExecServiceTest {
 
     @Mock ConfigurableApplicationContext appContext;
     @Mock MongoTemplate mongoTemplate;
@@ -42,12 +42,12 @@ class JobServiceTest {
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private JobService jobService;
+    private JobExecService jobExecService;
 
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
-        jobService = new JobService(appContext, mongoTemplate, threadManager);
+        jobExecService = new JobExecService(appContext, mongoTemplate, threadManager);
     }
 
     //------------------------------------
@@ -64,7 +64,7 @@ class JobServiceTest {
 
         val jobArgs = new Arguments();
         jobArgs.put("pmtProfile", "sp");
-        jobService.runJob("Job", jobArgs);
+        jobExecService.runJob("Job", jobArgs);
 
         assertEquals("Step", jobRec.getCurrentStepName());
         assertEquals(3, jobRec.getPartitionCount());
@@ -97,7 +97,7 @@ class JobServiceTest {
         when(mongoTemplate.find(any(), eq(JobRecord.class))).thenReturn(List.of(jobRec));
         when(threadManager.getExecutor()).thenReturn(executor);
         initialiseJobService(job, jobRec);
-        jobService.onHeartBeat(new NodeInfo(), LocalDateTime.now());
+        jobExecService.onHeartBeat(new NodeInfo(), LocalDateTime.now());
     }
 
     //-----------------------------------------------------------
@@ -111,7 +111,7 @@ class JobServiceTest {
         when(beanFactory.getBeanNamesForType(Job.class)).thenReturn(new String[]{"job"});
         when(beanFactory.getBean("job", Job.class)).thenReturn(job);
         when(mongoTemplate.indexOps(JobRecord.class)).thenReturn(indexOperations);
-        jobService.initialise(new NodeInfo());
+        jobExecService.initialise(new NodeInfo());
 
     }
 

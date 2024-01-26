@@ -3,9 +3,9 @@ package com.itblueprints.sysagent.cluster;
 import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
-import com.itblueprints.sysagent.job.JobService;
+import com.itblueprints.sysagent.job.JobExecService;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
-import com.itblueprints.sysagent.step.StepService;
+import com.itblueprints.sysagent.step.StepExecService;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,8 +23,10 @@ class ClusterServiceTest {
 
     @Mock MongoTemplate mongoTemplate;
     @Mock SchedulerService schedulerService;
-    @Mock JobService jobService;
-    @Mock StepService stepService;
+    @Mock
+    JobExecService jobExecService;
+    @Mock
+    StepExecService stepExecService;
     @Mock Config config;
     @Mock ThreadManager threadManager;
 
@@ -35,9 +37,9 @@ class ClusterServiceTest {
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
-        clusterService1 = new ClusterService(mongoTemplate, schedulerService, jobService, stepService, config, threadManager);
-        clusterService2 = new ClusterService(mongoTemplate, schedulerService, jobService, stepService, config, threadManager);
-        clusterService3 = new ClusterService(mongoTemplate, schedulerService, jobService, stepService, config, threadManager);
+        clusterService1 = new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager);
+        clusterService2 = new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager);
+        clusterService3 = new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager);
 
         //Save puts in an id
         when(mongoTemplate.save(any())).thenAnswer(ans -> {

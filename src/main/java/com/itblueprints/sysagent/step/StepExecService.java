@@ -4,7 +4,7 @@ import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.cluster.NodeInfo;
-import com.itblueprints.sysagent.job.JobService;
+import com.itblueprints.sysagent.job.JobExecService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -24,9 +24,9 @@ import java.util.concurrent.Future;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class StepService {
+public class StepExecService {
     private final MongoTemplate mongoTemplate;
-    private final JobService jobService;
+    private final JobExecService jobExecService;
     private final ThreadManager threadManager;
 
     //-------------------------------------------------------------
@@ -60,7 +60,7 @@ public class StepService {
         stepRec.setStartedAt(now);
         mongoTemplate.save(stepRec);
 
-        val step = jobService.getStep(stepRec.getJobName(), stepRec.getStepName());
+        val step = jobExecService.getStep(stepRec.getJobName(), stepRec.getStepName());
         val ctx = new StepContext();
         ctx.getArguments().add(stepRec.getJobArguments());
         if(stepRec.getPartitionCount() > 0) {

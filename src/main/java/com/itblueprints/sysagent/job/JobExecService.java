@@ -24,7 +24,7 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class JobService {
+public class JobExecService {
 
     private final ConfigurableApplicationContext appContext;
     private final MongoTemplate mongoTemplate;

@@ -2,7 +2,7 @@ package com.itblueprints.sysagent;
 
 import com.itblueprints.sysagent.cluster.NodeRecord;
 import com.itblueprints.sysagent.job.JobRecord;
-import com.itblueprints.sysagent.job.JobService;
+import com.itblueprints.sysagent.job.JobExecService;
 import com.itblueprints.sysagent.scheduling.JobScheduleRecord;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class SysAgentService {
 
     private final MongoOperations mongoOperations;
-    private final JobService jobService;
+    private final JobExecService jobExecService;
 
     //--------------------------------
     public void resetCluster() {
@@ -31,6 +31,6 @@ public class SysAgentService {
 
     //--------------------------------
     public void runJob(String jobName, Arguments jobArguments){
-        jobService.runJob(jobName, jobArguments);
+        jobExecService.runJob(jobName, jobArguments);
     }
 }

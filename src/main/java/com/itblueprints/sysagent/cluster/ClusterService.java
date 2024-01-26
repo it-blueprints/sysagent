@@ -4,9 +4,9 @@ import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
-import com.itblueprints.sysagent.job.JobService;
+import com.itblueprints.sysagent.job.JobExecService;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
-import com.itblueprints.sysagent.step.StepService;
+import com.itblueprints.sysagent.step.StepExecService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +30,8 @@ public class ClusterService {
 
     private final MongoTemplate mongoTemplate;
     private final SchedulerService schedulerService;
-    private final JobService jobService;
-    private final StepService stepService;
+    private final JobExecService jobExecService;
+    private final StepExecService stepExecService;
     private final Config config;
     private final ThreadManager threadManager;
 
@@ -74,16 +74,16 @@ public class ClusterService {
             if (nodeInfo.isManager) {
                 schedulerService.initialise(nodeInfo);
             }
-            jobService.initialise(nodeInfo); //All nodes need this to load up steps
+            jobExecService.initialise(nodeInfo); //All nodes need this to load up steps
             nodeRecord.setInitialised(true);
             mongoTemplate.save(nodeRecord);
         } else {
             val now = LocalDateTime.now();
             if (nodeInfo.isManager) {
                 schedulerService.onHeartBeat(nodeInfo, now);
-                jobService.onHeartBeat(nodeInfo, now);
+                jobExecService.onHeartBeat(nodeInfo, now);
             }
-            threadManager.getExecutor().submit(() -> stepService.onHeartBeat(nodeInfo, now));
+            threadManager.getExecutor().submit(() -> stepExecService.onHeartBeat(nodeInfo, now));
         }
     }
 
