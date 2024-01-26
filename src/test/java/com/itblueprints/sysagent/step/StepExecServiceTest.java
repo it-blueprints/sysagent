@@ -61,7 +61,7 @@ class StepExecServiceTest {
         when(jobExecService.getStep(jobName, stepName)).thenReturn(step);
 
         val now = LocalDateTime.of(2024, 1, 10, 0,0,0);
-        val stepProcessed = stepExecService.tryProcessStep(nodeInfo, now);
+        val stepProcessed = stepExecService.processStepIfAvailable(nodeInfo, now);
 
         assertTrue(stepProcessed);
         assertEquals(StepRecord.Status.Completed, stepRec.getStatus());

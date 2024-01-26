@@ -36,14 +36,15 @@ public class StepExecService {
             log.debug("Node busy. Not taking on additional work");
             return;
         }
+
         var stepProcessed = false;
         do {
-            stepProcessed = tryProcessStep(nodeInfo, now);
+            stepProcessed = processStepIfAvailable(nodeInfo, now);
         } while(stepProcessed);
     }
 
     //-------------------------------------------------------------
-    boolean tryProcessStep(NodeInfo nodeInfo, LocalDateTime now){
+    boolean processStepIfAvailable(NodeInfo nodeInfo, LocalDateTime now){
         val stepRec = getNextStepToProcess(nodeInfo.thisNodeId);
         if (stepRec != null) {
             processStep(stepRec, now);
