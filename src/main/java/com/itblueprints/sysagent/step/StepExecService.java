@@ -37,7 +37,7 @@ public class StepExecService {
             return;
         }
         var stepProcessed = false;
-        do{
+        do {
             stepProcessed = tryProcessStep(nodeInfo, now);
         } while(stepProcessed);
     }
