@@ -38,9 +38,10 @@ class ClusterServiceTest {
     @BeforeEach
     void beforeEach() {
         nodes = List.of(
-           new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager),
-           new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager),
-           new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager)
+                new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager),
+                new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager),
+                new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager),
+                new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager)
         );
 
         //Save puts in an id
@@ -55,25 +56,27 @@ class ClusterServiceTest {
 
     private static final int HB_SECS = 10;
     private static final long START_TIME = 1700000000000L;
-    private static final long LEASE_MILLIS = ClusterService.LEASE_HEARTBEATS*HB_SECS*1000;
 
     private boolean clusterInited = false;
     private NodeRecord mgrNodeRecord;
+    private long toTime(int sec){
+        return START_TIME + sec * 1000;
+    }
     //-------------------------------------
     @Test
     void computeClusterState() {
 
         val testCases = List.of(
-                TestCase.of(0, 0, true),
+                TestCase.of(0, 0, true), //start, manager = 0
                 TestCase.of(1, 1, false),
                 TestCase.of(10, 0, true),
                 TestCase.of(11, 1, false),
-                TestCase.of(31, 1, true),
+                TestCase.of(31, 1, true), //manager change 0 -> 1
                 TestCase.of(31, 2, false),
                 TestCase.of(32, 0, false),
                 TestCase.of(41, 2, false),
                 TestCase.of(51, 2, false),
-                TestCase.of(52, 0, true),
+                TestCase.of(52, 3, true), //manager change 1 -> 3
                 TestCase.of(61, 2, false)
         );
 
@@ -83,6 +86,21 @@ class ClusterServiceTest {
                     mgrNodeRecord = assertState(tc, i[0]);
                     i[0]++;
                 });
+
+        val currentMgr = nodes.get(3);
+        val currentWorker = nodes.get(2);
+        val currentDead = nodes.get(1);
+
+        assertEquals(toTime(72), currentMgr.nodeRecord.getAliveTill());
+        assertEquals(0, currentMgr.nodeRecord.getManagerLeaseTill());
+        assertEquals("ID_4", currentMgr.managerNodeRecord.getManagerId());
+        assertEquals(toTime(72), currentMgr.managerNodeRecord.getManagerLeaseTill());
+        assertEquals(0L, currentMgr.managerNodeRecord.getAliveTill());
+
+        assertEquals(toTime(81), currentWorker.nodeRecord.getAliveTill());
+        assertEquals("ID_4", currentWorker.managerNodeRecord.getManagerId());
+
+        assertEquals(toTime(51), currentDead.nodeRecord.getAliveTill());
     }
     //-------------------------------------------------
     private NodeRecord assertState(TestCase testCase, int testNum){
