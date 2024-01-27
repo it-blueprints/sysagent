@@ -111,20 +111,21 @@ public class ClusterService {
         //extend life
         nodeRecord.setAliveTill(timeNow + hrtbt * LEASE_HEARTBEATS);
         nodeRecord = mongoTemplate.save(nodeRecord);
-        val savedMgrNS = mongoTemplate.findById(MANAGER_ID, NodeRecord.class);
-        if(savedMgrNS == null){ //No leader record
+        val mgrNodeRecInDb = mongoTemplate.findById(MANAGER_ID, NodeRecord.class);
+        if(mgrNodeRecInDb == null){ //No leader record
             //create one. Only one will succeed as the id is constant and it has a unique constraint
-            val mgrNS = new NodeRecord();
-            mgrNS.setId(MANAGER_ID);
-            mgrNS.setManagerId(nodeRecord.getId());
-            mgrNS.setManagerSince(timeNow);
-            mgrNS.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
-            managerNodeRecord = mongoTemplate.save(mgrNS);
+            val mgrNodeRec = new NodeRecord();
+            mgrNodeRec.setId(MANAGER_ID);
+            mgrNodeRec.setManagerId(nodeRecord.getId());
+            mgrNodeRec.setManagerSince(timeNow);
+            mgrNodeRec.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
+            managerNodeRecord = mongoTemplate.save(mgrNodeRec);
+            nodeRecord.setManagerId(nodeRecord.getId());
         }
         else {  //Leader record exists
             //update state held
-            managerNodeRecord = savedMgrNS;
-
+            managerNodeRecord = mgrNodeRecInDb;
+            nodeRecord.setManagerId(managerNodeRecord.getManagerId());
             if(isManager()){ //This is the leader node
                 //Extend lease
                 managerNodeRecord.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
@@ -133,7 +134,7 @@ public class ClusterService {
             else { //Another node is the leader
 
                 //If lease has expired
-                if(managerNodeRecord.getManagerLeaseTill() < timeNow - (hrtbt * LEASE_HEARTBEATS)){
+                if(managerNodeRecord.getManagerLeaseTill() < timeNow){
                     //Read leader record with lock
                     val mgrQuery = new Query();
                     mgrQuery.addCriteria(Criteria
@@ -141,10 +142,10 @@ public class ClusterService {
                             .and("locked").is(false));
                     val update = new Update();
                     update.set("locked", true);
-                    val lockedLeaderNS = mongoTemplate.findAndModify(mgrQuery, update, NodeRecord.class);
+                    val lockedMgrNR = mongoTemplate.findAndModify(mgrQuery, update, NodeRecord.class);
 
                     //if was successful in obtaining the lock
-                    if(lockedLeaderNS != null) {
+                    if(lockedMgrNR != null) {
                         //Set this as the manager
                         managerNodeRecord.setManagerId(nodeRecord.getId());
                         managerNodeRecord.setManagerSince(timeNow);

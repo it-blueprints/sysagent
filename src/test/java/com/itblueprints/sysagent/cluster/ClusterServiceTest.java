@@ -14,6 +14,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -30,16 +32,16 @@ class ClusterServiceTest {
     @Mock Config config;
     @Mock ThreadManager threadManager;
 
-    ClusterService clusterService1;
-    ClusterService clusterService2;
-    ClusterService clusterService3;
+    List<ClusterService> nodes;
 
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
-        clusterService1 = new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager);
-        clusterService2 = new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager);
-        clusterService3 = new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager);
+        nodes = List.of(
+           new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager),
+           new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager),
+           new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager)
+        );
 
         //Save puts in an id
         when(mongoTemplate.save(any())).thenAnswer(ans -> {
@@ -49,97 +51,81 @@ class ClusterServiceTest {
             }
             return ns;
         });
-
     }
 
+    private static final int HB_SECS = 10;
+    private static final long START_TIME = 1700000000000L;
+    private static final long LEASE_MILLIS = ClusterService.LEASE_HEARTBEATS*HB_SECS*1000;
+
+    private boolean clusterInited = false;
+    private NodeRecord mgrNodeRecord;
     //-------------------------------------
-    //@Test
-    void computeNodeInfo() {
+    @Test
+    void computeClusterState() {
 
-        //Node 1 start
-        val node1_time1 = 1700000000000L;
-        when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeRecord.class)).thenReturn(null);
-        when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(null);
-        clusterService1.nodeRecord.setStartedAt(node1_time1);
-        val node1_result1 = clusterService1.computeClusterState(10, node1_time1);
-        checkNodeInfo(node1_result1, "ID_1", true, node1_time1);
-        checkNodeState(clusterService1, null, node1_time1);
-        checkMgrNodeState(clusterService1, node1_time1, "ID_1", node1_time1+SECS_20);
+        val testCases = List.of(
+                TestCase.of(0, 0, true),
+                TestCase.of(1, 1, false),
+                TestCase.of(10, 0, true),
+                TestCase.of(11, 1, false),
+                TestCase.of(31, 1, true),
+                TestCase.of(31, 2, false),
+                TestCase.of(32, 0, false),
+                TestCase.of(41, 2, false),
+                TestCase.of(51, 2, false),
+                TestCase.of(52, 0, true)
+        );
 
-        //Node 1 Hb 2
-        val node1_time2 = node1_time1 + SECS_10;
-        var mgrNs = clusterService1.managerNodeRecord;
-        when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeRecord.class)).thenReturn(mgrNs);
-        when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(mgrNs);
-        val node1_result2 = clusterService1.computeClusterState(10, node1_time2);
-        checkNodeInfo(node1_result2, "ID_1", true, node1_time2);
-        checkNodeState(clusterService1, null, node1_time2);
-        checkMgrNodeState(clusterService1, node1_time2, "ID_1", node1_time2+SECS_30);
+        val i = new int[]{1};
+        testCases.stream().forEach( tc -> {
+                    System.out.println("Test case # " + i[0]);
+                    mgrNodeRecord = assertState(tc, i[0]);
+                    i[0]++;
+                });
+    }
+    //-------------------------------------------------
+    private NodeRecord assertState(TestCase testCase, int testNum){
 
-        //Node 2 start
-        val node2_time1 = node1_time2+SECS_1;
-        val node_2_result1 = clusterService2.computeClusterState(10, node2_time1);
-        checkNodeInfo(node_2_result1, "ID_2", false, node2_time1);
-        checkNodeState(clusterService2, null, node2_time1);
-        checkMgrNodeState(clusterService2, node2_time1, "ID_1", node1_time2+SECS_20);
+        val timeNow = START_TIME + testCase.sec * 1000;
 
-        //Node 2 Hb 2
-        val node2_time2 = node2_time1+SECS_10;
+        val nIdx = testCase.nodeIdx;
+        val nodeId = "ID_" + (nIdx + 1);
+        val node = nodes.get(nIdx);
 
-        //Node 2 Hb 3. By now mgr is unresponsive
-        val node2_time3 = node2_time2+SECS_10;
-        val node_2_result3 = clusterService2.computeClusterState(10, node2_time3);
-        checkNodeInfo(node_2_result3, "ID_2", false, node2_time3);
-        checkNodeState(clusterService2, null, node2_time3);
-        checkMgrNodeState(clusterService2, node2_time3, "ID_1", node1_time2+SECS_20);
+        if(!clusterInited) {
+            when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeRecord.class)).thenReturn(null);
+            when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(null);
+            node.nodeRecord.setStartedAt(timeNow);
+            clusterInited = true;
+        }
+        else{
+            when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeRecord.class)).thenReturn(mgrNodeRecord);
+            lenient().when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(mgrNodeRecord);
+        }
 
-        //Node 2 Hb 4. Expect this to become new mgr
-        val node2_time4 = node2_time3+SECS_10;
-        val node_2_result4 = clusterService2.computeClusterState(10, node2_time4);
-        checkNodeInfo(node_2_result3, "ID_2", true, node2_time4);
-        checkNodeState(clusterService2, null, node2_time4);
-        checkMgrNodeState(clusterService2, node2_time4, "ID_2", node2_time3+SECS_20);
+        val cs = node.computeClusterState(HB_SECS, timeNow);
 
-        //Node 2 Hb 4. Node 2 is still the mgr
-        val node2_time5 = node2_time4+SECS_10;
-        val node_2_result5 = clusterService2.computeClusterState(10, node2_time5);
-        checkNodeInfo(node_2_result4, "ID_2", true, node2_time5);
-        checkNodeState(clusterService2, null, node2_time5);
-        checkMgrNodeState(clusterService2, node2_time5, "ID_2", node2_time4+SECS_20);
+        //cluster state
+        assertEquals(nodeId, cs.nodeId);
+        assertEquals(testCase.shouldBeManager, cs.isManager);
+        assertEquals(Utils.toDateTime(timeNow), cs.timeNow);
 
-        mgrNs = clusterService2.managerNodeRecord;
-        when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeRecord.class)).thenReturn(mgrNs);
-
-        //Node 1 restarts
-        val node1_time3 = node2_time4;
-        clusterService3.nodeRecord.setStartedAt(node1_time3);
-        val node1_result3 = clusterService3.computeClusterState(10, node1_time3);
-        checkNodeInfo(node1_result3, "ID_3", false, node1_time3);
-        checkNodeState(clusterService3, null, node1_time3);
-        checkMgrNodeState(clusterService3, node1_time3, "ID_2", node1_time3+SECS_20);
-
+        return node.managerNodeRecord;
     }
 
-    //-------------------------------------------
-    private void checkNodeInfo(ClusterState info, String id, boolean isMgr, long timeNow){
-        assertEquals(id, info.nodeId);
-        assertEquals(isMgr, info.isManager);
-        assertEquals(Utils.toDateTime(timeNow), info.timeNow);
-    }
-    //---------------------------------------------------------
-    private void checkNodeState(ClusterService svc, String mgrId, long timeNow){
-        assertEquals(mgrId, svc.nodeRecord.getManagerId());
-        assertEquals(timeNow + SECS_20, svc.nodeRecord.getAliveTill());
-        assertEquals(0, svc.nodeRecord.getManagerSince());
-        assertEquals(0, svc.nodeRecord.getManagerLeaseTill());
-    }
-    //-------------------------------------------------------------------
-    private void checkMgrNodeState(ClusterService svc, long timeNow, String mgrId, long mgrSince){
-        assertEquals("M", svc.managerNodeRecord.getId());
-        assertEquals(timeNow + SECS_20, svc.managerNodeRecord.getAliveTill());
-        assertEquals(mgrId, svc.managerNodeRecord.getManagerId());
-        assertEquals(mgrSince, svc.managerNodeRecord.getManagerSince());
-        assertEquals(timeNow + SECS_20, svc.managerNodeRecord.getManagerLeaseTill());
+    //------------------------
+    static class TestCase{
+        public int sec;
+        public int nodeIdx;
+        public boolean shouldBeManager;
+
+        public static TestCase of(int sec, int nodeIdx, boolean shouldBeManager) {
+            val tc = new TestCase();
+            tc.sec = sec;
+            tc.nodeIdx = nodeIdx;
+            tc.shouldBeManager = shouldBeManager;
+            return tc;
+        }
     }
 
     //-----------------
@@ -148,9 +134,4 @@ class ClusterServiceTest {
         id++;
         return "ID_"+id;
     }
-
-    private static long SECS_10 = 10000;
-    private static long SECS_20 = 20000;
-    private static long SECS_30 = 20000;
-    private static long SECS_1 = 1000;
 }
