@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @ToString
-public class ClusterState {
+public class ClusterInfo {
     public LocalDateTime timeNow;
     public String nodeId;
     public boolean isManager;

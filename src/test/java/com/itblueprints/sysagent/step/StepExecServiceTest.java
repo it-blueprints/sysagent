@@ -3,7 +3,7 @@ package com.itblueprints.sysagent.step;
 import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.ThreadManager;
-import com.itblueprints.sysagent.cluster.ClusterState;
+import com.itblueprints.sysagent.cluster.ClusterInfo;
 import com.itblueprints.sysagent.job.JobExecService;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,7 +52,7 @@ class StepExecServiceTest {
     //-------------------------------------
     @Test
     void tryProcessStep() {
-        val nodeInfo = new ClusterState();
+        val clusterInfo = new ClusterInfo();
 
         val stepRec = createStepRecord();
         when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(stepRec);
@@ -61,7 +61,7 @@ class StepExecServiceTest {
         when(jobExecService.getStep(jobName, stepName)).thenReturn(step);
 
         val now = LocalDateTime.of(2024, 1, 10, 0,0,0);
-        val stepProcessed = stepExecService.processStepIfAvailable(nodeInfo, now);
+        val stepProcessed = stepExecService.processStepIfAvailable(clusterInfo, now);
 
         assertTrue(stepProcessed);
         assertEquals(StepRecord.Status.Completed, stepRec.getStatus());

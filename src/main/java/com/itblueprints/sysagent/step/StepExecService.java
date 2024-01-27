@@ -3,7 +3,7 @@ package com.itblueprints.sysagent.step;
 import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
-import com.itblueprints.sysagent.cluster.ClusterState;
+import com.itblueprints.sysagent.cluster.ClusterInfo;
 import com.itblueprints.sysagent.job.JobExecService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,22 +30,22 @@ public class StepExecService {
     private final ThreadManager threadManager;
 
     //-------------------------------------------------------------
-    public void onHeartBeat(ClusterState clusterState, LocalDateTime now) {
+    public void onHeartBeat(ClusterInfo clusterInfo, LocalDateTime now) {
 
-        if(clusterState.isBusy) {
+        if(clusterInfo.isBusy) {
             log.debug("Node busy. Not taking on additional work");
             return;
         }
 
         var stepProcessed = false;
         do {
-            stepProcessed = processStepIfAvailable(clusterState, now);
+            stepProcessed = processStepIfAvailable(clusterInfo, now);
         } while(stepProcessed);
     }
 
     //-------------------------------------------------------------
-    boolean processStepIfAvailable(ClusterState clusterState, LocalDateTime now){
-        val stepRec = getNextStepToProcess(clusterState.nodeId);
+    boolean processStepIfAvailable(ClusterInfo clusterInfo, LocalDateTime now){
+        val stepRec = getNextStepToProcess(clusterInfo.nodeId);
         if (stepRec != null) {
             processStep(stepRec, now);
             threadManager.drainWorkerTaskQueue();

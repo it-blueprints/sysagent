@@ -69,23 +69,23 @@ public class ClusterService {
     //------------------------------
     void onHeartBeat(int heartBeatSecs){
         val timeNow = System.currentTimeMillis();
-        val nodeInfo = computeClusterState(heartBeatSecs, timeNow);
-        log.debug("* HB - Current nodeInfo = "+nodeInfo);
+        val clusterInfo = computeClusterState(heartBeatSecs, timeNow);
+        log.debug("HB - clusterInfo="+clusterInfo);
 
         if (!nodeRecord.isInitialised()) {
-            if (nodeInfo.isManager) {
-                schedulerService.initialise(nodeInfo);
+            if (clusterInfo.isManager) {
+                schedulerService.initialise(clusterInfo);
             }
-            jobExecService.initialise(nodeInfo); //All nodes need this to load up steps
+            jobExecService.initialise(clusterInfo); //All nodes need this to load up steps
             nodeRecord.setInitialised(true);
             mongoTemplate.save(nodeRecord);
         } else {
             val now = LocalDateTime.now();
-            if (nodeInfo.isManager) {
-                schedulerService.onHeartBeat(nodeInfo, now);
-                jobExecService.onHeartBeat(nodeInfo, now);
+            if (clusterInfo.isManager) {
+                schedulerService.onHeartBeat(clusterInfo, now);
+                jobExecService.onHeartBeat(clusterInfo, now);
             }
-            threadManager.getExecutor().submit(() -> stepExecService.onHeartBeat(nodeInfo, now));
+            threadManager.getExecutor().submit(() -> stepExecService.onHeartBeat(clusterInfo, now));
         }
     }
 
@@ -94,7 +94,7 @@ public class ClusterService {
     private static final int CLEANUP_HEARTBEATS = 600;
 
     //----------------------------------------
-    ClusterState computeClusterState(int heartBeatSecs, long timeNow){
+    ClusterInfo computeClusterState(int heartBeatSecs, long timeNow){
 
         val hrtbt = heartBeatSecs * 1000;
 
@@ -176,13 +176,13 @@ public class ClusterService {
             }
         }
 
-        val cs = new ClusterState();
-        cs.timeNow = Utils.toDateTime(timeNow);
-        cs.nodeId = nodeRecord.getId();
-        cs.isManager = isManager();
-        cs.isBusy = threadManager.isNodeBusy();
-        cs.deadNodeIds = deadNodeIds;
-        return cs;
+        val ci = new ClusterInfo();
+        ci.timeNow = Utils.toDateTime(timeNow);
+        ci.nodeId = nodeRecord.getId();
+        ci.isManager = isManager();
+        ci.isBusy = threadManager.isNodeBusy();
+        ci.deadNodeIds = deadNodeIds;
+        return ci;
     }
 
     //----------------------

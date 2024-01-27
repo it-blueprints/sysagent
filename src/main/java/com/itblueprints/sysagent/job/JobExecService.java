@@ -3,7 +3,7 @@ package com.itblueprints.sysagent.job;
 import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
-import com.itblueprints.sysagent.cluster.ClusterState;
+import com.itblueprints.sysagent.cluster.ClusterInfo;
 import com.itblueprints.sysagent.step.Step;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.RequiredArgsConstructor;
@@ -75,9 +75,9 @@ public class JobExecService {
     }
 
     //------------------------------------------------------------
-    public void onHeartBeat(ClusterState clusterState, LocalDateTime now) {
+    public void onHeartBeat(ClusterInfo clusterInfo, LocalDateTime now) {
         processExecutingJobs(now);
-        releaseDeadClaims(clusterState);
+        releaseDeadClaims(clusterInfo);
     }
 
     //--------------------------------------------------------------------
@@ -174,8 +174,8 @@ public class JobExecService {
     }
 
     //-------------------------------------------------------
-    public void releaseDeadClaims(ClusterState clusterState){
-        for(val deadNodeId : clusterState.deadNodeIds){
+    public void releaseDeadClaims(ClusterInfo clusterInfo){
+        for(val deadNodeId : clusterInfo.deadNodeIds){
             val query = new Query();
             query.addCriteria(Criteria
                     .where("nodeId").is(deadNodeId)
@@ -191,7 +191,7 @@ public class JobExecService {
     }
 
     //-----------------------------------------------
-    public void initialise(ClusterState clusterState){
+    public void initialise(ClusterInfo clusterInfo){
 
         log.debug("Initialising JobService");
         val beanFactory = appContext.getBeanFactory();
