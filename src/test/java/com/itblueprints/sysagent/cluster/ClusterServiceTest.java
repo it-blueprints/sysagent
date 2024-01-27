@@ -82,7 +82,6 @@ class ClusterServiceTest {
 
         val i = new int[]{1};
         testCases.stream().forEach( tc -> {
-                    System.out.println("Test case # " + i[0]);
                     mgrNodeRecord = assertState(tc, i[0]);
                     i[0]++;
                 });
