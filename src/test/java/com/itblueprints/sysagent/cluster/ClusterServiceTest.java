@@ -73,7 +73,8 @@ class ClusterServiceTest {
                 TestCase.of(32, 0, false),
                 TestCase.of(41, 2, false),
                 TestCase.of(51, 2, false),
-                TestCase.of(52, 0, true)
+                TestCase.of(52, 0, true),
+                TestCase.of(61, 2, false)
         );
 
         val i = new int[]{1};
