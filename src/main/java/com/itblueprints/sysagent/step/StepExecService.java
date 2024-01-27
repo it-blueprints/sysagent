@@ -79,7 +79,8 @@ public class StepExecService {
             else step.execute(ctx);
         }
         catch (Exception e){
-            e.printStackTrace();
+            stepRec.setStatus(StepRecord.Status.Failed);
+            mongoTemplate.save(stepRec);
             throw new SysAgentException("Batch step "+step.getName()+" failed", e);
         }
         finally {
