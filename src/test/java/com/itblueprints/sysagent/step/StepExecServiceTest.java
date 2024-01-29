@@ -2,9 +2,11 @@ package com.itblueprints.sysagent.step;
 
 import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.Config;
+import com.itblueprints.sysagent.ExecStatus;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
 import com.itblueprints.sysagent.job.JobExecService;
+import com.itblueprints.sysagent.repository.RecordRepository;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,9 +29,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class StepExecServiceTest {
 
-    @Mock MongoTemplate mongoTemplate;
-    @Mock
-    JobExecService jobExecService;
+    @Mock RecordRepository repository;
+    @Mock JobExecService jobExecService;
     @Mock Config config;
     @Mock ThreadManager threadManager;
 
@@ -46,7 +47,7 @@ class StepExecServiceTest {
         when(threadManager.getExecutor()).thenReturn(executor);
         when(threadManager.getTaskQueueSize()).thenReturn(2);
 
-        stepExecService = new StepExecService(mongoTemplate, jobExecService, threadManager);
+        stepExecService = new StepExecService(jobExecService, threadManager, repository);
     }
 
     //-------------------------------------
@@ -55,7 +56,7 @@ class StepExecServiceTest {
         val clusterInfo = new ClusterInfo();
 
         val stepRec = createStepRecord();
-        when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(stepRec);
+        when(repository.tryClaimNextStepPartition(any())).thenReturn(stepRec);
 
         val step = new MockStep();
         when(jobExecService.getStep(jobName, stepName)).thenReturn(step);
@@ -64,7 +65,7 @@ class StepExecServiceTest {
         val stepProcessed = stepExecService.processStepIfAvailable(clusterInfo, now);
 
         assertTrue(stepProcessed);
-        assertEquals(StepRecord.Status.Completed, stepRec.getStatus());
+        assertEquals(ExecStatus.Completed, stepRec.getStatus());
         assertEquals(3, step.totalPages);
         assertEquals(true, step.preProcessCalled);
         assertEquals(true, step.postProcessCalled);

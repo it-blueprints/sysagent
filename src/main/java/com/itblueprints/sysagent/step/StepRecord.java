@@ -1,9 +1,9 @@
 package com.itblueprints.sysagent.step;
 
 import com.itblueprints.sysagent.Arguments;
+import com.itblueprints.sysagent.ExecStatus;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -44,17 +44,15 @@ public class StepRecord {
 
     private LocalDateTime completedAt;
 
+    private LocalDateTime lastUpdateAt;
+
     private long batchItemsProcessed = -1;
 
+    private int retryCount = 0;
+
     @Indexed
-    private Status status = Status.New;
+    private ExecStatus status = ExecStatus.New;
 
     private CheckPointState checkPointState;
 
-    public enum Status {
-        New,
-        Executing,
-        Failed,
-        Completed
-    }
 }

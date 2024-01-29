@@ -1,10 +1,12 @@
 package com.itblueprints.sysagent.step;
 
+import com.itblueprints.sysagent.ExecStatus;
 import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
 import com.itblueprints.sysagent.job.JobExecService;
+import com.itblueprints.sysagent.repository.RecordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -25,9 +27,9 @@ import java.util.concurrent.Future;
 @RequiredArgsConstructor
 @Slf4j
 public class StepExecService {
-    private final MongoTemplate mongoTemplate;
     private final JobExecService jobExecService;
     private final ThreadManager threadManager;
+    private final RecordRepository repository;
 
     //-------------------------------------------------------------
     public void onHeartBeat(ClusterInfo clusterInfo, LocalDateTime now) {
@@ -45,7 +47,7 @@ public class StepExecService {
 
     //-------------------------------------------------------------
     boolean processStepIfAvailable(ClusterInfo clusterInfo, LocalDateTime now){
-        val stepRec = getNextStepToProcess(clusterInfo.nodeId);
+        val stepRec = repository.tryClaimNextStepPartition(clusterInfo.nodeId);
         if (stepRec != null) {
             processStep(stepRec, now);
             threadManager.drainWorkerTaskQueue();
@@ -57,9 +59,9 @@ public class StepExecService {
     //-------------------------------------------------------------
     void processStep(StepRecord stepRec, LocalDateTime now){
         threadManager.setNodeBusy(true);
-        stepRec.setStatus(StepRecord.Status.Executing);
+        stepRec.setStatus(ExecStatus.Executing);
         stepRec.setStartedAt(now);
-        mongoTemplate.save(stepRec);
+        repository.save(stepRec);
 
         val step = jobExecService.getStep(stepRec.getJobName(), stepRec.getStepName());
         val ctx = new StepContext();
@@ -79,17 +81,17 @@ public class StepExecService {
             else step.execute(ctx);
         }
         catch (Exception e){
-            stepRec.setStatus(StepRecord.Status.Failed);
-            mongoTemplate.save(stepRec);
-            throw new SysAgentException("Batch step "+step.getName()+" failed", e);
+            stepRec.setStatus(ExecStatus.Failed);
+            repository.save(stepRec);
+            throw new SysAgentException("Batch step failed - "+step.getName(), e);
         }
         finally {
             threadManager.setNodeBusy(false);
         }
         stepRec.setBatchItemsProcessed(ctx.getItemsProcessed());
-        stepRec.setStatus(StepRecord.Status.Completed);
+        stepRec.setStatus(ExecStatus.Completed);
         stepRec.setCompletedAt(LocalDateTime.now());
-        mongoTemplate.save(stepRec);
+        repository.save(stepRec);
 
         threadManager.setNodeBusy(false);
     }
@@ -181,24 +183,5 @@ public class StepExecService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    //----------------------------------------------
-    private StepRecord getNextStepToProcess(String nodeId){
-        //Read leader record with lock
-        val query = new Query();
-        query.addCriteria(
-                Criteria.where("claimed").is(false)
-        );
-
-        val update = new Update();
-        update.set("claimed", true);
-        update.set("nodeId", nodeId);
-        val lockedStepRec = mongoTemplate.findAndModify(query, update, StepRecord.class);
-        if(lockedStepRec!=null) { //because this is the pre update value
-            lockedStepRec.setClaimed(true);
-            lockedStepRec.setNodeId(nodeId);
-        }
-        return lockedStepRec;
     }
 }

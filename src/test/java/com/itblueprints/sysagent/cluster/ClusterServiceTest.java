@@ -4,6 +4,7 @@ import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.job.JobExecService;
+import com.itblueprints.sysagent.repository.RecordRepository;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
 import com.itblueprints.sysagent.step.StepExecService;
 import lombok.val;
@@ -23,7 +24,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ClusterServiceTest {
 
-    @Mock MongoTemplate mongoTemplate;
+    @Mock
+    RecordRepository repository;
     @Mock SchedulerService schedulerService;
     @Mock
     JobExecService jobExecService;
@@ -38,14 +40,14 @@ class ClusterServiceTest {
     @BeforeEach
     void beforeEach() {
         nodes = List.of(
-                new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager),
-                new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager),
-                new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager),
-                new ClusterService(mongoTemplate, schedulerService, jobExecService, stepExecService, config, threadManager)
+                new ClusterService(repository, schedulerService, jobExecService, stepExecService, config, threadManager),
+                new ClusterService(repository, schedulerService, jobExecService, stepExecService, config, threadManager),
+                new ClusterService(repository, schedulerService, jobExecService, stepExecService, config, threadManager),
+                new ClusterService(repository, schedulerService, jobExecService, stepExecService, config, threadManager)
         );
 
         //Save puts in an id
-        when(mongoTemplate.save(any())).thenAnswer(ans -> {
+        when(repository.save((NodeRecord) any())).thenAnswer(ans -> {
             val ns = (NodeRecord) ans.getArguments()[0];
             if(ns.getId() == null) {
                 ns.setId(nextId());
@@ -111,14 +113,14 @@ class ClusterServiceTest {
         val node = nodes.get(nIdx);
 
         if(!clusterInited) {
-            when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeRecord.class)).thenReturn(null);
-            when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(null);
+            when(repository.getManagerNodeRecord()).thenReturn(null);
+            when(repository.tryGetLockedManagerNodeRecord()).thenReturn(null);
             node.nodeRecord.setStartedAt(timeNow);
             clusterInited = true;
         }
         else{
-            when(mongoTemplate.findById(ClusterService.MANAGER_ID, NodeRecord.class)).thenReturn(mgrNodeRecord);
-            lenient().when(mongoTemplate.findAndModify(any(), any(), any())).thenReturn(mgrNodeRecord);
+            when(repository.getManagerNodeRecord()).thenReturn(mgrNodeRecord);
+            lenient().when(repository.tryGetLockedManagerNodeRecord()).thenReturn(mgrNodeRecord);
         }
 
         val cs = node.computeClusterState(HB_SECS, timeNow);

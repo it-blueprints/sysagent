@@ -26,5 +26,6 @@ public class NodeRecord {
     private boolean locked;
 
     private boolean initialised;
-    
+
+    public static final String MANAGER_ID = "M";
 }

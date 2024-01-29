@@ -1,8 +1,10 @@
 package com.itblueprints.sysagent.job;
 
 import com.itblueprints.sysagent.Arguments;
+import com.itblueprints.sysagent.ExecStatus;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
+import com.itblueprints.sysagent.repository.RecordRepository;
 import com.itblueprints.sysagent.step.MockStep;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.val;
@@ -33,7 +35,7 @@ import static org.mockito.Mockito.*;
 class JobExecServiceTest {
 
     @Mock ConfigurableApplicationContext appContext;
-    @Mock MongoTemplate mongoTemplate;
+    @Mock RecordRepository repository;
     @Mock ThreadManager threadManager;
     @Mock ConfigurableListableBeanFactory beanFactory;
     @Mock IndexOperations indexOperations;
@@ -47,7 +49,7 @@ class JobExecServiceTest {
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
-        jobExecService = new JobExecService(appContext, mongoTemplate, threadManager);
+        jobExecService = new JobExecService(appContext, repository, threadManager);
     }
 
     //------------------------------------
@@ -58,7 +60,7 @@ class JobExecServiceTest {
         val jobRec = new JobRecord();
         jobRec.setJobName("Job");
 
-        when(mongoTemplate.save(any())).thenReturn(jobRec);
+        when(repository.save((JobRecord) any())).thenReturn(jobRec);
 
         initialiseJobService(job, jobRec);
 
@@ -69,7 +71,7 @@ class JobExecServiceTest {
         assertEquals("Step", jobRec.getCurrentStepName());
         assertEquals(3, jobRec.getPartitionCount());
 
-        verify(mongoTemplate, times(3)).save(stepRecC.capture());
+        verify(repository, times(3)).save(stepRecC.capture());
 
         val stepRecs = stepRecC.getAllValues();
         val n = stepRecs.stream()
@@ -94,7 +96,7 @@ class JobExecServiceTest {
         jobRec.setJobName("Job");
         jobRec.setCurrentStepName("Step");
 
-        when(mongoTemplate.find(any(), eq(JobRecord.class))).thenReturn(List.of(jobRec));
+        when(repository.findExecutingJobRecords()).thenReturn(List.of(jobRec));
         when(threadManager.getExecutor()).thenReturn(executor);
         initialiseJobService(job, jobRec);
         jobExecService.processExecutingJobs(LocalDateTime.now());
@@ -111,12 +113,11 @@ class JobExecServiceTest {
 
         jobRec.setJobName("Job");
         jobRec.setId("job1234");
-        jobRec.setStatus(JobRecord.Status.Executing);
+        jobRec.setStatus(ExecStatus.Executing);
 
         when(appContext.getBeanFactory()).thenReturn(beanFactory);
         when(beanFactory.getBeanNamesForType(Job.class)).thenReturn(new String[]{"job"});
         when(beanFactory.getBean("job", Job.class)).thenReturn(job);
-        when(mongoTemplate.indexOps(JobRecord.class)).thenReturn(indexOperations);
         jobExecService.initialise(new ClusterInfo());
 
     }

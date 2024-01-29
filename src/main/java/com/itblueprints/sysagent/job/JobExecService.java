@@ -1,20 +1,14 @@
 package com.itblueprints.sysagent.job;
 
-import com.itblueprints.sysagent.Arguments;
-import com.itblueprints.sysagent.SysAgentException;
-import com.itblueprints.sysagent.ThreadManager;
+import com.itblueprints.sysagent.*;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
+import com.itblueprints.sysagent.repository.RecordRepository;
 import com.itblueprints.sysagent.step.Step;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.index.Index;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -27,7 +21,7 @@ import java.util.Map;
 public class JobExecService {
 
     private final ConfigurableApplicationContext appContext;
-    private final MongoTemplate mongoTemplate;
+    private final RecordRepository repository;
     private final ThreadManager threadManager;
 
     //--------------------------------------------------------------
@@ -44,7 +38,7 @@ public class JobExecService {
 
     //--------------------------------------------------------
     // Starts off a Job
-    // Called either by the SchedulerService on by a API
+    // Called either by the SchedulerService or via API
     public void runJob(String jobName, Arguments jobArgs) {
 
         if(!jobsMap.containsKey(jobName)){
@@ -53,25 +47,27 @@ public class JobExecService {
 
         log.debug("Running "+jobName);
 
-        if(!jobArgs.contains(Keys.jobStartedAt)){
-            jobArgs.put(Keys.jobStartedAt, LocalDateTime.now());
+        if(!jobArgs.contains(SysAgentService.DataKeys.jobStartedAt)){
+            jobArgs.put(SysAgentService.DataKeys.jobStartedAt, LocalDateTime.now());
         }
 
-        val jobStartedAt = jobArgs.asTime(Keys.jobStartedAt);
+        val jobStartedAt = jobArgs.asTime(SysAgentService.DataKeys.jobStartedAt);
 
         val jRec = new JobRecord();
         jRec.setJobName(jobName);
         jRec.setJobArguments(jobArgs);
-        jRec.setStatus(JobRecord.Status.Executing);
+        jRec.setStatus(ExecStatus.Executing);
+        jRec.setStartedAt(jobStartedAt);
+        jRec.setLastUpdateAt(jobStartedAt);
 
-        var jobRec = mongoTemplate.save(jRec);
+        var jobRec = repository.save(jRec);
 
         val jobItem = jobsMap.get(jobName);
         val firstStep = jobItem.firstStep;
         jobItem.job.addToJobArguments(jobArgs);
 
         sendStepExecutionInstruction(firstStep, jobArgs, jobRec);
-        mongoTemplate.save(jobRec);
+        repository.save(jobRec);
     }
 
     //------------------------------------------------------------
@@ -82,15 +78,13 @@ public class JobExecService {
 
     //--------------------------------------------------------------------
     void processExecutingJobs(LocalDateTime now) {
-        val query = new Query();
-        query.addCriteria(Criteria
-                .where("status").is(JobRecord.Status.Executing));
-        val executingJobs = mongoTemplate.find(query, JobRecord.class);
+        val executingJobs = repository.findExecutingJobRecords();
         for(val jobRec : executingJobs){
 
             threadManager.getExecutor().submit(() -> {
                 try {
-                    processExecutingJob(jobRec, now);
+                    doIfCurrentStepIsComplete(jobRec, now);
+                    doIfJobHasFailed(jobRec, now);
                 }
                 catch (Exception e){
                     e.printStackTrace();
@@ -101,14 +95,9 @@ public class JobExecService {
     }
 
     //--------------------------------------------------------------------
-    private void processExecutingJob(JobRecord jobRec, LocalDateTime now) {
-        val query = new Query();
-        query.addCriteria(Criteria
-                .where("jobRecordId").is(jobRec.getId())
-                .and("stepName").is(jobRec.getCurrentStepName())
-                .and("status").is(StepRecord.Status.Completed)
-        );
-        val completedPrtns = mongoTemplate.find(query, StepRecord.class);
+    private void doIfCurrentStepIsComplete(JobRecord jobRec, LocalDateTime now) {
+
+        val completedPrtns = repository.findCompletedPartitionsOfCurrentStepOfJob(jobRec.getId(), jobRec.getCurrentStepName());
         val partitionsCompletedCount = completedPrtns.size();
         jobRec.setPartitionsCompletedCount(partitionsCompletedCount);
 
@@ -123,18 +112,19 @@ public class JobExecService {
 
             if(nextPStep != null) {
                 //Next step
-                log.debug("Sending step execution instruction for step "+nextPStep.stepName);
+                log.debug("Sending step execution instruction for step - "+nextPStep.stepName);
                 val jobArgs = jobRec.getJobArguments();
                 sendStepExecutionInstruction(nextPStep, jobArgs, jobRec);
             }
             else { //No more steps, job complete
-                log.debug("Job "+jobRec.getJobName()+" is complete");
-                jobRec.setStatus(JobRecord.Status.Completed);
-                jobRec.setJobCompletedAt(now);
+                log.debug("Job complete - "+jobRec.getJobName());
+                jobRec.setStatus(ExecStatus.Completed);
+                jobRec.setCompletedAt(now);
             }
         }
 
-        mongoTemplate.save(jobRec);
+        jobRec.setLastUpdateAt(now);
+        repository.save(jobRec);
     }
 
     //----------------------------------------------------------------------
@@ -169,24 +159,54 @@ public class JobExecService {
                 stepRecord.setPartitionNum(i);
                 stepRecord.setPartitionCount(totalPartitions);
             }
-            mongoTemplate.save(stepRecord);
+            repository.save(stepRecord);
         }
     }
 
     //-------------------------------------------------------
     public void releaseDeadClaims(ClusterInfo clusterInfo){
         for(val deadNodeId : clusterInfo.deadNodeIds){
-            val query = new Query();
-            query.addCriteria(Criteria
-                    .where("nodeId").is(deadNodeId)
-                    .and("status").is(StepRecord.Status.Executing)
-            );
-            val unworkedStepRecs = mongoTemplate.find(query, StepRecord.class);
+            val unworkedStepRecs = repository.findExecutingStepPartitionsOfNode(deadNodeId);
             for(val stepRec : unworkedStepRecs){
                 stepRec.setClaimed(false);
                 stepRec.setNodeId(null);
-                mongoTemplate.save(stepRec);
+                repository.save(stepRec);
             }
+        }
+    }
+
+    //---------------------------------------------------------------
+    public void doIfJobHasFailed(JobRecord jobRec, LocalDateTime now) {
+
+        val prtns = repository.findCompletedOrFailedStepsPartitionsOfJob(jobRec.getId());
+        val prtnCount = prtns.size();
+
+        //If all partitions of current step are either completed or failed, job has failed
+        if(prtnCount == jobRec.getPartitionCount()){
+            val hasFailuresOpt = prtns.stream().filter(p -> p.getStatus().equals(ExecStatus.Failed)).findAny();
+            if(hasFailuresOpt.isPresent()) {
+                jobRec.setStatus(ExecStatus.Failed);
+                jobRec.setLastUpdateAt(now);
+                repository.save(jobRec);
+            }
+        }
+    }
+    //-----------------------------------------------
+    //Called from API
+    public void retryFailedJob(String jobName, LocalDateTime now) {
+        if(!jobsMap.containsKey(jobName)){
+            throw new SysAgentException("Job not found. jobName="+jobName);
+        }
+        val failedJobRec = repository.findJobRecordForFailedJob(jobName);
+        if(failedJobRec == null) throw new SysAgentException("Cannot retry Job as it is not marked as Failed. jobName="+jobName);
+        log.debug("Retrying "+jobName);
+        val failedStepPrtns = repository.findFailedStepPartitionsOfJob(failedJobRec.getId());
+        for(val failedStepPrtn : failedStepPrtns){
+            failedStepPrtn.setStatus(ExecStatus.New);
+            failedStepPrtn.setClaimed(false);
+            failedStepPrtn.setRetryCount(failedStepPrtn.getRetryCount()+1);
+            failedStepPrtn.setLastUpdateAt(now);
+            repository.save(failedStepPrtn);
         }
     }
 
@@ -204,7 +224,7 @@ public class JobExecService {
             val pipeline = jobBean.getPipeline();
             val firstPStep = pipeline.getFirstStep();
             if(firstPStep==null){
-                throw new SysAgentException("First step is missing in pipeline for job "+jobBean.getName());
+                throw new SysAgentException("First step is missing in pipeline for Job "+jobBean.getName());
             }
             jobItem.firstStep = firstPStep;
 
@@ -220,18 +240,9 @@ public class JobExecService {
         }
 
         //MongoDB indices
-        mongoTemplate.indexOps(JobRecord.class)
-                .ensureIndex(new Index()
-                        .on("jobRecordId", Sort.Direction.ASC)
-                        .on("stepName", Sort.Direction.ASC)
-                        .on("status", Sort.Direction.ASC));
-
+        repository.ensureJobRecordIndices();
 
         log.debug("JobService initialised");
     }
 
-    //--------------------------
-    public static class Keys {
-        public static final String jobStartedAt = "jobStartedAt";
-    }
 }

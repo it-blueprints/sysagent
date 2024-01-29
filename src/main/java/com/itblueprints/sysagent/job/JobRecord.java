@@ -1,6 +1,7 @@
 package com.itblueprints.sysagent.job;
 
 import com.itblueprints.sysagent.Arguments;
+import com.itblueprints.sysagent.ExecStatus;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
@@ -20,11 +21,15 @@ public class JobRecord {
     private String jobName;
 
     @Indexed
-    private Status status = Status.New;
+    private ExecStatus status = ExecStatus.New;
 
     private Arguments jobArguments;
 
-    private LocalDateTime jobCompletedAt;
+    private LocalDateTime startedAt;
+
+    private LocalDateTime completedAt;
+
+    private LocalDateTime lastUpdateAt;
 
     private String currentStepName;
 
@@ -32,10 +37,6 @@ public class JobRecord {
 
     private int partitionsCompletedCount = 0;
 
-    //------------------
-    public enum Status {
-        New,
-        Executing,
-        Completed
-    }
+    private int retryCount = 0;
+
 }

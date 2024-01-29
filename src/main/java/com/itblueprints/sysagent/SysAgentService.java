@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 @RequiredArgsConstructor
 public class SysAgentService {
@@ -32,5 +34,16 @@ public class SysAgentService {
     //--------------------------------
     public void runJob(String jobName, Arguments jobArguments){
         jobExecService.runJob(jobName, jobArguments);
+    }
+
+
+    //------------------------------------------------
+    public void retryFailedJob(String jobName){
+        jobExecService.retryFailedJob(jobName, LocalDateTime.now());
+    }
+
+    //--------------------------------
+    public static class DataKeys {
+        public static final String jobStartedAt = "jobStartedAt";
     }
 }
