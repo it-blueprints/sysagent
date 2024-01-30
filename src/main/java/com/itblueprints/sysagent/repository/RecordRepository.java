@@ -19,7 +19,7 @@ public interface RecordRepository {
     //Job Record
     JobRecord save(JobRecord jobRecord);
     List<JobRecord> findExecutingJobRecords();
-    void ensureJobRecordIndices();
+    void initialise();
     JobRecord findJobRecordForFailedJob(String jobName);
 
     //Step Record

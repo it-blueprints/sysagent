@@ -64,7 +64,7 @@ public class JobExecService {
 
         val jobItem = jobsMap.get(jobName);
         val firstStep = jobItem.firstStep;
-        jobItem.job.addToJobArguments(jobArgs);
+        jobItem.job.onStarted(jobArgs);
 
         sendStepExecutionInstruction(firstStep, jobArgs, jobRec);
         repository.save(jobRec);
@@ -240,7 +240,7 @@ public class JobExecService {
         }
 
         //MongoDB indices
-        repository.ensureJobRecordIndices();
+        repository.initialise();
 
         log.debug("JobService initialised");
     }

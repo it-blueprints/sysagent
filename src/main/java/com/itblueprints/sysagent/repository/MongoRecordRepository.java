@@ -97,7 +97,7 @@ public class MongoRecordRepository implements RecordRepository {
 
     //--------------------------------------
     @Override
-    public void ensureJobRecordIndices() {
+    public void initialise() {
         mongoTemplate.indexOps(JobRecord.class)
                 .ensureIndex(new Index()
                         .on("jobRecordId", Sort.Direction.ASC)
