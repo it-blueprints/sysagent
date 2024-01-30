@@ -17,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 
 import java.time.LocalDateTime;
@@ -96,7 +95,7 @@ class JobExecServiceTest {
         jobRec.setJobName("Job");
         jobRec.setCurrentStepName("Step");
 
-        when(repository.findExecutingJobRecords()).thenReturn(List.of(jobRec));
+        when(repository.findRecordsForRunningJobs()).thenReturn(List.of(jobRec));
         when(threadManager.getExecutor()).thenReturn(executor);
         initialiseJobService(job, jobRec);
         jobExecService.processExecutingJobs(LocalDateTime.now());
@@ -113,7 +112,7 @@ class JobExecServiceTest {
 
         jobRec.setJobName("Job");
         jobRec.setId("job1234");
-        jobRec.setStatus(ExecStatus.Executing);
+        jobRec.setStatus(ExecStatus.RUNNING);
 
         when(appContext.getBeanFactory()).thenReturn(beanFactory);
         when(beanFactory.getBeanNamesForType(Job.class)).thenReturn(new String[]{"job"});

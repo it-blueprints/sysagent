@@ -51,7 +51,7 @@ public class StepRecord {
     private int retryCount = 0;
 
     @Indexed
-    private ExecStatus status = ExecStatus.New;
+    private ExecStatus status = ExecStatus.NEW;
 
     private CheckPointState checkPointState;
 

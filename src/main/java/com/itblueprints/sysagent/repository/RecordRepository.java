@@ -13,20 +13,20 @@ public interface RecordRepository {
     NodeRecord getManagerNodeRecord();
     NodeRecord getNodeRecordById(String id);
     NodeRecord tryGetLockedManagerNodeRecord();
-    List<NodeRecord> getOtherNodeRecords(String thisNodeId);
+    List<NodeRecord> getRecordsForOtherNodes(String thisNodeId);
     void delete(NodeRecord nodeRecord);
 
     //Job Record
     JobRecord save(JobRecord jobRecord);
-    List<JobRecord> findExecutingJobRecords();
+    List<JobRecord> findRecordsForRunningJobs();
     void initialise();
-    JobRecord findJobRecordForFailedJob(String jobName);
+    JobRecord findRecordForFailedJob(String jobName);
 
     //Step Record
     StepRecord save(StepRecord stepRecord);
     List<StepRecord> findCompletedPartitionsOfCurrentStepOfJob(String jobRecordId, String stepName);
-    List<StepRecord> findExecutingStepPartitionsOfNode(String nodeRecordId);
-    List<StepRecord> findCompletedOrFailedStepsPartitionsOfJob(String jobRecordId);
+    List<StepRecord> findRunningStepPartitionsOfNode(String nodeRecordId);
+    List<StepRecord> findCompleteOrFailedStepsPartitionsOfJob(String jobRecordId);
     List<StepRecord> findFailedStepPartitionsOfJob(String jobRecordId);
     StepRecord tryClaimNextStepPartition(String thisNodeId);
 }

@@ -12,10 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -59,7 +55,7 @@ public class StepExecService {
     //-------------------------------------------------------------
     void processStep(StepRecord stepRec, LocalDateTime now){
         threadManager.setNodeBusy(true);
-        stepRec.setStatus(ExecStatus.Executing);
+        stepRec.setStatus(ExecStatus.RUNNING);
         stepRec.setStartedAt(now);
         repository.save(stepRec);
 
@@ -81,7 +77,7 @@ public class StepExecService {
             else step.execute(ctx);
         }
         catch (Exception e){
-            stepRec.setStatus(ExecStatus.Failed);
+            stepRec.setStatus(ExecStatus.FAILED);
             repository.save(stepRec);
             throw new SysAgentException("Batch step failed - "+step.getName(), e);
         }
@@ -89,7 +85,7 @@ public class StepExecService {
             threadManager.setNodeBusy(false);
         }
         stepRec.setBatchItemsProcessed(ctx.getItemsProcessed());
-        stepRec.setStatus(ExecStatus.Completed);
+        stepRec.setStatus(ExecStatus.COMPLETE);
         stepRec.setCompletedAt(LocalDateTime.now());
         repository.save(stepRec);
 

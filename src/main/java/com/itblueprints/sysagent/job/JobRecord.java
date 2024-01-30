@@ -21,7 +21,7 @@ public class JobRecord {
     private String jobName;
 
     @Indexed
-    private ExecStatus status = ExecStatus.New;
+    private ExecStatus status = ExecStatus.NEW;
 
     private Arguments jobArguments;
 

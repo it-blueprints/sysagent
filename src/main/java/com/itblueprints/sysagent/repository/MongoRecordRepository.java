@@ -65,7 +65,7 @@ public class MongoRecordRepository implements RecordRepository {
 
     //--------------------------------------
     @Override
-    public List<NodeRecord> getOtherNodeRecords(String thisNodeId) {
+    public List<NodeRecord> getRecordsForOtherNodes(String thisNodeId) {
         val allNRs = mongoTemplate.findAll(NodeRecord.class);
         Set<String> excludedIds = Set.of(MANAGER_ID, thisNodeId);
         return allNRs.stream()
@@ -88,10 +88,10 @@ public class MongoRecordRepository implements RecordRepository {
 
     //--------------------------------------
     @Override
-    public List<JobRecord> findExecutingJobRecords() {
+    public List<JobRecord> findRecordsForRunningJobs() {
         val executingJobsQuery = new Query();
         executingJobsQuery.addCriteria(Criteria
-                .where("status").is(ExecStatus.Executing));
+                .where("status").is(ExecStatus.RUNNING));
         return mongoTemplate.find(executingJobsQuery, JobRecord.class);
     }
 
@@ -107,11 +107,11 @@ public class MongoRecordRepository implements RecordRepository {
 
     //--------------------------------------
     @Override
-    public JobRecord findJobRecordForFailedJob(String jobName) {
+    public JobRecord findRecordForFailedJob(String jobName) {
         val query = new Query();
         query.addCriteria(Criteria
                 .where("jobName").is(jobName)
-                .and("status").is(ExecStatus.Failed));
+                .and("status").is(ExecStatus.FAILED));
         return mongoTemplate.findOne(query, JobRecord.class);
     }
 
@@ -129,29 +129,29 @@ public class MongoRecordRepository implements RecordRepository {
         query.addCriteria(Criteria
                 .where("jobRecordId").is(jobRecordId)
                 .and("stepName").is(stepName)
-                .and("status").is(ExecStatus.Completed)
+                .and("status").is(ExecStatus.COMPLETE)
         );
         return mongoTemplate.find(query, StepRecord.class);
     }
 
     //--------------------------------------
     @Override
-    public List<StepRecord> findExecutingStepPartitionsOfNode(String nodeRecordId) {
+    public List<StepRecord> findRunningStepPartitionsOfNode(String nodeRecordId) {
         val query = new Query();
         query.addCriteria(Criteria
                 .where("nodeId").is(nodeRecordId)
-                .and("status").is(ExecStatus.Executing)
+                .and("status").is(ExecStatus.RUNNING)
         );
        return mongoTemplate.find(query, StepRecord.class);
     }
 
     //--------------------------------------
     @Override
-    public List<StepRecord> findCompletedOrFailedStepsPartitionsOfJob(String jobRecordId) {
+    public List<StepRecord> findCompleteOrFailedStepsPartitionsOfJob(String jobRecordId) {
         val query = new Query();
         val statusIsCompletedOrExecuting = new Criteria().orOperator(
-                Criteria.where("status").is(ExecStatus.Completed),
-                Criteria.where("status").is(ExecStatus.Failed)
+                Criteria.where("status").is(ExecStatus.COMPLETE),
+                Criteria.where("status").is(ExecStatus.FAILED)
         );
         val criteria = new Criteria().andOperator(
                 Criteria.where("jobRecordId").is(jobRecordId),
@@ -168,7 +168,7 @@ public class MongoRecordRepository implements RecordRepository {
         val query = new Query();
         query.addCriteria(Criteria
                 .where("jobRecordId").is(jobRecordId)
-                .and("status").is(ExecStatus.Failed)
+                .and("status").is(ExecStatus.FAILED)
         );
         return mongoTemplate.find(query, StepRecord.class);
     }

@@ -56,7 +56,7 @@ public class JobExecService {
         val jRec = new JobRecord();
         jRec.setJobName(jobName);
         jRec.setJobArguments(jobArgs);
-        jRec.setStatus(ExecStatus.Executing);
+        jRec.setStatus(ExecStatus.RUNNING);
         jRec.setStartedAt(jobStartedAt);
         jRec.setLastUpdateAt(jobStartedAt);
 
@@ -78,7 +78,7 @@ public class JobExecService {
 
     //--------------------------------------------------------------------
     void processExecutingJobs(LocalDateTime now) {
-        val executingJobs = repository.findExecutingJobRecords();
+        val executingJobs = repository.findRecordsForRunningJobs();
         for(val jobRec : executingJobs){
 
             threadManager.getExecutor().submit(() -> {
@@ -119,7 +119,7 @@ public class JobExecService {
             else { //No more steps, job complete
                 jobItem.job.onComplete(jobArgs);
                 log.debug("Job complete - "+jobRec.getJobName());
-                jobRec.setStatus(ExecStatus.Completed);
+                jobRec.setStatus(ExecStatus.COMPLETE);
                 jobRec.setCompletedAt(now);
             }
         }
@@ -167,7 +167,7 @@ public class JobExecService {
     //-------------------------------------------------------
     public void releaseDeadClaims(ClusterInfo clusterInfo){
         for(val deadNodeId : clusterInfo.deadNodeIds){
-            val unworkedStepRecs = repository.findExecutingStepPartitionsOfNode(deadNodeId);
+            val unworkedStepRecs = repository.findRunningStepPartitionsOfNode(deadNodeId);
             for(val stepRec : unworkedStepRecs){
                 stepRec.setClaimed(false);
                 stepRec.setNodeId(null);
@@ -179,14 +179,14 @@ public class JobExecService {
     //---------------------------------------------------------------
     public void doIfJobHasFailed(JobRecord jobRec, LocalDateTime now) {
 
-        val prtns = repository.findCompletedOrFailedStepsPartitionsOfJob(jobRec.getId());
+        val prtns = repository.findCompleteOrFailedStepsPartitionsOfJob(jobRec.getId());
         val prtnCount = prtns.size();
 
         //If all partitions of current step are either completed or failed, job has failed
         if(prtnCount == jobRec.getPartitionCount()){
-            val hasFailuresOpt = prtns.stream().filter(p -> p.getStatus().equals(ExecStatus.Failed)).findAny();
+            val hasFailuresOpt = prtns.stream().filter(p -> p.getStatus().equals(ExecStatus.FAILED)).findAny();
             if(hasFailuresOpt.isPresent()) {
-                jobRec.setStatus(ExecStatus.Failed);
+                jobRec.setStatus(ExecStatus.FAILED);
                 jobRec.setLastUpdateAt(now);
                 repository.save(jobRec);
             }
@@ -198,12 +198,12 @@ public class JobExecService {
         if(!jobsMap.containsKey(jobName)){
             throw new SysAgentException("Job not found. jobName="+jobName);
         }
-        val failedJobRec = repository.findJobRecordForFailedJob(jobName);
+        val failedJobRec = repository.findRecordForFailedJob(jobName);
         if(failedJobRec == null) throw new SysAgentException("Cannot retry Job as it is not marked as Failed. jobName="+jobName);
         log.debug("Retrying "+jobName);
         val failedStepPrtns = repository.findFailedStepPartitionsOfJob(failedJobRec.getId());
         for(val failedStepPrtn : failedStepPrtns){
-            failedStepPrtn.setStatus(ExecStatus.New);
+            failedStepPrtn.setStatus(ExecStatus.NEW);
             failedStepPrtn.setClaimed(false);
             failedStepPrtn.setRetryCount(failedStepPrtn.getRetryCount()+1);
             failedStepPrtn.setLastUpdateAt(now);

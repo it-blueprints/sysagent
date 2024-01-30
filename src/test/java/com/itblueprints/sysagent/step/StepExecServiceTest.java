@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -65,7 +64,7 @@ class StepExecServiceTest {
         val stepProcessed = stepExecService.processStepIfAvailable(clusterInfo, now);
 
         assertTrue(stepProcessed);
-        assertEquals(ExecStatus.Completed, stepRec.getStatus());
+        assertEquals(ExecStatus.COMPLETE, stepRec.getStatus());
         assertEquals(3, step.totalPages);
         assertEquals(true, step.preProcessCalled);
         assertEquals(true, step.postProcessCalled);

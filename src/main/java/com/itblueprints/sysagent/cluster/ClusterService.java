@@ -150,7 +150,7 @@ public class ClusterService {
         List deadNodeIds = new ArrayList<String>();
         if(isManager()) {
             //Handle dead nodes
-            val otherNodeRecs = repository.getOtherNodeRecords(nodeRecord.getId()); //mongoTemplate.findAll(NodeRecord.class);
+            val otherNodeRecs = repository.getRecordsForOtherNodes(nodeRecord.getId()); //mongoTemplate.findAll(NodeRecord.class);
 
             for (val nodeRec : otherNodeRecs) {
                 val nodeId = nodeRec.getId();
