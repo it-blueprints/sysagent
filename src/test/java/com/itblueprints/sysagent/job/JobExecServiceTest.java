@@ -132,12 +132,12 @@ class JobExecServiceTest {
         }
 
         @Override
-        public void onStarted(Arguments jobArguments) {
+        public void onStart(Arguments jobArguments) {
 
         }
 
         @Override
-        public void onCompleted() {
+        public void onComplete(Arguments jobArguments) {
 
         }
 

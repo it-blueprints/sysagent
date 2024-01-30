@@ -64,7 +64,7 @@ public class JobExecService {
 
         val jobItem = jobsMap.get(jobName);
         val firstStep = jobItem.firstStep;
-        jobItem.job.onStarted(jobArgs);
+        jobItem.job.onStart(jobArgs);
 
         sendStepExecutionInstruction(firstStep, jobArgs, jobRec);
         repository.save(jobRec);
@@ -110,13 +110,14 @@ public class JobExecService {
             val jobItem = jobsMap.get(jobRec.getJobName());
             val nextPStep = jobItem.getStep(jobRec.getCurrentStepName()).nextPipelineStep;
 
+            val jobArgs = jobRec.getJobArguments();
             if(nextPStep != null) {
                 //Next step
                 log.debug("Sending step execution instruction for step - "+nextPStep.stepName);
-                val jobArgs = jobRec.getJobArguments();
                 sendStepExecutionInstruction(nextPStep, jobArgs, jobRec);
             }
             else { //No more steps, job complete
+                jobItem.job.onComplete(jobArgs);
                 log.debug("Job complete - "+jobRec.getJobName());
                 jobRec.setStatus(ExecStatus.Completed);
                 jobRec.setCompletedAt(now);

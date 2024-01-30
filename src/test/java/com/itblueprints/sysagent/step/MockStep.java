@@ -20,11 +20,6 @@ public class MockStep implements BatchStep<String, String> {
     public List<String> result = new ArrayList<>();
 
     @Override
-    public void preProcess(StepContext context) {
-        preProcessCalled = true;
-    }
-
-    @Override
     public Page<String> readPageOfItems(Pageable pageRequest, StepContext context) {
         readChunkOfItems_TimesCalled++;
         if(pageRequest.getPageNumber() == 0) {
@@ -57,7 +52,13 @@ public class MockStep implements BatchStep<String, String> {
     }
 
     @Override
-    public void postProcess(StepContext context) {
+    public void onStart(StepContext context) {
+        preProcessCalled = true;
+    }
+
+
+    @Override
+    public void onComplete(StepContext context) {
         postProcessCalled = true;
     }
 

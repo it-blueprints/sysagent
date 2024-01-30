@@ -6,9 +6,9 @@ public interface Job {
 
     JobPipeline getPipeline();
 
-    void onStarted(Arguments jobArguments);
+    void onStart(Arguments jobArguments);
 
-    void onCompleted();
+    void onComplete(Arguments jobArguments);
 
     //-----------------------------------
     default String getName(){

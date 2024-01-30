@@ -102,7 +102,7 @@ public class StepExecService {
         int lotSize = threadManager.getTaskQueueSize();
 
         //Call pre process()
-        batchStep.preProcess(context);
+        batchStep.onStart(context);
 
         long itemsProcessed = 0;
         int pgNum = 0;
@@ -164,7 +164,7 @@ public class StepExecService {
         context.setItemsProcessed(itemsProcessed);
 
         //Call post process()
-        batchStep.postProcess(context);
+        batchStep.onComplete(context);
     }
 
     //-----------------------------------------------------------------------

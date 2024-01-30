@@ -11,7 +11,7 @@ public interface BatchStep<IN, OUT> extends Step {
         throw new UnsupportedOperationException();
     }
 
-    void preProcess(StepContext context);
+    void onStart(StepContext context);
 
     Page<IN> readPageOfItems(Pageable pageRequest, StepContext context);
 
@@ -19,7 +19,7 @@ public interface BatchStep<IN, OUT> extends Step {
 
     void writePageOfItems(Page<OUT> page, StepContext context);
 
-    void postProcess(StepContext context);
+    void onComplete(StepContext context);
 
     /*
     This field indicates if the query to fetch items, returns the same result even if items have
