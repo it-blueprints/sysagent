@@ -29,5 +29,7 @@ public interface BatchStep<IN, OUT> extends Step {
     like to mark an item as processed and then not fetch it for processing again. However sometimes
     it may be set too true when we want to process all records in each run.
      */
-    boolean isSelectionFixed();
+    default boolean isSelectionFixed(){
+        return false;
+    }
 }
