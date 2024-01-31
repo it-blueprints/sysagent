@@ -82,12 +82,12 @@ class JobExecServiceTest {
         val partnArgs = stepRecs.stream()
                 .map(sr -> {
                     val sb = new StringBuilder();
-                    sb.append("k1:").append(sr.getPartitionArguments().asString("k1")).append(",");
+                    sb.append("k1:").append(sr.getPartitionArguments().asString("k1")).append("+");
                     sb.append("k2:").append(sr.getPartitionArguments().asString("k2"));
                     return sb.toString();
                 }).
                 collect(Collectors.toList());
-        assertEquals(List.of("k1:k1v1,k2:k2v1", "k1:k1v2,k2:k2v1", "k1:k1v3,k2:k2v2", "k1:k1v4,k2:k2v2"), partnArgs);
+        assertEquals(List.of("k1:k1v1+k2:k2v1", "k1:k1v2+k2:k2v1", "k1:k1v3+k2:k2v2", "k1:k1v4+k2:k2v2"), partnArgs);
     }
 
 
