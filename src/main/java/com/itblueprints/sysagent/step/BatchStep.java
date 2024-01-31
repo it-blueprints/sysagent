@@ -6,11 +6,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface BatchStep<IN, OUT> extends Step {
 
-    @Override
-    default void execute(StepContext context) {
-        throw new UnsupportedOperationException();
-    }
-
     default void onStart(StepContext context){}
 
     Page<IN> readPageOfItems(Pageable pageRequest, StepContext context);

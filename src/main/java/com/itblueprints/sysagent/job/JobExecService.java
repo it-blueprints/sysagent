@@ -3,6 +3,7 @@ package com.itblueprints.sysagent.job;
 import com.itblueprints.sysagent.*;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
 import com.itblueprints.sysagent.repository.RecordRepository;
+import com.itblueprints.sysagent.step.Partitioned;
 import com.itblueprints.sysagent.step.Step;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -53,20 +55,13 @@ public class JobExecService {
 
         val jobStartedAt = jobArgs.asTime(SysAgentService.DataKeys.jobStartedAt);
 
-        val jRec = new JobRecord();
-        jRec.setJobName(jobName);
-        jRec.setJobArguments(jobArgs);
-        jRec.setStatus(ExecStatus.RUNNING);
-        jRec.setStartedAt(jobStartedAt);
-        jRec.setLastUpdateAt(jobStartedAt);
-
+        val jRec = JobRecord.create(jobName, jobArgs, jobStartedAt);
         var jobRec = repository.save(jRec);
 
         val jobItem = jobsMap.get(jobName);
-        val firstStep = jobItem.firstStep;
         jobItem.job.onStart(jobArgs);
 
-        sendStepExecutionInstruction(firstStep, jobArgs, jobRec);
+        sendStepExecutionInstruction(jobItem.firstStep.step, jobArgs, jobRec);
         repository.save(jobRec);
     }
 
@@ -83,8 +78,31 @@ public class JobExecService {
 
             threadManager.getExecutor().submit(() -> {
                 try {
-                    doIfCurrentStepIsComplete(jobRec, now);
-                    doIfJobHasFailed(jobRec, now);
+                    val stepRecs = repository.getRecordsOfStepOfJob(jobRec.getId(), jobRec.getCurrentStepName());
+                    if(isCurrentStepComplete(jobRec, stepRecs)){
+                        //get next step
+                        val jobItem = jobsMap.get(jobRec.getJobName());
+                        val nextPStep = jobItem.getStep(jobRec.getCurrentStepName()).nextPipelineStep;
+                        val jobArgs = jobRec.getJobArguments();
+                        if(nextPStep != null) { //there is a next step
+                            sendStepExecutionInstruction(nextPStep.step, jobArgs, jobRec);
+                        }
+                        else { //No more steps, job complete
+                            jobItem.job.onComplete(jobArgs);
+                            log.debug("Job complete - "+jobRec.getJobName());
+                            jobRec.setStatus(ExecStatus.COMPLETE);
+                            jobRec.setCompletedAt(now);
+                        }
+                        jobRec.setLastUpdateAt(now);
+                        repository.save(jobRec);
+                    }
+                    else if(hasCurrentStepFailed(jobRec, stepRecs)){
+                        //Mark job as failed
+                        jobRec.setStatus(ExecStatus.FAILED);
+                        jobRec.setLastUpdateAt(now);
+                        repository.save(jobRec);
+                    }
+
                 }
                 catch (Exception e){
                     e.printStackTrace();
@@ -94,74 +112,79 @@ public class JobExecService {
         }
     }
 
-    //--------------------------------------------------------------------
-    private void doIfCurrentStepIsComplete(JobRecord jobRec, LocalDateTime now) {
-
-        val completedPrtns = repository.findCompletedPartitionsOfCurrentStepOfJob(jobRec.getId(), jobRec.getCurrentStepName());
-        val partitionsCompletedCount = completedPrtns.size();
-        jobRec.setPartitionsCompletedCount(partitionsCompletedCount);
-
-        log.debug("partitions completed = "+partitionsCompletedCount+" of "+jobRec.getPartitionCount());
-
-        //If all partitions of current step are complete,
-        if(partitionsCompletedCount == jobRec.getPartitionCount()){
-
-            //Get next step if present
-            val jobItem = jobsMap.get(jobRec.getJobName());
-            val nextPStep = jobItem.getStep(jobRec.getCurrentStepName()).nextPipelineStep;
-
-            val jobArgs = jobRec.getJobArguments();
-            if(nextPStep != null) {
-                //Next step
-                log.debug("Sending step execution instruction for step - "+nextPStep.stepName);
-                sendStepExecutionInstruction(nextPStep, jobArgs, jobRec);
-            }
-            else { //No more steps, job complete
-                jobItem.job.onComplete(jobArgs);
-                log.debug("Job complete - "+jobRec.getJobName());
-                jobRec.setStatus(ExecStatus.COMPLETE);
-                jobRec.setCompletedAt(now);
-            }
+    //-----------------------------------------------------------------------------
+    boolean isCurrentStepComplete(JobRecord jobRec, List<StepRecord> stepRecs){
+        boolean completed = false;
+        if(jobRec.getPartitionCount() > 0){
+            val completedCount = stepRecs.stream().filter(sr -> sr.getStatus() == ExecStatus.COMPLETE).count();
+            jobRec.setPartitionsCompletedCount(Math.toIntExact(completedCount));
+            log.debug("partitions completed = "+completedCount+" of "+jobRec.getPartitionCount());
+            completed = completedCount == jobRec.getPartitionCount();
         }
+        else {
+            completed = stepRecs.get(0).getStatus() == ExecStatus.COMPLETE;
+        }
+        return completed;
+    }
 
-        jobRec.setLastUpdateAt(now);
-        repository.save(jobRec);
+    //----------------------------------------------
+    boolean hasCurrentStepFailed(JobRecord jobRec, List<StepRecord> stepRecs){
+
+        boolean failed = false;
+        if(jobRec.getPartitionCount() > 0){
+            val completeCount = stepRecs.stream()
+                    .filter(sr -> sr.getStatus() == ExecStatus.COMPLETE)
+                    .count();
+
+            val failedCount = stepRecs.stream()
+                    .filter(sr -> sr.getStatus() == ExecStatus.FAILED )
+                    .count();
+
+            failed = (completeCount+failedCount == jobRec.getPartitionCount()) && failedCount > 0;
+        }
+        else {
+            failed = stepRecs.get(0).getStatus() == ExecStatus.FAILED;
+        }
+        return failed;
     }
 
     //----------------------------------------------------------------------
-    private void sendStepExecutionInstruction(PipelineStep pipelineStep,
+    private void sendStepExecutionInstruction(Step step,
                                               Arguments jobArgs,
                                               JobRecord jobRecord){
-        //Get the partitions for the step
-        val step = pipelineStep.step;
-        val partArgs = step.getPartitionArgumentsList(jobArgs);
 
-        int totalPartitions = 1;
-        if(partArgs!=null && !partArgs.isEmpty()){
-            if(partArgs.size() < 2) throw new SysAgentException("Minimum partitions is 2");
-            totalPartitions = partArgs.size();
-        }
+        log.debug("Sending step execution instruction for step - " + step.getName());
+        jobRecord.setCurrentStepName(step.getName());
 
-        log.debug("Total partitions = "+totalPartitions);
+        if(step instanceof Partitioned) {
 
-        jobRecord.setCurrentStepName(pipelineStep.stepName);
-        jobRecord.setPartitionCount(totalPartitions);
-        jobRecord.setPartitionsCompletedCount(0);
+            val prtned = (Partitioned) step;
+            val partArgs = prtned.getPartitionArgumentsList(jobArgs);
 
-        for(int i=0; i < totalPartitions; i++){
-            val stepRecord = new StepRecord();
-            stepRecord.setJobRecordId(jobRecord.getId());
-            stepRecord.setJobName(jobRecord.getJobName());
-            stepRecord.setStepName(pipelineStep.stepName);
-            stepRecord.setJobArguments(jobArgs);
-            if(totalPartitions > 1) {
+            int prtnCount = 0;
+            if (partArgs != null && !partArgs.isEmpty()) {
+                if (partArgs.size() < 2) throw new SysAgentException("Minimum partitions is 2");
+                prtnCount = partArgs.size();
+            }
+            jobRecord.setPartitionCount(prtnCount);
+            jobRecord.setPartitionsCompletedCount(0);
+            log.debug("Total partitions = " + prtnCount);
+
+            for(int i=0; i < prtnCount; i++){
+                val stepRecord = StepRecord.create(jobRecord.getId(), jobRecord.getJobName(), step.getName(), jobArgs);
                 val partArg = partArgs.get(i);
                 stepRecord.setPartitionArguments(partArg);
                 stepRecord.setPartitionNum(i);
-                stepRecord.setPartitionCount(totalPartitions);
+                stepRecord.setPartitionCount(prtnCount);
+                repository.save(stepRecord);
             }
+
+        }
+        else {
+            val stepRecord = StepRecord.create(jobRecord.getId(), jobRecord.getJobName(), step.getName(), jobArgs);
             repository.save(stepRecord);
         }
+
     }
 
     //-------------------------------------------------------
@@ -176,22 +199,6 @@ public class JobExecService {
         }
     }
 
-    //---------------------------------------------------------------
-    public void doIfJobHasFailed(JobRecord jobRec, LocalDateTime now) {
-
-        val prtns = repository.findCompleteOrFailedStepsPartitionsOfJob(jobRec.getId());
-        val prtnCount = prtns.size();
-
-        //If all partitions of current step are either completed or failed, job has failed
-        if(prtnCount == jobRec.getPartitionCount()){
-            val hasFailuresOpt = prtns.stream().filter(p -> p.getStatus().equals(ExecStatus.FAILED)).findAny();
-            if(hasFailuresOpt.isPresent()) {
-                jobRec.setStatus(ExecStatus.FAILED);
-                jobRec.setLastUpdateAt(now);
-                repository.save(jobRec);
-            }
-        }
-    }
     //-----------------------------------------------
     //Called from API
     public void retryFailedJob(String jobName, LocalDateTime now) {
@@ -232,7 +239,7 @@ public class JobExecService {
             //Create a map of step name to pipeline step
             var currPStep = firstPStep;
             do {
-                jobItem.putStep(currPStep.stepName, currPStep);
+                jobItem.putStep(currPStep.step.getName(), currPStep);
                 currPStep = currPStep.nextPipelineStep;
             }
             while(currPStep!=null);

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MockStep implements BatchStep<String, String> {
+public class MockStep implements PartitionedBatchStep<String, String> {
 
     public boolean preProcessCalled;
     public boolean postProcessCalled;

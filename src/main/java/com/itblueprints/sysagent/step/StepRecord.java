@@ -4,6 +4,7 @@ import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.ExecStatus;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.val;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -54,5 +55,14 @@ public class StepRecord {
     private ExecStatus status = ExecStatus.NEW;
 
     private CheckPointState checkPointState;
+
+    public static StepRecord create(String jobRecordId, String jobName, String stepName, Arguments jobArguments){
+        val sr = new StepRecord();
+        sr.jobRecordId = jobRecordId;
+        sr.jobName = jobName;
+        sr.stepName = stepName;
+        sr.jobArguments = jobArguments;
+        return sr;
+    }
 
 }

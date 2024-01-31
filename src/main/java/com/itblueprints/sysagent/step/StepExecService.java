@@ -72,9 +72,11 @@ public class StepExecService {
 
         try {
             if(step instanceof BatchStep){
-                executeBatchStep((BatchStep) step, ctx);
+                runBatchStep((BatchStep) step, ctx);
             }
-            else step.execute(ctx);
+            else if(step instanceof SimpleStep){
+                ((SimpleStep) step).run(ctx);
+            }
         }
         catch (Exception e){
             stepRec.setStatus(ExecStatus.FAILED);
@@ -93,7 +95,7 @@ public class StepExecService {
     }
 
     //----------------------------------------------------------------------
-    <IN, OUT> void executeBatchStep(BatchStep<IN, OUT> batchStep, StepContext context){
+    <IN, OUT> void runBatchStep(BatchStep<IN, OUT> batchStep, StepContext context){
         //This is the number future submissions allowed at a time
         int lotSize = threadManager.getTaskQueueSize();
 

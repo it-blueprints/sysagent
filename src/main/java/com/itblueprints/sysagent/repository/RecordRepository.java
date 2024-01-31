@@ -24,9 +24,8 @@ public interface RecordRepository {
 
     //Step Record
     StepRecord save(StepRecord stepRecord);
-    List<StepRecord> findCompletedPartitionsOfCurrentStepOfJob(String jobRecordId, String stepName);
+    List<StepRecord> getRecordsOfStepOfJob(String jobRecordId, String stepName);
     List<StepRecord> findRunningStepPartitionsOfNode(String nodeRecordId);
-    List<StepRecord> findCompleteOrFailedStepsPartitionsOfJob(String jobRecordId);
     List<StepRecord> findFailedStepPartitionsOfJob(String jobRecordId);
     StepRecord tryClaimNextStepPartition(String thisNodeId);
 }

@@ -91,20 +91,25 @@ class JobExecServiceTest {
     @Test
     void processExecutingJobs() {
         val job = new MockJob();
-        val jobRec = new JobRecord();
-        jobRec.setJobName("Job");
+        val jobRec = JobRecord.create("Job", new Arguments(), LocalDateTime.now());
+        jobRec.setId("1");
         jobRec.setCurrentStepName("Step");
 
+        val stepRec = StepRecord.create("1","Job", "Step", new Arguments());
+
         when(repository.findRecordsForRunningJobs()).thenReturn(List.of(jobRec));
+        lenient().when(repository.getRecordsOfStepOfJob(any(), any())).thenReturn(List.of(stepRec));
         when(threadManager.getExecutor()).thenReturn(executor);
         initialiseJobService(job, jobRec);
         jobExecService.processExecutingJobs(LocalDateTime.now());
+
+        //TODO
     }
 
     //------------------------------------
     @Test
     void releaseDeadClaims() {
-
+        //TODO
     }
 
     //-----------------------------------------------------------
