@@ -1,6 +1,6 @@
 package com.itblueprints.sysagent.step;
 
-public interface Step {
+public interface StepI {
 
     default String getName(){
         return this.getClass().getName();

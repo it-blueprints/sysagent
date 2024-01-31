@@ -4,7 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 
-public interface BatchStep<IN, OUT> extends Step {
+public interface Batched<IN, OUT> {
 
     default void onStart(StepContext context){}
 

@@ -1,4 +1,4 @@
 package com.itblueprints.sysagent.step;
 
-public interface PartitionedBatchStep<IN, OUT> extends BatchStep<IN, OUT>, Partitioned {
+public interface PartitionedBatchStep<IN, OUT> extends StepI, Batched<IN, OUT>, Partitioned {
 }

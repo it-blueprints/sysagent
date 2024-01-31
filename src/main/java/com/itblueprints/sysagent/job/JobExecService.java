@@ -4,7 +4,7 @@ import com.itblueprints.sysagent.*;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import com.itblueprints.sysagent.step.Partitioned;
-import com.itblueprints.sysagent.step.Step;
+import com.itblueprints.sysagent.step.StepI;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class JobExecService {
     //--------------------------------------------------------------
     private Map<String, JobItem> jobsMap = new HashMap<>();
 
-    public Step getStep(String jobName, String stepName){
+    public StepI getStep(String jobName, String stepName){
         if(jobsMap.containsKey(jobName)) {
             val jobItem = jobsMap.get(jobName);
             return jobItem.getStep(stepName).step;
@@ -149,7 +149,7 @@ public class JobExecService {
     }
 
     //----------------------------------------------------------------------
-    private void sendStepExecutionInstruction(Step step,
+    private void sendStepExecutionInstruction(StepI step,
                                               Arguments jobArgs,
                                               JobRecord jobRecord){
 
