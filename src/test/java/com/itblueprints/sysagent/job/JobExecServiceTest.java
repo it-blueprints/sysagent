@@ -5,7 +5,6 @@ import com.itblueprints.sysagent.ExecStatus;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
 import com.itblueprints.sysagent.repository.RecordRepository;
-import com.itblueprints.sysagent.step.MockStep;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +26,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -67,25 +65,31 @@ class JobExecServiceTest {
         jobArgs.put("pmtProfile", "sp");
         jobExecService.runJob("Job", jobArgs);
 
-        assertEquals("Step", jobRec.getCurrentStepName());
-        assertEquals(3, jobRec.getPartitionCount());
+        assertEquals("Step1", jobRec.getCurrentStepName());
+        assertEquals(4, jobRec.getPartitionCount());
 
-        verify(repository, times(3)).save(stepRecC.capture());
+        verify(repository, times(4)).save(stepRecC.capture());
 
         val stepRecs = stepRecC.getAllValues();
         val n = stepRecs.stream()
                 .filter(sr -> sr.getJobName().equals("Job")
                 && sr.getJobRecordId().equals("job1234")
-                && sr.getStepName().equals("Step")
+                && sr.getStepName().equals("Step1")
                 && sr.getJobArguments().asString("pmtProfile").equals("sp"))
                 .count();
-        assertEquals(3, n);
+        assertEquals(4, n);
 
         val partnArgs = stepRecs.stream()
-                .map(sr -> sr.getPartitionArguments().asInt("partition")).
+                .map(sr -> {
+                    val sb = new StringBuilder();
+                    sb.append("k1:").append(sr.getPartitionArguments().asString("k1")).append(",");
+                    sb.append("k2:").append(sr.getPartitionArguments().asString("k2"));
+                    return sb.toString();
+                }).
                 collect(Collectors.toList());
-        assertEquals(List.of(1,2,3), partnArgs);
+        assertEquals(List.of("k1:k1v1,k2:k2v1", "k1:k1v2,k2:k2v1", "k1:k1v3,k2:k2v2", "k1:k1v4,k2:k2v2"), partnArgs);
     }
+
 
     //------------------------------------
     @Test
@@ -124,31 +128,6 @@ class JobExecServiceTest {
         when(beanFactory.getBean("job", Job.class)).thenReturn(job);
         jobExecService.initialise(new ClusterInfo());
 
-    }
-
-    //-----------------------------------
-    static class MockJob implements Job {
-
-        @Override
-        public JobPipeline getPipeline() {
-            return JobPipeline.create()
-                    .firstStep(new MockStep());
-        }
-
-        @Override
-        public void onStart(Arguments jobArguments) {
-
-        }
-
-        @Override
-        public void onComplete(Arguments jobArguments) {
-
-        }
-
-        @Override
-        public String getName() {
-            return "Job";
-        }
     }
 
 }
