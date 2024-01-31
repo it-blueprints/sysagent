@@ -1,9 +1,9 @@
 package com.itblueprints.sysagent.job;
 
-import com.itblueprints.sysagent.step.StepI;
+import com.itblueprints.sysagent.step.Step;
 
 class PipelineStep {
-    public StepI step;
+    public Step step;
     public String onOutcome;
     public PipelineStep nextPipelineStep;
 }

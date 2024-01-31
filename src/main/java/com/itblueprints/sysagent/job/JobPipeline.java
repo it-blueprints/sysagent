@@ -1,7 +1,7 @@
 package com.itblueprints.sysagent.job;
 
 import com.itblueprints.sysagent.SysAgentException;
-import com.itblueprints.sysagent.step.StepI;
+import com.itblueprints.sysagent.step.Step;
 import lombok.Getter;
 import lombok.val;
 
@@ -19,7 +19,7 @@ public class JobPipeline {
 
     private PipelineStep currentStep;
 
-    public JobPipeline firstStep(StepI step){
+    public JobPipeline firstStep(Step step){
         if(firstStep!=null){
             throw new SysAgentException("Cannot add first step as the pipeline is not empty");
         }
@@ -30,7 +30,7 @@ public class JobPipeline {
     }
 
     //-------------------------------------------
-    public JobPipeline nextStep(StepI step){
+    public JobPipeline nextStep(Step step){
         if(currentStep==null){
             throw new SysAgentException("Cannot add next step as the pipeline is empty");
         }
