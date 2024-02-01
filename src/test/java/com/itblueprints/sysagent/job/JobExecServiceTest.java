@@ -7,7 +7,6 @@ import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import com.itblueprints.sysagent.step.StepRecord;
-import com.mongodb.Function;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.itblueprints.sysagent.TestUtils.assertTrueForAll;
@@ -64,7 +62,7 @@ class JobExecServiceTest {
 
         when(repository.save((JobRecord) any())).thenReturn(jobRec);
 
-        initialiseJobService(job, jobRec);
+        loadJobIntoService(job, jobRec);
 
         val jobArgs = new Arguments();
         jobArgs.put("pmtProfile", "sp");
@@ -109,7 +107,7 @@ class JobExecServiceTest {
         when(repository.findRecordsForRunningJobs()).thenReturn(List.of(jobRec));
         lenient().when(repository.getRecordsOfStepOfJob(any(), any())).thenReturn(List.of(stepRec));
         when(threadManager.getExecutor()).thenReturn(executor);
-        initialiseJobService(job, jobRec);
+        loadJobIntoService(job, jobRec);
         jobExecService.processExecutingJobs(now);
 
         //TODO
@@ -225,13 +223,8 @@ class JobExecServiceTest {
 
     }
 
-    @Test
-    void initialise() {
-
-    }
-
     //-----------------------------------------------------------
-    private void initialiseJobService(Job job, JobRecord jobRec){
+    private void loadJobIntoService(Job job, JobRecord jobRec){
 
         jobRec.setJobName("Job");
         jobRec.setId("job1234");
