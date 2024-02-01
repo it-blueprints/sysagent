@@ -4,10 +4,10 @@ import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
-import com.itblueprints.sysagent.job.JobExecService;
+import com.itblueprints.sysagent.job.JobExecutionService;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
-import com.itblueprints.sysagent.step.StepExecService;
+import com.itblueprints.sysagent.step.StepExecutionService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +31,8 @@ public class ClusterService {
 
     private final RecordRepository repository;
     private final SchedulerService schedulerService;
-    private final JobExecService jobExecService;
-    private final StepExecService stepExecService;
+    private final JobExecutionService jobExecutionService;
+    private final StepExecutionService stepExecutionService;
     private final Config config;
     private final ThreadManager threadManager;
 
@@ -75,16 +75,16 @@ public class ClusterService {
             if (clusterInfo.isManager) {
                 schedulerService.initialise(clusterInfo);
             }
-            jobExecService.initialise(clusterInfo); //All nodes need this to load up steps
+            jobExecutionService.initialise(clusterInfo); //All nodes need this to load up steps
             nodeRecord.setInitialised(true);
             repository.save(nodeRecord);
         } else {
             val now = LocalDateTime.now();
             if (clusterInfo.isManager) {
                 schedulerService.onHeartBeat(clusterInfo, now);
-                jobExecService.onHeartBeat(clusterInfo, now);
+                jobExecutionService.onHeartBeat(clusterInfo, now);
             }
-            threadManager.getExecutor().submit(() -> stepExecService.onHeartBeat(clusterInfo, now));
+            threadManager.getExecutor().submit(() -> stepExecutionService.onHeartBeat(clusterInfo, now));
         }
     }
 

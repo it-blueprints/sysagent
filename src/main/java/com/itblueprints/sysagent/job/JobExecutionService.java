@@ -20,7 +20,7 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class JobExecService {
+public class JobExecutionService {
 
     private final ConfigurableApplicationContext appContext;
     private final RecordRepository repository;
@@ -73,12 +73,12 @@ public class JobExecService {
 
     //--------------------------------------------------------------------
     void processExecutingJobs(LocalDateTime now) {
-        val executingJobs = repository.findRecordsForRunningJobs();
+        val executingJobs = repository.getRunningJobRecords();
         for(val jobRec : executingJobs){
 
             threadManager.getExecutor().submit(() -> {
                 try {
-                    val stepRecs = repository.getRecordsOfStepOfJob(jobRec.getId(), jobRec.getCurrentStepName());
+                    val stepRecs = repository.getStepsRecordsForStepOfJob(jobRec.getId(), jobRec.getCurrentStepName());
                     if(isCurrentStepComplete(jobRec, stepRecs)){
                         //get next step
                         val jobItem = jobsMap.get(jobRec.getJobName());
@@ -201,7 +201,7 @@ public class JobExecService {
     //-------------------------------------------------------
     public void releaseDeadClaims(ClusterInfo clusterInfo){
         for(val deadNodeId : clusterInfo.deadNodeIds){
-            val unworkedStepRecs = repository.findRunningStepPartitionsOfNode(deadNodeId);
+            val unworkedStepRecs = repository.getStepRecordsClaimedByNode(deadNodeId);
             for(val stepRec : unworkedStepRecs){
                 stepRec.setClaimed(false);
                 stepRec.setNodeId(null);
@@ -216,16 +216,16 @@ public class JobExecService {
         if(!jobsMap.containsKey(jobName)){
             throw new SysAgentException("Job not found. jobName="+jobName);
         }
-        val failedJobRec = repository.findRecordForFailedJob(jobName);
+        val failedJobRec = repository.getFailedJobRecordOfJob(jobName);
         if(failedJobRec == null) throw new SysAgentException("Cannot retry Job as it is not marked as Failed. jobName="+jobName);
         log.debug("Retrying "+jobName);
-        val failedStepPrtns = repository.findFailedStepPartitionsOfJob(failedJobRec.getId());
-        for(val failedStepPrtn : failedStepPrtns){
-            failedStepPrtn.setStatus(ExecStatus.NEW);
-            failedStepPrtn.setClaimed(false);
-            failedStepPrtn.setRetryCount(failedStepPrtn.getRetryCount()+1);
-            failedStepPrtn.setLastUpdateAt(now);
-            repository.save(failedStepPrtn);
+        val failedStepRecs = repository.getFailedStepRecordsForJob(failedJobRec.getId());
+        for(val failedSr : failedStepRecs){
+            failedSr.setStatus(ExecStatus.NEW);
+            failedSr.setClaimed(false);
+            failedSr.setRetryCount(failedSr.getRetryCount()+1);
+            failedSr.setLastUpdateAt(now);
+            repository.save(failedSr);
         }
     }
 

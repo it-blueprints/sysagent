@@ -3,17 +3,16 @@ package com.itblueprints.sysagent.cluster;
 import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
-import com.itblueprints.sysagent.job.JobExecService;
+import com.itblueprints.sysagent.job.JobExecutionService;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
-import com.itblueprints.sysagent.step.StepExecService;
+import com.itblueprints.sysagent.step.StepExecutionService;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.util.List;
 
@@ -28,9 +27,9 @@ class ClusterServiceTest {
     RecordRepository repository;
     @Mock SchedulerService schedulerService;
     @Mock
-    JobExecService jobExecService;
+    JobExecutionService jobExecutionService;
     @Mock
-    StepExecService stepExecService;
+    StepExecutionService stepExecutionService;
     @Mock Config config;
     @Mock ThreadManager threadManager;
 
@@ -40,10 +39,10 @@ class ClusterServiceTest {
     @BeforeEach
     void beforeEach() {
         nodes = List.of(
-                new ClusterService(repository, schedulerService, jobExecService, stepExecService, config, threadManager),
-                new ClusterService(repository, schedulerService, jobExecService, stepExecService, config, threadManager),
-                new ClusterService(repository, schedulerService, jobExecService, stepExecService, config, threadManager),
-                new ClusterService(repository, schedulerService, jobExecService, stepExecService, config, threadManager)
+                new ClusterService(repository, schedulerService, jobExecutionService, stepExecutionService, config, threadManager),
+                new ClusterService(repository, schedulerService, jobExecutionService, stepExecutionService, config, threadManager),
+                new ClusterService(repository, schedulerService, jobExecutionService, stepExecutionService, config, threadManager),
+                new ClusterService(repository, schedulerService, jobExecutionService, stepExecutionService, config, threadManager)
         );
 
         //Save puts in an id

@@ -18,14 +18,14 @@ public interface RecordRepository {
 
     //Job Record
     JobRecord save(JobRecord jobRecord);
-    List<JobRecord> findRecordsForRunningJobs();
+    List<JobRecord> getRunningJobRecords();
     void initialise();
-    JobRecord findRecordForFailedJob(String jobName);
+    JobRecord getFailedJobRecordOfJob(String jobName);
 
     //Step Record
     StepRecord save(StepRecord stepRecord);
-    List<StepRecord> getRecordsOfStepOfJob(String jobRecordId, String stepName);
-    List<StepRecord> findRunningStepPartitionsOfNode(String nodeRecordId);
-    List<StepRecord> findFailedStepPartitionsOfJob(String jobRecordId);
-    StepRecord tryClaimNextStepPartition(String thisNodeId);
+    List<StepRecord> getStepsRecordsForStepOfJob(String jobRecordId, String stepName);
+    List<StepRecord> getStepRecordsClaimedByNode(String nodeRecordId);
+    List<StepRecord> getFailedStepRecordsForJob(String jobRecordId);
+    StepRecord tryClaimNextStepRecord(String thisNodeId);
 }

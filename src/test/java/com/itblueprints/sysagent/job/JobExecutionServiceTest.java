@@ -32,7 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class JobExecServiceTest {
+class JobExecutionServiceTest {
 
     @Mock ConfigurableApplicationContext appContext;
     @Mock RecordRepository repository;
@@ -43,13 +43,13 @@ class JobExecServiceTest {
 
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    private JobExecService jobExecService;
+    private JobExecutionService jobExecutionService;
     private LocalDateTime now = LocalDateTime.now();
 
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
-        jobExecService = new JobExecService(appContext, repository, threadManager);
+        jobExecutionService = new JobExecutionService(appContext, repository, threadManager);
     }
 
     //------------------------------------
@@ -66,7 +66,7 @@ class JobExecServiceTest {
 
         val jobArgs = new Arguments();
         jobArgs.put("pmtProfile", "sp");
-        jobExecService.runJob("Job", jobArgs);
+        jobExecutionService.runJob("Job", jobArgs);
 
         assertEquals("Step1", jobRec.getCurrentStepName());
         assertEquals(4, jobRec.getCurrentStepPartitionCount());
@@ -104,11 +104,11 @@ class JobExecServiceTest {
 
         val stepRec = StepRecord.of("1","Job", "Step", new Arguments());
 
-        when(repository.findRecordsForRunningJobs()).thenReturn(List.of(jobRec));
-        lenient().when(repository.getRecordsOfStepOfJob(any(), any())).thenReturn(List.of(stepRec));
+        when(repository.getRunningJobRecords()).thenReturn(List.of(jobRec));
+        lenient().when(repository.getStepsRecordsForStepOfJob(any(), any())).thenReturn(List.of(stepRec));
         when(threadManager.getExecutor()).thenReturn(executor);
         loadJobIntoService(job, jobRec);
-        jobExecService.processExecutingJobs(now);
+        jobExecutionService.processExecutingJobs(now);
 
         //TODO
     }
@@ -125,26 +125,26 @@ class JobExecServiceTest {
         //2 steps ccomplete, one not yet
         stepRecs.get(0).setStatus(ExecStatus.COMPLETE);
         stepRecs.get(1).setStatus(ExecStatus.COMPLETE);
-        val result1 = jobExecService.isCurrentStepComplete(jobRec, stepRecs);
+        val result1 = jobExecutionService.isCurrentStepComplete(jobRec, stepRecs);
         assertFalse(result1);
 
         //all steps now complete
         stepRecs.get(2).setStatus(ExecStatus.COMPLETE);
-        val result2 = jobExecService.isCurrentStepComplete(jobRec, stepRecs);
+        val result2 = jobExecutionService.isCurrentStepComplete(jobRec, stepRecs);
         assertTrue(result2);
 
         //***** Test single step *****
         jobRec.setCurrentStepPartitionCount(0);
         val onlyStepRec = List.of(stepRecs.get(0));
         onlyStepRec.get(0).setStatus(ExecStatus.COMPLETE);
-        val result3 = jobExecService.isCurrentStepComplete(jobRec, onlyStepRec);
+        val result3 = jobExecutionService.isCurrentStepComplete(jobRec, onlyStepRec);
         assertTrue(result3);
 
         //***** Test with empty step recs ****
         jobRec.setCurrentStepPartitionCount(2);
         List<StepRecord> noStepRecs = List.of();
         assertThrows(SysAgentException.class, () -> {
-            jobExecService.isCurrentStepComplete(jobRec, noStepRecs);
+            jobExecutionService.isCurrentStepComplete(jobRec, noStepRecs);
         });
     }
 
@@ -161,21 +161,21 @@ class JobExecServiceTest {
         stepRecs.get(0).setStatus(ExecStatus.COMPLETE);
         stepRecs.get(1).setStatus(ExecStatus.COMPLETE);
         stepRecs.get(2).setStatus(ExecStatus.FAILED);
-        val result1 = jobExecService.hasCurrentStepFailed(jobRec, stepRecs);
+        val result1 = jobExecutionService.hasCurrentStepFailed(jobRec, stepRecs);
         assertTrue(result1);
 
         //***** Test single step *****
         jobRec.setCurrentStepPartitionCount(0);
         val onlyStepRec = List.of(stepRecs.get(0));
         onlyStepRec.get(0).setStatus(ExecStatus.FAILED);
-        val result2 = jobExecService.hasCurrentStepFailed(jobRec, onlyStepRec);
+        val result2 = jobExecutionService.hasCurrentStepFailed(jobRec, onlyStepRec);
         assertTrue(result2);
 
         //***** Test with empty step recs ****
         jobRec.setCurrentStepPartitionCount(2);
         List<StepRecord> noStepRecs = List.of();
         assertThrows(SysAgentException.class, () -> {
-            jobExecService.hasCurrentStepFailed(jobRec, noStepRecs);
+            jobExecutionService.hasCurrentStepFailed(jobRec, noStepRecs);
         });
 
     }
@@ -191,7 +191,7 @@ class JobExecServiceTest {
 
         val step = new MockStep1();
 
-        jobExecService.sendStepExecutionInstruction(step, Arguments.of(), jobRec);
+        jobExecutionService.sendStepExecutionInstruction(step, Arguments.of(), jobRec);
 
         assertEquals(4, jobRec.getCurrentStepPartitionCount());
         verify(repository, times(4)).save(stepRecC.capture());
@@ -214,7 +214,27 @@ class JobExecServiceTest {
     //------------------------------------
     @Test
     void releaseDeadClaims() {
-        //TODO
+        val clInfo = new ClusterInfo();
+        clInfo.deadNodeIds = List.of("node1_id", "node2_id");
+
+        val sr1 = StepRecord.of("jobrecid1", "Job", "Step1", Arguments.of());
+        sr1.setClaimed(true);
+        sr1.setNodeId("node1_id");
+        when(repository.getStepRecordsClaimedByNode("node1_id")).thenReturn(List.of(sr1));
+
+        val sr2 = StepRecord.of("jobrecid1", "Job", "Step2", Arguments.of());
+        sr2.setClaimed(true);
+        sr2.setNodeId("node2_id");
+        when(repository.getStepRecordsClaimedByNode("node2_id")).thenReturn(List.of(sr2));
+
+        jobExecutionService.releaseDeadClaims(clInfo);
+
+        verify(repository, times(2)).save((StepRecord) any());
+
+        val stepRecs = List.of(sr1, sr2);
+        assertTrueForAll(stepRecs, sr -> sr.isClaimed() == false);
+        assertTrueForAll(stepRecs, sr -> sr.getNodeId() == null);
+
     }
 
     //------------------------------------
@@ -233,7 +253,7 @@ class JobExecServiceTest {
         when(appContext.getBeanFactory()).thenReturn(beanFactory);
         when(beanFactory.getBeanNamesForType(Job.class)).thenReturn(new String[]{"job"});
         when(beanFactory.getBean("job", Job.class)).thenReturn(job);
-        jobExecService.initialise(new ClusterInfo());
+        jobExecutionService.initialise(new ClusterInfo());
 
     }
 

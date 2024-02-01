@@ -88,7 +88,7 @@ public class MongoRecordRepository implements RecordRepository {
 
     //--------------------------------------
     @Override
-    public List<JobRecord> findRecordsForRunningJobs() {
+    public List<JobRecord> getRunningJobRecords() {
         val executingJobsQuery = new Query();
         executingJobsQuery.addCriteria(Criteria
                 .where("status").is(ExecStatus.RUNNING));
@@ -107,7 +107,7 @@ public class MongoRecordRepository implements RecordRepository {
 
     //--------------------------------------
     @Override
-    public JobRecord findRecordForFailedJob(String jobName) {
+    public JobRecord getFailedJobRecordOfJob(String jobName) {
         val query = new Query();
         query.addCriteria(Criteria
                 .where("jobName").is(jobName)
@@ -124,7 +124,7 @@ public class MongoRecordRepository implements RecordRepository {
 
     //--------------------------------------
     @Override
-    public List<StepRecord> getRecordsOfStepOfJob(String jobRecordId, String stepName) {
+    public List<StepRecord> getStepsRecordsForStepOfJob(String jobRecordId, String stepName) {
         val query = new Query();
         query.addCriteria(Criteria
                 .where("jobRecordId").is(jobRecordId)
@@ -135,7 +135,7 @@ public class MongoRecordRepository implements RecordRepository {
 
     //--------------------------------------
     @Override
-    public List<StepRecord> findRunningStepPartitionsOfNode(String nodeRecordId) {
+    public List<StepRecord> getStepRecordsClaimedByNode(String nodeRecordId) {
         val query = new Query();
         query.addCriteria(Criteria
                 .where("nodeId").is(nodeRecordId)
@@ -146,7 +146,7 @@ public class MongoRecordRepository implements RecordRepository {
 
     //--------------------------------------
     @Override
-    public List<StepRecord> findFailedStepPartitionsOfJob(String jobRecordId) {
+    public List<StepRecord> getFailedStepRecordsForJob(String jobRecordId) {
         val query = new Query();
         query.addCriteria(Criteria
                 .where("jobRecordId").is(jobRecordId)
@@ -157,7 +157,7 @@ public class MongoRecordRepository implements RecordRepository {
 
     //--------------------------------------
     @Override
-    public StepRecord tryClaimNextStepPartition(String thisNodeId) {
+    public StepRecord tryClaimNextStepRecord(String thisNodeId) {
         val query = new Query();
         query.addCriteria(
                 Criteria.where("claimed").is(false)

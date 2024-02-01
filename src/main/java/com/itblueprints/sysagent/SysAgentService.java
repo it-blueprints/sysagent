@@ -2,7 +2,7 @@ package com.itblueprints.sysagent;
 
 import com.itblueprints.sysagent.cluster.NodeRecord;
 import com.itblueprints.sysagent.job.JobRecord;
-import com.itblueprints.sysagent.job.JobExecService;
+import com.itblueprints.sysagent.job.JobExecutionService;
 import com.itblueprints.sysagent.scheduling.JobScheduleRecord;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class SysAgentService {
 
     private final MongoOperations mongoOperations;
-    private final JobExecService jobExecService;
+    private final JobExecutionService jobExecutionService;
 
     //--------------------------------
     public void resetCluster() {
@@ -33,13 +33,13 @@ public class SysAgentService {
 
     //--------------------------------
     public void runJob(String jobName, Arguments jobArguments){
-        jobExecService.runJob(jobName, jobArguments);
+        jobExecutionService.runJob(jobName, jobArguments);
     }
 
 
     //------------------------------------------------
     public void retryFailedJob(String jobName){
-        jobExecService.retryFailedJob(jobName, LocalDateTime.now());
+        jobExecutionService.retryFailedJob(jobName, LocalDateTime.now());
     }
 
     //--------------------------------

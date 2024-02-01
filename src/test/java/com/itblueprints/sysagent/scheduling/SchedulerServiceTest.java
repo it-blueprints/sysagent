@@ -3,7 +3,7 @@ package com.itblueprints.sysagent.scheduling;
 import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
-import com.itblueprints.sysagent.job.JobExecService;
+import com.itblueprints.sysagent.job.JobExecutionService;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class SchedulerServiceTest {
     @Mock ThreadManager threadManager;
     @Mock MongoTemplate mongoTemplate;
     @Mock
-    JobExecService jobExecService;
+    JobExecutionService jobExecutionService;
     @Mock Config config;
 
     SchedulerService schedulerService;
@@ -38,7 +38,7 @@ class SchedulerServiceTest {
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
-        schedulerService = new SchedulerService(appContext, threadManager, mongoTemplate, jobExecService, config);
+        schedulerService = new SchedulerService(appContext, threadManager, mongoTemplate, jobExecutionService, config);
         when(config.getHeartBeatSecs()).thenReturn(10);
 
         val sji = new SchedulerService.ScheduledJobItem();

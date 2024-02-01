@@ -5,7 +5,7 @@ import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.ExecStatus;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
-import com.itblueprints.sysagent.job.JobExecService;
+import com.itblueprints.sysagent.job.JobExecutionService;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,14 +26,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class StepExecServiceTest {
+class StepExecutionServiceTest {
 
     @Mock RecordRepository repository;
-    @Mock JobExecService jobExecService;
+    @Mock
+    JobExecutionService jobExecutionService;
     @Mock Config config;
     @Mock ThreadManager threadManager;
 
-    StepExecService stepExecService;
+    StepExecutionService stepExecutionService;
 
     private final String jobName = "Job";
     private final String stepName = "Step";
@@ -46,7 +47,7 @@ class StepExecServiceTest {
         when(threadManager.getExecutor()).thenReturn(executor);
         when(threadManager.getTaskQueueSize()).thenReturn(2);
 
-        stepExecService = new StepExecService(jobExecService, threadManager, repository);
+        stepExecutionService = new StepExecutionService(jobExecutionService, threadManager, repository);
     }
 
     //-------------------------------------
@@ -55,13 +56,13 @@ class StepExecServiceTest {
         val clusterInfo = new ClusterInfo();
 
         val stepRec = createStepRecord();
-        when(repository.tryClaimNextStepPartition(any())).thenReturn(stepRec);
+        when(repository.tryClaimNextStepRecord(any())).thenReturn(stepRec);
 
         val step = new MockStep();
-        when(jobExecService.getStep(jobName, stepName)).thenReturn(step);
+        when(jobExecutionService.getStep(jobName, stepName)).thenReturn(step);
 
         val now = LocalDateTime.of(2024, 1, 10, 0,0,0);
-        val stepProcessed = stepExecService.processStepIfAvailable(clusterInfo, now);
+        val stepProcessed = stepExecutionService.processStepIfAvailable(clusterInfo, now);
 
         assertTrue(stepProcessed);
         assertEquals(ExecStatus.COMPLETE, stepRec.getStatus());

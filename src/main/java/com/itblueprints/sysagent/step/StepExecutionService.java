@@ -5,7 +5,7 @@ import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
-import com.itblueprints.sysagent.job.JobExecService;
+import com.itblueprints.sysagent.job.JobExecutionService;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +22,8 @@ import java.util.concurrent.Future;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class StepExecService {
-    private final JobExecService jobExecService;
+public class StepExecutionService {
+    private final JobExecutionService jobExecutionService;
     private final ThreadManager threadManager;
     private final RecordRepository repository;
 
@@ -43,7 +43,7 @@ public class StepExecService {
 
     //-------------------------------------------------------------
     boolean processStepIfAvailable(ClusterInfo clusterInfo, LocalDateTime now){
-        val stepRec = repository.tryClaimNextStepPartition(clusterInfo.nodeId);
+        val stepRec = repository.tryClaimNextStepRecord(clusterInfo.nodeId);
         if (stepRec != null) {
             processStep(stepRec, now);
             threadManager.drainWorkerTaskQueue();
@@ -59,7 +59,7 @@ public class StepExecService {
         stepRec.setStartedAt(now);
         repository.save(stepRec);
 
-        val step = jobExecService.getStep(stepRec.getJobName(), stepRec.getStepName());
+        val step = jobExecutionService.getStep(stepRec.getJobName(), stepRec.getStepName());
         val ctx = new StepContext();
         ctx.getArguments().add(stepRec.getJobArguments());
         if(stepRec.getPartitionCount() > 0) {

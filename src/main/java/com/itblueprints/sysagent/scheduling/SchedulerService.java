@@ -2,7 +2,7 @@ package com.itblueprints.sysagent.scheduling;
 
 import com.itblueprints.sysagent.*;
 import com.itblueprints.sysagent.cluster.ClusterInfo;
-import com.itblueprints.sysagent.job.JobExecService;
+import com.itblueprints.sysagent.job.JobExecutionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -24,7 +24,7 @@ public class SchedulerService {
     private final ConfigurableApplicationContext appContext;
     private final ThreadManager threadManager;
     private final MongoTemplate mongoTemplate;
-    private final JobExecService jobExecService;
+    private final JobExecutionService jobExecutionService;
     private final Config config;
 
     final List<ScheduledJobItem> scheduledJobItems = new ArrayList<>();
@@ -56,7 +56,7 @@ public class SchedulerService {
                         Utils.sleepFor(gap < 0 ? 0 : (gap+1)*1000);
                         val args = new Arguments();
                         args.put(SysAgentService.DataKeys.jobStartedAt, nextRunAt);
-                        jobExecService.runJob(item.jobName, args);
+                        jobExecutionService.runJob(item.jobName, args);
                     }
                     catch (Exception e){
                         e.printStackTrace();
