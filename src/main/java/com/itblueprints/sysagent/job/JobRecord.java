@@ -34,14 +34,14 @@ public class JobRecord {
 
     private String currentStepName;
 
-    private int partitionCount = 0;
+    private int currentStepPartitionCount = 0;
 
-    private int partitionsCompletedCount = 0;
+    private int currentStepPartitionsCompletedCount = 0;
 
-    private int retryCount = 0;
+    private int currentStepRetryCount = 0;
 
     //------------------------------------------
-    public static JobRecord create(String jobName, Arguments jobArguments, LocalDateTime startedAt) {
+    public static JobRecord of(String jobName, Arguments jobArguments, LocalDateTime startedAt) {
         val jr = new JobRecord();
         jr.jobName = jobName;
         jr.status = ExecStatus.RUNNING;

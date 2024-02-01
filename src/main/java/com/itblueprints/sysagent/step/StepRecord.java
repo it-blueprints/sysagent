@@ -56,7 +56,7 @@ public class StepRecord {
 
     private CheckPointState checkPointState;
 
-    public static StepRecord create(String jobRecordId, String jobName, String stepName, Arguments jobArguments){
+    public static StepRecord of(String jobRecordId, String jobName, String stepName, Arguments jobArguments){
         val sr = new StepRecord();
         sr.jobRecordId = jobRecordId;
         sr.jobName = jobName;
