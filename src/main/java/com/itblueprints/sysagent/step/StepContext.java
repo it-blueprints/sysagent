@@ -23,6 +23,6 @@ public class StepContext {
     @Setter
     private CheckPointState checkPointState;
 
-    private StepData stepData = new StepData();
+    private StepDataMap stepDataMap = new StepDataMap();
 
 }
