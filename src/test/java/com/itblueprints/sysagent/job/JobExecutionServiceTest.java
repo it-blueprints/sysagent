@@ -49,22 +49,22 @@ class JobExecutionServiceTest {
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
+
         jobExecutionService = new JobExecutionService(appContext, repository, threadManager);
+        loadMockJobIntoService();
     }
 
     //------------------------------------
     @Test
     void runJob() {
 
-        val job = new MockJob();
-        val jobRec = new JobRecord();
-        jobRec.setJobName("Job");
+        val jobRec = JobRecord.of("Job", Arguments.of(), now);
+        jobRec.setId("jrid1");
+        jobRec.setStatus(ExecStatus.RUNNING);
 
         when(repository.save((JobRecord) any())).thenReturn(jobRec);
 
-        loadJobIntoService(job, jobRec);
-
-        val jobArgs = new Arguments();
+        val jobArgs = jobRec.getJobArguments();
         jobArgs.put("pmtProfile", "sp");
         jobExecutionService.runJob("Job", jobArgs);
 
@@ -74,13 +74,11 @@ class JobExecutionServiceTest {
         verify(repository, times(4)).save(stepRecC.capture());
 
         val stepRecs = stepRecC.getAllValues();
-        val n = stepRecs.stream()
-                .filter(sr -> sr.getJobName().equals("Job")
-                && sr.getJobRecordId().equals("job1234")
-                && sr.getStepName().equals("Step1")
-                && sr.getJobArguments().getAsString("pmtProfile").equals("sp"))
-                .count();
-        assertEquals(4, n);
+
+        assertTrueForAll(stepRecs, sr -> sr.getJobName().equals("Job"));
+        assertTrueForAll(stepRecs, sr -> sr.getJobRecordId().equals("jrid1"));
+        assertTrueForAll(stepRecs, sr -> sr.getStepName().equals("Step1"));
+        assertTrueForAll(stepRecs, sr -> sr.getJobArguments().getAsString("pmtProfile").equals("sp"));
 
         val partnArgs = stepRecs.stream()
                 .map(sr -> {
@@ -97,9 +95,9 @@ class JobExecutionServiceTest {
     //------------------------------------
     @Test
     void processExecutingJobs() {
-        val job = new MockJob();
-        val jobRec = JobRecord.of("Job", new Arguments(), now);
-        jobRec.setId("1");
+        val jobRec = JobRecord.of("Job", Arguments.of(), now);
+        jobRec.setId("jrid1");
+        jobRec.setStatus(ExecStatus.RUNNING);
         jobRec.setCurrentStepName("Step");
 
         val stepRec = StepRecord.of("1","Job", "Step", new Arguments());
@@ -107,7 +105,7 @@ class JobExecutionServiceTest {
         when(repository.getRunningJobRecords()).thenReturn(List.of(jobRec));
         lenient().when(repository.getStepsRecordsForStepOfJob(any(), any())).thenReturn(List.of(stepRec));
         when(threadManager.getExecutor()).thenReturn(executor);
-        loadJobIntoService(job, jobRec);
+
         jobExecutionService.processExecutingJobs(now);
 
         //TODO
@@ -240,16 +238,26 @@ class JobExecutionServiceTest {
     //------------------------------------
     @Test
     void retryFailedJob() {
+        val testData = createTestJobAndStepRecords();
+        val jobRec = testData.getFirst();
+        val stepRecs = testData.getSecond().subList(0,1);
+        when(repository.getFailedJobRecordOfJob("Job")).thenReturn(jobRec);
+        when(repository.getFailedStepRecordsForJob("jrid1")).thenReturn(stepRecs);
 
+        jobExecutionService.retryFailedJob("Job", now);
+
+        verify(repository, times(1)).save((StepRecord) any());
+
+        val sr = stepRecs.get(0);
+        assertEquals(ExecStatus.NEW, sr.getStatus());
+        assertEquals(false, sr.isClaimed());
+        assertEquals(1, sr.getRetryCount());
+        assertEquals(now, sr.getLastUpdateAt());
     }
 
     //-----------------------------------------------------------
-    private void loadJobIntoService(Job job, JobRecord jobRec){
-
-        jobRec.setJobName("Job");
-        jobRec.setId("job1234");
-        jobRec.setStatus(ExecStatus.RUNNING);
-
+    private void loadMockJobIntoService(){
+        val job = new MockJob();
         when(appContext.getBeanFactory()).thenReturn(beanFactory);
         when(beanFactory.getBeanNamesForType(Job.class)).thenReturn(new String[]{"job"});
         when(beanFactory.getBean("job", Job.class)).thenReturn(job);
