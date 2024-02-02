@@ -6,15 +6,15 @@ import org.springframework.data.domain.Pageable;
 
 public interface Batched<IN, OUT> {
 
-    default void onStart(StepContext context){}
+    default void onStart(BatchStepContext context){}
 
-    Page<IN> readPageOfItems(Pageable pageRequest, StepContext context);
+    Page<IN> readPageOfItems(Pageable pageRequest, BatchStepContext context);
 
-    OUT processItem(IN item, StepContext context);
+    OUT processItem(IN item, BatchStepContext context);
 
-    void writePageOfItems(Page<OUT> page, StepContext context);
+    void writePageOfItems(Page<OUT> page, BatchStepContext context);
 
-    default void onComplete(StepContext context){}
+    default void onComplete(BatchStepContext context){}
 
     /*
     This field indicates if the query to fetch items, returns the same result even if items have

@@ -60,7 +60,7 @@ public class StepExecutionService {
         repository.save(stepRec);
 
         val step = jobExecutionService.getStep(stepRec.getJobName(), stepRec.getStepName());
-        val ctx = new StepContext();
+        val ctx = step instanceof Batched? new BatchStepContext() : new StepContext();
         ctx.getArguments().add(stepRec.getJobArguments());
         if(stepRec.getPartitionCount() > 0) {
             ctx.getArguments().add(stepRec.getPartitionArguments());
@@ -72,7 +72,9 @@ public class StepExecutionService {
 
         try {
             if(step instanceof Batched){
-                runBatched((Batched) step, ctx);
+                val batchCtx = (BatchStepContext) ctx;
+                runBatched((Batched) step, batchCtx);
+                stepRec.setBatchItemsProcessed(batchCtx.getItemsProcessed());
             }
             else if(step instanceof SimpleStep){
                 ((SimpleStep) step).run(ctx);
@@ -86,7 +88,7 @@ public class StepExecutionService {
         finally {
             threadManager.setNodeBusy(false);
         }
-        stepRec.setBatchItemsProcessed(ctx.getItemsProcessed());
+
         stepRec.setStatus(ExecStatus.COMPLETE);
         stepRec.setCompletedAt(LocalDateTime.now());
         repository.save(stepRec);
@@ -95,7 +97,7 @@ public class StepExecutionService {
     }
 
     //----------------------------------------------------------------------
-    <IN, OUT> void runBatched(Batched<IN, OUT> batchStep, StepContext context){
+    <IN, OUT> void runBatched(Batched<IN, OUT> batchStep, BatchStepContext context){
         //This is the number future submissions allowed at a time
         int lotSize = threadManager.getTaskQueueSize();
 

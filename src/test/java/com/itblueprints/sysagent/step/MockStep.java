@@ -20,7 +20,7 @@ public class MockStep implements PartitionedBatchStep<String, String> {
     public List<String> result = new ArrayList<>();
 
     @Override
-    public Page<String> readPageOfItems(Pageable pageRequest, StepContext context) {
+    public Page<String> readPageOfItems(Pageable pageRequest, BatchStepContext context) {
         readChunkOfItems_TimesCalled++;
         if(pageRequest.getPageNumber() == 0) {
             val items = List.of("A", "B", "C", "D");
@@ -40,25 +40,25 @@ public class MockStep implements PartitionedBatchStep<String, String> {
     }
 
     @Override
-    public String processItem(String item, StepContext context) {
+    public String processItem(String item, BatchStepContext context) {
         processItem_TimesCalled++;
         return item+"_X";
     }
 
     @Override
-    public void writePageOfItems(Page<String> page, StepContext context) {
+    public void writePageOfItems(Page<String> page, BatchStepContext context) {
         result.addAll(page.toList());
         totalPages = page.getTotalPages();
     }
 
     @Override
-    public void onStart(StepContext context) {
+    public void onStart(BatchStepContext context) {
         preProcessCalled = true;
     }
 
 
     @Override
-    public void onComplete(StepContext context) {
+    public void onComplete(BatchStepContext context) {
         postProcessCalled = true;
     }
 

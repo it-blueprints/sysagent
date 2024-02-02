@@ -14,11 +14,4 @@ public class StepContext {
     private Integer totalPartitions;
     void setTotalPartitions(Integer totalPartitions) {this.totalPartitions = totalPartitions;}
 
-    private long itemsProcessed;
-    void setItemsProcessed(long itemsProcessed) {
-        this.itemsProcessed = itemsProcessed;
-    }
-
-    private final DataHolder dataHolder = new DataHolder();
-
 }
