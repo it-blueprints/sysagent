@@ -11,7 +11,7 @@ public class StepContext {
     private Integer partitionNum;
     void setPartitionNum(Integer partitionNum) {this.partitionNum = partitionNum;}
 
-    private Integer totalPartitions;
-    void setTotalPartitions(Integer totalPartitions) {this.totalPartitions = totalPartitions;}
+    private Integer partitionCount;
+    void setPartitionCount(Integer partitionCount) {this.partitionCount = partitionCount;}
 
 }

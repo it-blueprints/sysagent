@@ -10,18 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MockStep implements PartitionedBatchStep<String, String> {
+public class MockBatchPartitionedStep implements PartitionedBatchStep<String, String> {
 
-    public boolean preProcessCalled;
-    public boolean postProcessCalled;
+    public boolean onStartCalled;
+    public boolean onCompleteCalled;
     public int totalPages;
-    public int readChunkOfItems_TimesCalled;
+    public int readPageOfItems_TimesCalled;
     public int processItem_TimesCalled;
+    public int writePageOfItems_TimesCalled;
     public List<String> result = new ArrayList<>();
 
     @Override
     public Page<String> readPageOfItems(Pageable pageRequest, BatchStepContext context) {
-        readChunkOfItems_TimesCalled++;
+        readPageOfItems_TimesCalled++;
         if(pageRequest.getPageNumber() == 0) {
             val items = List.of("A", "B", "C", "D");
             val pg = new PageImpl<>(items, pageRequest, 11);
@@ -47,19 +48,20 @@ public class MockStep implements PartitionedBatchStep<String, String> {
 
     @Override
     public void writePageOfItems(Page<String> page, BatchStepContext context) {
+        writePageOfItems_TimesCalled++;
         result.addAll(page.toList());
         totalPages = page.getTotalPages();
     }
 
     @Override
     public void onStart(BatchStepContext context) {
-        preProcessCalled = true;
+        onStartCalled = true;
     }
 
 
     @Override
     public void onComplete(BatchStepContext context) {
-        postProcessCalled = true;
+        onCompleteCalled = true;
     }
 
     @Override
@@ -69,11 +71,7 @@ public class MockStep implements PartitionedBatchStep<String, String> {
 
     @Override
     public List<Arguments> getPartitionArgumentsList(Arguments jobArguments) {
-        return List.of(1,2,3).stream().map(i -> {
-            val arg = new Arguments();
-            arg.put("partition", i);
-            return arg;
-        }).collect(Collectors.toList());
+        return List.of(1,2,3).stream().map(i -> Arguments.of("partition", i)).collect(Collectors.toList());
     }
 
     @Override

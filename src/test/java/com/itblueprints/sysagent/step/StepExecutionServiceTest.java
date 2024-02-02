@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class StepExecutionServiceTest {
@@ -36,49 +36,79 @@ class StepExecutionServiceTest {
 
     StepExecutionService stepExecutionService;
 
-    private final String jobName = "Job";
-    private final String stepName = "Step";
     private ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    private LocalDateTime now = LocalDateTime.now();
 
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
-        when(threadManager.getBatchPageSize()).thenReturn(4);
-        when(threadManager.getExecutor()).thenReturn(executor);
-        when(threadManager.getTaskQueueSize()).thenReturn(2);
-
         stepExecutionService = new StepExecutionService(jobExecutionService, threadManager, repository);
     }
 
     //-------------------------------------
     @Test
-    void tryProcessStep() {
+    void processStepIfAvailable() {
         val clusterInfo = new ClusterInfo();
-
         val stepRec = createStepRecord();
         when(repository.tryClaimNextStepRecord(any())).thenReturn(stepRec);
 
-        val step = new MockStep();
-        when(jobExecutionService.getStep(jobName, stepName)).thenReturn(step);
+        val step = new MockPartitionedStep();
+        when(jobExecutionService.getStep("Job", "Step")).thenReturn(step);
 
-        val now = LocalDateTime.of(2024, 1, 10, 0,0,0);
         val stepProcessed = stepExecutionService.processStepIfAvailable(clusterInfo, now);
 
         assertTrue(stepProcessed);
+    }
+
+    //-------------------------------------
+    @Test
+    void processStep() {
+        val stepRec = createStepRecord();
+        stepRec.setPartitionCount(3);
+        stepRec.setPartitionNum(1);
+        val step = new MockPartitionedStep();
+        when(jobExecutionService.getStep("Job", "Step")).thenReturn(step);
+
+        stepExecutionService.processStep(stepRec, now);
+
         assertEquals(ExecStatus.COMPLETE, stepRec.getStatus());
+        assertEquals(now, stepRec.getStartedAt());
+        verify(threadManager, times(1)).setNodeBusy(true);
+        verify(threadManager, times(1)).setNodeBusy(false);
+        verify(repository,times(2)).save(stepRec);
+        assertTrue(step.runCalled);
+        val ctx = step.stepContext;
+        assertEquals(stepRec.getPartitionCount(), ctx.getPartitionCount());
+        assertEquals(stepRec.getPartitionNum(), ctx.getPartitionNum());
+    }
+
+    //------------------------------------
+    @Test
+    void runBatched() {
+        when(threadManager.getBatchPageSize()).thenReturn(4);
+        when(threadManager.getExecutor()).thenReturn(executor);
+        when(threadManager.getTaskQueueSize()).thenReturn(2);
+
+        val step = new MockBatchPartitionedStep();
+        val ctx = new BatchStepContext();
+        stepExecutionService.runBatched(step, ctx);
+
+        assertEquals(11, ctx.getItemsProcessed());
         assertEquals(3, step.totalPages);
-        assertEquals(true, step.preProcessCalled);
-        assertEquals(true, step.postProcessCalled);
-        assertEquals(3, step.readChunkOfItems_TimesCalled);
+        assertEquals(true, step.onStartCalled);
+        assertEquals(true, step.onCompleteCalled);
+        assertEquals(3, step.readPageOfItems_TimesCalled);
         assertEquals(11, step.processItem_TimesCalled);
+        assertEquals(3, step.writePageOfItems_TimesCalled);
         assertEquals(List.of("A_X", "B_X", "C_X", "D_X", "E_X", "F_X", "G_X", "H_X", "I_X", "J_X", "K_X"), step.result);
     }
 
     //------------------------------------
     private StepRecord createStepRecord(){
         val stepRec = new StepRecord();
-        stepRec.setJobName(jobName);
-        stepRec.setStepName(stepName);
+        stepRec.setJobName("Job");
+        stepRec.setStepName("Step");
         stepRec.setClaimed(true);
         val jobArgs = new Arguments();
         jobArgs.put("procDate", LocalDate.of(2024, 1, 12));

@@ -65,7 +65,7 @@ public class StepExecutionService {
         if(stepRec.getPartitionCount() > 0) {
             ctx.getArguments().add(stepRec.getPartitionArguments());
             ctx.setPartitionNum(stepRec.getPartitionNum());
-            ctx.setTotalPartitions(stepRec.getPartitionCount());
+            ctx.setPartitionCount(stepRec.getPartitionCount());
         }
 
         log.debug("Executing step '"+stepRec.getStepName() + "' with arguments "+ctx.getArguments());
@@ -79,21 +79,18 @@ public class StepExecutionService {
             else if(step instanceof SimpleStep){
                 ((SimpleStep) step).run(ctx);
             }
+            stepRec.setStatus(ExecStatus.COMPLETE);
+            stepRec.setCompletedAt(LocalDateTime.now());
         }
         catch (Exception e){
             stepRec.setStatus(ExecStatus.FAILED);
-            repository.save(stepRec);
+            stepRec.setLastUpdateAt(LocalDateTime.now());
             throw new SysAgentException("Batch step failed - "+step.getName(), e);
         }
         finally {
+            repository.save(stepRec);
             threadManager.setNodeBusy(false);
         }
-
-        stepRec.setStatus(ExecStatus.COMPLETE);
-        stepRec.setCompletedAt(LocalDateTime.now());
-        repository.save(stepRec);
-
-        threadManager.setNodeBusy(false);
     }
 
     //----------------------------------------------------------------------
