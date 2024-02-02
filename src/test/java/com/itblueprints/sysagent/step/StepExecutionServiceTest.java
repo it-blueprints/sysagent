@@ -29,8 +29,7 @@ import static org.mockito.Mockito.*;
 class StepExecutionServiceTest {
 
     @Mock RecordRepository repository;
-    @Mock
-    JobExecutionService jobExecutionService;
+    @Mock JobExecutionService jobExecutionService;
     @Mock Config config;
     @Mock ThreadManager threadManager;
 
