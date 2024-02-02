@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 public class StepContext {
 
-    private Arguments arguments = new Arguments();
+    private final Arguments arguments = new Arguments();
 
     private Integer partitionNum;
     void setPartitionNum(Integer partitionNum) {this.partitionNum = partitionNum;}
@@ -19,6 +19,6 @@ public class StepContext {
         this.itemsProcessed = itemsProcessed;
     }
 
-    private DataHolder dataHolder = new DataHolder();
+    private final DataHolder dataHolder = new DataHolder();
 
 }
