@@ -10,36 +10,32 @@ public interface TypedAccessor {
 
     Object get(String key);
 
-    default int asInt(String key){
+    default int getAsInt(String key){
         return (Integer) get(key);
     }
 
-    default boolean asBool(String key){
+    default boolean getAsBool(String key){
         return (Boolean) get(key);
     }
 
-    default String asString(String key){
+    default String getAsString(String key){
         return (String) get(key);
     }
 
-    default long asLong(String key){
+    default long getAsLong(String key){
         return (Long) get(key);
     }
 
-    default LocalDateTime asTime(String key){
+    default LocalDateTime getAsTime(String key){
         val time = get(key);
         if(time instanceof Date) return Utils.toDateTime((Date)time);
         else return (LocalDateTime) get(key);
     }
 
-    default LocalDate asDate(String key){
+    default LocalDate getAsDate(String key){
         val dt = get(key);
         if(dt instanceof Date) return Utils.toDate((Date)dt);
         else return (LocalDate) get(key);
-    }
-
-    default <T> T asType(String key, Class<T> clazz){
-        return (T) get(key);
     }
 
 }

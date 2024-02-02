@@ -78,15 +78,15 @@ class JobExecutionServiceTest {
                 .filter(sr -> sr.getJobName().equals("Job")
                 && sr.getJobRecordId().equals("job1234")
                 && sr.getStepName().equals("Step1")
-                && sr.getJobArguments().asString("pmtProfile").equals("sp"))
+                && sr.getJobArguments().getAsString("pmtProfile").equals("sp"))
                 .count();
         assertEquals(4, n);
 
         val partnArgs = stepRecs.stream()
                 .map(sr -> {
                     val sb = new StringBuilder();
-                    sb.append("k1:").append(sr.getPartitionArguments().asString("k1")).append("+");
-                    sb.append("k2:").append(sr.getPartitionArguments().asString("k2"));
+                    sb.append("k1:").append(sr.getPartitionArguments().getAsString("k1")).append("+");
+                    sb.append("k2:").append(sr.getPartitionArguments().getAsString("k2"));
                     return sb.toString();
                 }).
                 collect(Collectors.toList());
