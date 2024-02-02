@@ -19,6 +19,6 @@ public class StepContext {
         this.itemsProcessed = itemsProcessed;
     }
 
-    private StepDataMap stepDataMap = new StepDataMap();
+    private DataHolder dataHolder = new DataHolder();
 
 }
