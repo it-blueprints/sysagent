@@ -2,7 +2,6 @@ package com.itblueprints.sysagent.step;
 
 import com.itblueprints.sysagent.Arguments;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public class StepContext {
@@ -19,9 +18,6 @@ public class StepContext {
     void setItemsProcessed(long itemsProcessed) {
         this.itemsProcessed = itemsProcessed;
     }
-
-    @Setter
-    private CheckPointState checkPointState;
 
     private StepDataMap stepDataMap = new StepDataMap();
 

@@ -54,8 +54,6 @@ public class StepRecord {
     @Indexed
     private ExecStatus status = ExecStatus.NEW;
 
-    private CheckPointState checkPointState;
-
     public static StepRecord of(String jobRecordId, String jobName, String stepName, Arguments jobArguments){
         val sr = new StepRecord();
         sr.jobRecordId = jobRecordId;
