@@ -53,7 +53,7 @@ public class JobExecutionService {
             jobArgs.put(SysAgentService.DataKeys.jobStartedAt, LocalDateTime.now());
         }
 
-        val jobStartedAt = jobArgs.getAsTime(SysAgentService.DataKeys.jobStartedAt);
+        val jobStartedAt = jobArgs.getTime(SysAgentService.DataKeys.jobStartedAt);
 
         val jRec = JobRecord.of(jobName, jobArgs, jobStartedAt);
         var jobRec = repository.save(jRec);

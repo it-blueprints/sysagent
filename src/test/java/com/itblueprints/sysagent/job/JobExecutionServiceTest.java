@@ -78,13 +78,13 @@ class JobExecutionServiceTest {
         assertTrueForAll(stepRecs, sr -> sr.getJobName().equals("Job"));
         assertTrueForAll(stepRecs, sr -> sr.getJobRecordId().equals("jrid1"));
         assertTrueForAll(stepRecs, sr -> sr.getStepName().equals("Step1"));
-        assertTrueForAll(stepRecs, sr -> sr.getJobArguments().getAsString("pmtProfile").equals("sp"));
+        assertTrueForAll(stepRecs, sr -> sr.getJobArguments().getString("pmtProfile").equals("sp"));
 
         val partnArgs = stepRecs.stream()
                 .map(sr -> {
                     val sb = new StringBuilder();
-                    sb.append("k1:").append(sr.getPartitionArguments().getAsString("k1")).append("+");
-                    sb.append("k2:").append(sr.getPartitionArguments().getAsString("k2"));
+                    sb.append("k1:").append(sr.getPartitionArguments().getString("k1")).append("+");
+                    sb.append("k2:").append(sr.getPartitionArguments().getString("k2"));
                     return sb.toString();
                 }).
                 collect(Collectors.toList());
