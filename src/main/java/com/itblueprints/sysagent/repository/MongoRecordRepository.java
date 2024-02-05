@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.itblueprints.sysagent.cluster.NodeRecord.MANAGER_ID;
 
@@ -70,7 +69,7 @@ public class MongoRecordRepository implements RecordRepository {
         Set<String> excludedIds = Set.of(MANAGER_ID, thisNodeId);
         return allNRs.stream()
                 .filter(nr -> ! excludedIds.contains(nr.getId()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     //--------------------------------------
