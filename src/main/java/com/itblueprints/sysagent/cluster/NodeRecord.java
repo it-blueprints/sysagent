@@ -17,7 +17,7 @@ public class NodeRecord {
 
     private long aliveTill;
 
-    private String managerId;
+    private String managerNodeId;
 
     private long managerSince;
 

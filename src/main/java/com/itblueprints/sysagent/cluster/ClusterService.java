@@ -23,7 +23,12 @@ import java.util.concurrent.TimeUnit;
 
 import static com.itblueprints.sysagent.cluster.NodeRecord.MANAGER_ID;
 
-
+/**
+ * Controller for managing the state of the cluster. This includes tracking heartbeats,
+ * determining which node is the manager and which ones are workers and signalling the
+ * node is alive. Activities are carried out each time the ScheduledExecutorService
+ * wakes up and runs
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -40,7 +45,11 @@ public class ClusterService {
     NodeRecord nodeRecord = new NodeRecord();
     NodeRecord managerNodeRecord;
 
-    //------------------------------------------
+    //-----------------------------------------------------
+    /**
+     * Initialises the scheduled executor which then triggers every
+     * heartbeat number of seconds
+     */
     @PostConstruct
     void init() {
 
@@ -61,14 +70,20 @@ public class ClusterService {
         scheduler.scheduleAtFixedRate(r, hb, hb, TimeUnit.SECONDS);
     }
 
-    //------------------------------
+    //----------------------------------------------------
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
 
-    //------------------------------
+    //------------------------------------------------------------------
+    /**
+     * Called by the scheduled executor everytime heartBeatSecs elapses.
+     * Main method that carries out all the cluster related activities
+     * @param heartBeatSecs the number of seconds between each heart beat
+     */
     void onHeartBeat(int heartBeatSecs){
         val timeNow = System.currentTimeMillis();
-        val clusterInfo = computeClusterState(heartBeatSecs, timeNow);
+        //
+        val clusterInfo = computeClusterInfo(heartBeatSecs, timeNow);
         log.debug("HB - clusterInfo="+clusterInfo);
 
         if (!nodeRecord.isInitialised()) {
@@ -92,36 +107,45 @@ public class ClusterService {
 
     private static final int CLEANUP_HEARTBEATS = 600;
 
-    //----------------------------------------
-    ClusterInfo computeClusterState(int heartBeatSecs, long timeNow){
+    //---------------------------------------------------------------
+    /**
+     * Figures out the state of the cluster
+     * @param heartBeatSecs the number of seconds between each heart beat
+     * @param timeNow A long representing the time now
+     * @return A ClusterInfo object that hold information about the state of the cluster
+     */
+    ClusterInfo computeClusterInfo(int heartBeatSecs, long timeNow){
 
         val hrtbt = heartBeatSecs * 1000;
 
-        //check if cluster has been reset
+        //check if a NodeRecord for this node exists. If not create one and save to db
         val ns = repository.getNodeRecordById(nodeRecord.getId());
         if(ns == null){
             nodeRecord.setInitialised(false);
             repository.save(nodeRecord);
         }
 
-        //extend life
+        //extend life lease
         nodeRecord.setAliveTill(timeNow + hrtbt * LEASE_HEARTBEATS);
         nodeRecord = repository.save(nodeRecord);
+
+        //Get the manager record from the DB. This is the NodeRecord with id='M'
         val mgrNodeRecInDb = repository.getManagerNodeRecord();
-        if(mgrNodeRecInDb == null){ //No leader record
-            //create one. Only one will succeed as the id is constant and it has a unique constraint
+        if(mgrNodeRecInDb == null){ //No manager record
+            //create one. Only one node will succeed it creating it. This is beacuse
+            // the id is the constant 'M' and that would violate the unique constraint
             val mgrNodeRec = new NodeRecord();
             mgrNodeRec.setId(MANAGER_ID);
-            mgrNodeRec.setManagerId(nodeRecord.getId());
+            mgrNodeRec.setManagerNodeId(nodeRecord.getId());
             mgrNodeRec.setManagerSince(timeNow);
             mgrNodeRec.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
             managerNodeRecord = repository.save(mgrNodeRec);
-            nodeRecord.setManagerId(nodeRecord.getId());
+            nodeRecord.setManagerNodeId(nodeRecord.getId());
         }
         else {  //Leader record exists
             //update state held
             managerNodeRecord = mgrNodeRecInDb;
-            nodeRecord.setManagerId(managerNodeRecord.getManagerId());
+            nodeRecord.setManagerNodeId(managerNodeRecord.getManagerNodeId());
             if(isManager()){ //This is the leader node
                 //Extend lease
                 managerNodeRecord.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
@@ -137,7 +161,7 @@ public class ClusterService {
                     //if was successful in obtaining the lock
                     if(lockedMgrNR != null) {
                         //Set this as the manager
-                        managerNodeRecord.setManagerId(nodeRecord.getId());
+                        managerNodeRecord.setManagerNodeId(nodeRecord.getId());
                         managerNodeRecord.setManagerSince(timeNow);
                         managerNodeRecord.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
                         managerNodeRecord.setLocked(false);
@@ -176,7 +200,7 @@ public class ClusterService {
 
     //----------------------
     public boolean isManager(){
-        return managerNodeRecord.getManagerId().equals(nodeRecord.getId());
+        return managerNodeRecord.getManagerNodeId().equals(nodeRecord.getId());
     }
 
 }

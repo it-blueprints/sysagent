@@ -93,12 +93,12 @@ class ClusterServiceTest {
 
         assertEquals(toTime(72), currentMgr.nodeRecord.getAliveTill());
         assertEquals(0, currentMgr.nodeRecord.getManagerLeaseTill());
-        assertEquals("ID_4", currentMgr.managerNodeRecord.getManagerId());
+        assertEquals("ID_4", currentMgr.managerNodeRecord.getManagerNodeId());
         assertEquals(toTime(72), currentMgr.managerNodeRecord.getManagerLeaseTill());
         assertEquals(0L, currentMgr.managerNodeRecord.getAliveTill());
 
         assertEquals(toTime(81), currentWorker.nodeRecord.getAliveTill());
-        assertEquals("ID_4", currentWorker.managerNodeRecord.getManagerId());
+        assertEquals("ID_4", currentWorker.managerNodeRecord.getManagerNodeId());
 
         assertEquals(toTime(51), currentDead.nodeRecord.getAliveTill());
     }
@@ -122,7 +122,7 @@ class ClusterServiceTest {
             lenient().when(repository.tryGetLockedManagerNodeRecord()).thenReturn(mgrNodeRecord);
         }
 
-        val cs = node.computeClusterState(HB_SECS, timeNow);
+        val cs = node.computeClusterInfo(HB_SECS, timeNow);
 
         //cluster state
         assertEquals(nodeId, cs.nodeId);
