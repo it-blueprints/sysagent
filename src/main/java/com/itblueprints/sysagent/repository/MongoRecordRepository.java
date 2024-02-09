@@ -3,6 +3,7 @@ package com.itblueprints.sysagent.repository;
 import com.itblueprints.sysagent.ExecStatus;
 import com.itblueprints.sysagent.cluster.NodeRecord;
 import com.itblueprints.sysagent.job.JobRecord;
+import com.itblueprints.sysagent.scheduling.JobScheduleRecord;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
@@ -171,5 +172,14 @@ public class MongoRecordRepository implements RecordRepository {
             claimedStepRec.setNodeId(thisNodeId);
         }
         return claimedStepRec;
+    }
+
+    //--------------------------------------
+    @Override
+    public void clearAll() {
+        mongoTemplate.dropCollection(JobRecord.class);
+        mongoTemplate.dropCollection(JobScheduleRecord.class);
+        mongoTemplate.dropCollection(NodeRecord.class);
+        mongoTemplate.dropCollection(StepRecord.class);
     }
 }

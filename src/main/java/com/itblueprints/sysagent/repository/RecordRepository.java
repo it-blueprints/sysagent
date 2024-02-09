@@ -28,4 +28,7 @@ public interface RecordRepository {
     List<StepRecord> getStepRecordsClaimedByNode(String nodeRecordId);
     List<StepRecord> getFailedStepRecordsForJob(String jobRecordId);
     StepRecord tryClaimNextStepRecord(String thisNodeId);
+
+    //Clear down db
+    void clearAll();
 }

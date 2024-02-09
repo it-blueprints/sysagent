@@ -8,6 +8,13 @@ then
         ./mvnw clean source:jar install
         OK=1
     fi
+      if [[ "$2" == "sign" ]]
+      then
+          gpg -ab target/sysagent-0.0.3.jar
+          gpg -ab target/sysagent-0.0.3-javadoc.jar
+          gpg -ab target/sysagent-0.0.3-sources.jar
+          OK=1
+      fi
 
     if [[ "$2" == "mvnw" ]]
     then
