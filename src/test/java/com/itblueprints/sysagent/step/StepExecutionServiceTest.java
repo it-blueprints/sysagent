@@ -4,7 +4,7 @@ import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.ExecStatus;
 import com.itblueprints.sysagent.ThreadManager;
-import com.itblueprints.sysagent.cluster.ClusterInfo;
+import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.job.JobExecutionService;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import lombok.val;
@@ -48,7 +48,7 @@ class StepExecutionServiceTest {
     //-------------------------------------
     @Test
     void processStepIfAvailable() {
-        val clusterInfo = new ClusterInfo();
+        val clusterInfo = new NodeInfo();
         val stepRec = createStepRecord();
         when(repository.tryClaimNextStepRecord(any())).thenReturn(stepRec);
 

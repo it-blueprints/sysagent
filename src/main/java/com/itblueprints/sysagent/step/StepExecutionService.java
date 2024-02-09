@@ -4,7 +4,7 @@ import com.itblueprints.sysagent.ExecStatus;
 import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
-import com.itblueprints.sysagent.cluster.ClusterInfo;
+import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.job.JobExecutionService;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,22 +28,22 @@ public class StepExecutionService {
     private final RecordRepository repository;
 
     //-------------------------------------------------------------
-    public void onHeartBeat(ClusterInfo clusterInfo, LocalDateTime now) {
+    public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
 
-        if(clusterInfo.isBusy) {
+        if(nodeInfo.isNodeBusy) {
             log.debug("Node busy. Not taking on additional work");
             return;
         }
 
         var stepProcessed = false;
         do {
-            stepProcessed = processStepIfAvailable(clusterInfo, now);
+            stepProcessed = processStepIfAvailable(nodeInfo, now);
         } while(stepProcessed);
     }
 
     //-------------------------------------------------------------
-    boolean processStepIfAvailable(ClusterInfo clusterInfo, LocalDateTime now){
-        val stepRec = repository.tryClaimNextStepRecord(clusterInfo.nodeId);
+    boolean processStepIfAvailable(NodeInfo nodeInfo, LocalDateTime now){
+        val stepRec = repository.tryClaimNextStepRecord(nodeInfo.nodeId);
         if (stepRec != null) {
             processStep(stepRec, now);
             threadManager.drainWorkerTaskQueue();

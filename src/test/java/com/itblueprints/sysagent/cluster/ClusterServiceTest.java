@@ -5,26 +5,18 @@ import com.itblueprints.sysagent.TestUtils;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.job.JobExecutionService;
-import com.itblueprints.sysagent.repository.MongoRecordRepository;
-import com.itblueprints.sysagent.repository.RecordRepository;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
 import com.itblueprints.sysagent.step.StepExecutionService;
-import com.mongodb.client.MongoClients;
 import lombok.val;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.testcontainers.containers.MongoDBContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +47,7 @@ class ClusterServiceTest {
     private static final int HB_SECS = 10;
     private static final long START_TIME = 1700000000000L;
 
-    private NodeRecord mgrNodeRecord;
+    private ManagerNodeRecord mgrNodeRecord;
     private long toTime(int sec){
         return START_TIME + sec * 1000;
     }
@@ -87,22 +79,20 @@ class ClusterServiceTest {
         val currentWorker = nodes.get(2);
         val currentDead = nodes.get(1);
 
-        assertEquals(toTime(72), currentMgr.nodeRecord.getAliveTill());
-        assertEquals(0, currentMgr.nodeRecord.getManagerLeaseTill());
+        assertEquals(toTime(72), currentMgr.nodeRecord.getLifeLeaseTill());
         assertEquals(toTime(72), currentMgr.managerNodeRecord.getManagerLeaseTill());
-        assertEquals(0L, currentMgr.managerNodeRecord.getAliveTill());
-        assertEquals(toTime(81), currentWorker.nodeRecord.getAliveTill());
-        assertEquals(toTime(51), currentDead.nodeRecord.getAliveTill());
+        assertEquals(toTime(81), currentWorker.nodeRecord.getLifeLeaseTill());
+        assertEquals(toTime(51), currentDead.nodeRecord.getLifeLeaseTill());
     }
     //-------------------------------------------------
-    private NodeRecord assertState(TestCase testCase, int testNum){
+    private ManagerNodeRecord assertState(TestCase testCase, int testNum){
 
         val timeNow = START_TIME + testCase.sec * 1000;
 
         val nIdx = testCase.nodeIdx;
         val node = nodes.get(nIdx);
 
-        val cs = node.computeClusterInfo(HB_SECS, timeNow);
+        val cs = node.computeNodeInfo(HB_SECS, timeNow);
 
         //cluster state
         assertEquals(testCase.shouldBeManager, cs.isManager);

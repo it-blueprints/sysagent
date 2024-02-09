@@ -2,30 +2,26 @@ package com.itblueprints.sysagent.cluster;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
+/**
+ * NodeRecord holding details for a running node. This record is used to check
+ * if the node is still alive.When a node dies the lifeLeaseTill value is not
+ * extended, thus indicating that the node is dead. The manager node then comes
+ * along and clears out those NodeRecords
+ */
 @Getter
 @Setter
-@Document
-public class NodeRecord {
+public class NodeRecord extends BaseNodeRecord {
 
-    @Id
-    private String id;
-
+    /**
+     * When the node started up
+     */
     private long startedAt;
 
-    private long aliveTill;
-
-    private String managerNodeId;
-
-    private long managerSince;
-
-    private long managerLeaseTill;
-
-    private boolean locked;
-
-    private boolean initialised;
-
-    public static final String MANAGER_ID = "M";
+    /**
+     * This is the time upto which this node should be considered to be alive. If the
+     * current time is greater than this then the node is considered dead. With each
+     * heartbeat a node extends the value of this field.
+     */
+    private long lifeLeaseTill;
 }

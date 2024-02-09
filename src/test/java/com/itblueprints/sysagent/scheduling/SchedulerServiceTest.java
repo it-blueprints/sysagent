@@ -2,7 +2,7 @@ package com.itblueprints.sysagent.scheduling;
 
 import com.itblueprints.sysagent.Config;
 import com.itblueprints.sysagent.ThreadManager;
-import com.itblueprints.sysagent.cluster.ClusterInfo;
+import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.job.JobExecutionService;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,7 +67,7 @@ class SchedulerServiceTest {
         var totalInvocations = 0;
 
         //1 hr before schedule
-        val clusterInfo = new ClusterInfo();
+        val clusterInfo = new NodeInfo();
         val now1 = LocalDateTime.of(2024, 1, 10, 23,0,0);
         schedulerService.onHeartBeat(clusterInfo, now1);
         verify(threadManager, times(totalInvocations)).getExecutor();

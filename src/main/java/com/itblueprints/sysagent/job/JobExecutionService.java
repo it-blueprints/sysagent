@@ -1,7 +1,7 @@
 package com.itblueprints.sysagent.job;
 
 import com.itblueprints.sysagent.*;
-import com.itblueprints.sysagent.cluster.ClusterInfo;
+import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import com.itblueprints.sysagent.step.Partitioned;
 import com.itblueprints.sysagent.step.Step;
@@ -66,9 +66,9 @@ public class JobExecutionService {
     }
 
     //------------------------------------------------------------
-    public void onHeartBeat(ClusterInfo clusterInfo, LocalDateTime now) {
+    public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
         processExecutingJobs(now);
-        releaseDeadClaims(clusterInfo);
+        releaseDeadClaims(nodeInfo);
     }
 
     //--------------------------------------------------------------------
@@ -199,8 +199,8 @@ public class JobExecutionService {
     }
 
     //-------------------------------------------------------
-    public void releaseDeadClaims(ClusterInfo clusterInfo){
-        for(val deadNodeId : clusterInfo.deadNodeIds){
+    public void releaseDeadClaims(NodeInfo nodeInfo){
+        for(val deadNodeId : nodeInfo.deadNodeIds){
             val unworkedStepRecs = repository.getStepRecordsClaimedByNode(deadNodeId);
             for(val stepRec : unworkedStepRecs){
                 stepRec.setClaimed(false);
@@ -230,7 +230,7 @@ public class JobExecutionService {
     }
 
     //-----------------------------------------------
-    public void initialise(ClusterInfo clusterInfo){
+    public void initialise(NodeInfo nodeInfo){
 
         log.debug("Initialising JobService");
         val beanFactory = appContext.getBeanFactory();

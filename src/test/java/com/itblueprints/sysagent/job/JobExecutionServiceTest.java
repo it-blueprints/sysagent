@@ -4,7 +4,7 @@ import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.ExecStatus;
 import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
-import com.itblueprints.sysagent.cluster.ClusterInfo;
+import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import com.itblueprints.sysagent.step.StepRecord;
 import lombok.val;
@@ -212,7 +212,7 @@ class JobExecutionServiceTest {
     //------------------------------------
     @Test
     void releaseDeadClaims() {
-        val clInfo = new ClusterInfo();
+        val clInfo = new NodeInfo();
         clInfo.deadNodeIds = List.of("node1_id", "node2_id");
 
         val sr1 = StepRecord.of("jobrecid1", "Job", "Step1", Arguments.of());
@@ -261,7 +261,7 @@ class JobExecutionServiceTest {
         when(appContext.getBeanFactory()).thenReturn(beanFactory);
         when(beanFactory.getBeanNamesForType(Job.class)).thenReturn(new String[]{"job"});
         when(beanFactory.getBean("job", Job.class)).thenReturn(job);
-        jobExecutionService.initialise(new ClusterInfo());
+        jobExecutionService.initialise(new NodeInfo());
 
     }
 

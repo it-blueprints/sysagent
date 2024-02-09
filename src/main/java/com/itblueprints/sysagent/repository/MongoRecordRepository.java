@@ -1,6 +1,8 @@
 package com.itblueprints.sysagent.repository;
 
 import com.itblueprints.sysagent.ExecStatus;
+import com.itblueprints.sysagent.cluster.ManagerNodeRecord;
+import com.itblueprints.sysagent.cluster.BaseNodeRecord;
 import com.itblueprints.sysagent.cluster.NodeRecord;
 import com.itblueprints.sysagent.job.JobRecord;
 import com.itblueprints.sysagent.scheduling.JobScheduleRecord;
@@ -18,8 +20,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Set;
 
-import static com.itblueprints.sysagent.cluster.NodeRecord.MANAGER_ID;
-
 @Component
 @RequiredArgsConstructor
 public class MongoRecordRepository implements RecordRepository {
@@ -28,16 +28,19 @@ public class MongoRecordRepository implements RecordRepository {
 
     //****************** Node Records ********************
 
-    //--------------------------------------
     @Override
-    public NodeRecord save(NodeRecord nodeRecord) {
+    public <T extends BaseNodeRecord> T save(T nodeRecord) {
         return mongoTemplate.save(nodeRecord);
     }
 
     //--------------------------------------
     @Override
-    public NodeRecord getManagerNodeRecord() {
-        return mongoTemplate.findById(MANAGER_ID, NodeRecord.class);
+    public ManagerNodeRecord getManagerNodeRecord() {
+
+        val query = new Query();
+        query.addCriteria(Criteria
+                .where("isManagerNodeRecord").is(true));
+        return mongoTemplate.findOne(query, ManagerNodeRecord.class);
     }
 
     //--------------------------------------
@@ -51,14 +54,14 @@ public class MongoRecordRepository implements RecordRepository {
 
     //--------------------------------------
     @Override
-    public NodeRecord tryGetLockedManagerNodeRecord() {
+    public ManagerNodeRecord tryGetLockedManagerNodeRecord() {
         val mgrQuery = new Query();
         mgrQuery.addCriteria(Criteria
-                .where("id").is(MANAGER_ID)
+                .where("isManagerNodeRecord").is(true)
                 .and("locked").is(false));
         val update = new Update();
         update.set("locked", true);
-        val mgrNR = mongoTemplate.findAndModify(mgrQuery, update, NodeRecord.class);
+        val mgrNR = mongoTemplate.findAndModify(mgrQuery, update, ManagerNodeRecord.class);
         if(mgrNR!=null) mgrNR.setLocked(true);
         return mgrNR;
     }
@@ -67,15 +70,14 @@ public class MongoRecordRepository implements RecordRepository {
     @Override
     public List<NodeRecord> getRecordsForOtherNodes(String thisNodeId) {
         val allNRs = mongoTemplate.findAll(NodeRecord.class);
-        Set<String> excludedIds = Set.of(MANAGER_ID, thisNodeId);
         return allNRs.stream()
-                .filter(nr -> ! excludedIds.contains(nr.getId()))
+                .filter(nr -> ! nr.getId().equals(thisNodeId))
                 .toList();
     }
 
     //--------------------------------------
     @Override
-    public void delete(NodeRecord nodeRecord) {
+    public void delete(BaseNodeRecord nodeRecord) {
         mongoTemplate.remove(nodeRecord);
     }
 
@@ -179,7 +181,7 @@ public class MongoRecordRepository implements RecordRepository {
     public void clearAll() {
         mongoTemplate.dropCollection(JobRecord.class);
         mongoTemplate.dropCollection(JobScheduleRecord.class);
-        mongoTemplate.dropCollection(NodeRecord.class);
+        mongoTemplate.dropCollection(BaseNodeRecord.class);
         mongoTemplate.dropCollection(StepRecord.class);
     }
 }

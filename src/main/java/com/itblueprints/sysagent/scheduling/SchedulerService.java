@@ -1,7 +1,7 @@
 package com.itblueprints.sysagent.scheduling;
 
 import com.itblueprints.sysagent.*;
-import com.itblueprints.sysagent.cluster.ClusterInfo;
+import com.itblueprints.sysagent.cluster.NodeInfo;
 import com.itblueprints.sysagent.job.JobExecutionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ public class SchedulerService {
     final List<ScheduledJobItem> scheduledJobItems = new ArrayList<>();
 
     //------------------------------------------------------------
-    public void onHeartBeat(ClusterInfo clusterInfo, LocalDateTime now) {
+    public void onHeartBeat(NodeInfo nodeInfo, LocalDateTime now) {
 
         val heartBeatSecs = config.getHeartBeatSecs();
 
@@ -72,7 +72,7 @@ public class SchedulerService {
     }
 
     //-------------------------------------------------
-    public void initialise(ClusterInfo clusterInfo){
+    public void initialise(NodeInfo nodeInfo){
 
         val heartBeatSecs = config.getHeartBeatSecs();
         val beanFactory = appContext.getBeanFactory();
