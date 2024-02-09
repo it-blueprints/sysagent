@@ -130,8 +130,8 @@ public class ClusterService {
         nodeRecord = repository.save(nodeRecord);
 
         //Get the manager record from the DB. This is the NodeRecord with id='M'
-        val mgrNodeRecInDb = repository.getManagerNodeRecord();
-        if(mgrNodeRecInDb == null){ //No manager record
+        val savedMgrNodeRec = repository.getManagerNodeRecord();
+        if(savedMgrNodeRec == null){ //No manager record
             //create one. Only one node will succeed it creating it. This is beacuse
             // the id is the constant 'M' and that would violate the unique constraint
             val mgrNodeRec = new NodeRecord();
@@ -139,48 +139,47 @@ public class ClusterService {
             mgrNodeRec.setManagerNodeId(nodeRecord.getId());
             mgrNodeRec.setManagerSince(timeNow);
             mgrNodeRec.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
-            managerNodeRecord = repository.save(mgrNodeRec);
-            nodeRecord.setManagerNodeId(nodeRecord.getId());
+            repository.save(mgrNodeRec); //This call may fail silently
         }
-        else {  //Leader record exists
-            //update state held
-            managerNodeRecord = mgrNodeRecInDb;
-            nodeRecord.setManagerNodeId(managerNodeRecord.getManagerNodeId());
-            if(isManager()){ //This is the leader node
-                //Extend lease
-                managerNodeRecord.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
-                managerNodeRecord = repository.save(managerNodeRecord);
-            }
-            else { //Another node is the leader
 
-                //If lease has expired
-                if(managerNodeRecord.getManagerLeaseTill() < timeNow){
-                    //Read leader record with lock
-                    val lockedMgrNR = repository.tryGetLockedManagerNodeRecord();
+        managerNodeRecord = repository.getManagerNodeRecord();
 
-                    //if was successful in obtaining the lock
-                    if(lockedMgrNR != null) {
-                        //Set this as the manager
-                        managerNodeRecord.setManagerNodeId(nodeRecord.getId());
-                        managerNodeRecord.setManagerSince(timeNow);
-                        managerNodeRecord.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
-                        managerNodeRecord.setLocked(false);
-                        managerNodeRecord = repository.save(managerNodeRecord);
-                    }
+        if(isManager()){ //This is the manager node
+            //Extend lease
+            managerNodeRecord.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
+            managerNodeRecord = repository.save(managerNodeRecord);
+        }
+        else { //Another node is the manager
+
+            //If lease has expired
+            if(managerNodeRecord.getManagerLeaseTill() < timeNow){
+                //Read manager record with lock
+                val lockedMgrNR = repository.tryGetLockedManagerNodeRecord();
+
+                //if was successful in obtaining the lock
+                if(lockedMgrNR != null) {
+                    //Set this as the manager
+                    managerNodeRecord.setManagerNodeId(nodeRecord.getId());
+                    managerNodeRecord.setManagerSince(timeNow);
+                    managerNodeRecord.setManagerLeaseTill(timeNow + hrtbt * LEASE_HEARTBEATS);
+                    managerNodeRecord.setLocked(false);
+                    managerNodeRecord = repository.save(managerNodeRecord);
                 }
             }
         }
 
-        List deadNodeIds = new ArrayList<String>();
+
+        //Handle any dead nodes
+        List deadNodeIdList = new ArrayList<String>();
         if(isManager()) {
-            //Handle dead nodes
-            val otherNodeRecs = repository.getRecordsForOtherNodes(nodeRecord.getId()); //mongoTemplate.findAll(NodeRecord.class);
+
+            val otherNodeRecs = repository.getRecordsForOtherNodes(nodeRecord.getId());
 
             for (val nodeRec : otherNodeRecs) {
                 val nodeId = nodeRec.getId();
                 //recently dead, notify
                 if (nodeRec.getAliveTill() < timeNow - hrtbt * LEASE_HEARTBEATS){
-                    deadNodeIds.add(nodeId);
+                    deadNodeIdList.add(nodeId);
                 }
                 //long dead, clean up
                 if (nodeRec.getAliveTill() < timeNow - hrtbt * CLEANUP_HEARTBEATS){
@@ -194,7 +193,7 @@ public class ClusterService {
         ci.nodeId = nodeRecord.getId();
         ci.isManager = isManager();
         ci.isBusy = threadManager.isNodeBusy();
-        ci.deadNodeIds = deadNodeIds;
+        ci.deadNodeIds = deadNodeIdList;
         return ci;
     }
 

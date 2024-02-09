@@ -1,18 +1,25 @@
 package com.itblueprints.sysagent.cluster;
 
 import com.itblueprints.sysagent.Config;
+import com.itblueprints.sysagent.TestUtils;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
 import com.itblueprints.sysagent.job.JobExecutionService;
+import com.itblueprints.sysagent.repository.MongoRecordRepository;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import com.itblueprints.sysagent.scheduling.SchedulerService;
 import com.itblueprints.sysagent.step.StepExecutionService;
+import com.mongodb.client.MongoClients;
 import lombok.val;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
 
@@ -23,8 +30,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ClusterServiceTest {
 
-    @Mock
-    RecordRepository repository;
     @Mock SchedulerService schedulerService;
     @Mock
     JobExecutionService jobExecutionService;
@@ -38,27 +43,18 @@ class ClusterServiceTest {
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
+        val repository = TestUtils.getRecordRepository();
         nodes = List.of(
                 new ClusterService(repository, schedulerService, jobExecutionService, stepExecutionService, config, threadManager),
                 new ClusterService(repository, schedulerService, jobExecutionService, stepExecutionService, config, threadManager),
                 new ClusterService(repository, schedulerService, jobExecutionService, stepExecutionService, config, threadManager),
                 new ClusterService(repository, schedulerService, jobExecutionService, stepExecutionService, config, threadManager)
         );
-
-        //Save puts in an id
-        when(repository.save((NodeRecord) any())).thenAnswer(ans -> {
-            val ns = (NodeRecord) ans.getArguments()[0];
-            if(ns.getId() == null) {
-                ns.setId(nextId());
-            }
-            return ns;
-        });
     }
 
     private static final int HB_SECS = 10;
     private static final long START_TIME = 1700000000000L;
 
-    private boolean clusterInited = false;
     private NodeRecord mgrNodeRecord;
     private long toTime(int sec){
         return START_TIME + sec * 1000;
@@ -93,13 +89,9 @@ class ClusterServiceTest {
 
         assertEquals(toTime(72), currentMgr.nodeRecord.getAliveTill());
         assertEquals(0, currentMgr.nodeRecord.getManagerLeaseTill());
-        assertEquals("ID_4", currentMgr.managerNodeRecord.getManagerNodeId());
         assertEquals(toTime(72), currentMgr.managerNodeRecord.getManagerLeaseTill());
         assertEquals(0L, currentMgr.managerNodeRecord.getAliveTill());
-
         assertEquals(toTime(81), currentWorker.nodeRecord.getAliveTill());
-        assertEquals("ID_4", currentWorker.managerNodeRecord.getManagerNodeId());
-
         assertEquals(toTime(51), currentDead.nodeRecord.getAliveTill());
     }
     //-------------------------------------------------
@@ -108,24 +100,11 @@ class ClusterServiceTest {
         val timeNow = START_TIME + testCase.sec * 1000;
 
         val nIdx = testCase.nodeIdx;
-        val nodeId = "ID_" + (nIdx + 1);
         val node = nodes.get(nIdx);
-
-        if(!clusterInited) {
-            when(repository.getManagerNodeRecord()).thenReturn(null);
-            when(repository.tryGetLockedManagerNodeRecord()).thenReturn(null);
-            node.nodeRecord.setStartedAt(timeNow);
-            clusterInited = true;
-        }
-        else{
-            when(repository.getManagerNodeRecord()).thenReturn(mgrNodeRecord);
-            lenient().when(repository.tryGetLockedManagerNodeRecord()).thenReturn(mgrNodeRecord);
-        }
 
         val cs = node.computeClusterInfo(HB_SECS, timeNow);
 
         //cluster state
-        assertEquals(nodeId, cs.nodeId);
         assertEquals(testCase.shouldBeManager, cs.isManager);
         assertEquals(Utils.toDateTime(timeNow), cs.timeNow);
 
