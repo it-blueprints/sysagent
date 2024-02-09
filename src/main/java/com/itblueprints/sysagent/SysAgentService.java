@@ -1,13 +1,8 @@
 package com.itblueprints.sysagent;
 
-import com.itblueprints.sysagent.cluster.NodeRecord;
-import com.itblueprints.sysagent.job.JobRecord;
 import com.itblueprints.sysagent.job.JobExecutionService;
 import com.itblueprints.sysagent.repository.RecordRepository;
-import com.itblueprints.sysagent.scheduling.JobScheduleRecord;
-import com.itblueprints.sysagent.step.StepRecord;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
