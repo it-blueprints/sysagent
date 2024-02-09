@@ -1,6 +1,6 @@
 package com.itblueprints.sysagent;
 
-public enum ExecStatus {
+public enum ExecutionStatus {
     NEW,
     RUNNING,
     COMPLETE,

@@ -1,7 +1,6 @@
 package com.itblueprints.sysagent.job;
 
-import com.itblueprints.sysagent.Arguments;
-import com.itblueprints.sysagent.ExecStatus;
+import com.itblueprints.sysagent.ExecutionStatus;
 import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.cluster.NodeInfo;
@@ -58,9 +57,9 @@ class JobExecutionServiceTest {
     @Test
     void runJob() {
 
-        val jobRec = JobRecord.of("Job", new Arguments(), now);
+        val jobRec = JobRecord.of("Job", new JobArguments(), now);
         jobRec.setId("jrid1");
-        jobRec.setStatus(ExecStatus.RUNNING);
+        jobRec.setStatus(ExecutionStatus.RUNNING);
 
         when(repository.save((JobRecord) any())).thenReturn(jobRec);
 
@@ -83,8 +82,8 @@ class JobExecutionServiceTest {
         val partnArgs = stepRecs.stream()
                 .map(sr -> {
                     val sb = new StringBuilder();
-                    sb.append("k1:").append(sr.getPartitionArguments().getString("k1")).append("+");
-                    sb.append("k2:").append(sr.getPartitionArguments().getString("k2"));
+                    sb.append("k1:").append(sr.getPartition().getString("k1")).append("+");
+                    sb.append("k2:").append(sr.getPartition().getString("k2"));
                     return sb.toString();
                 }).
                 collect(Collectors.toList());
@@ -95,12 +94,12 @@ class JobExecutionServiceTest {
     //------------------------------------
     @Test
     void processExecutingJobs() {
-        val jobRec = JobRecord.of("Job", new Arguments(), now);
+        val jobRec = JobRecord.of("Job", new JobArguments(), now);
         jobRec.setId("jrid1");
-        jobRec.setStatus(ExecStatus.RUNNING);
+        jobRec.setStatus(ExecutionStatus.RUNNING);
         jobRec.setCurrentStepName("Step");
 
-        val stepRec = StepRecord.of("1","Job", "Step", new Arguments());
+        val stepRec = StepRecord.of("1","Job", "Step", new JobArguments());
 
         when(repository.getRunningJobRecords()).thenReturn(List.of(jobRec));
         lenient().when(repository.getStepsRecordsForStepOfJob(any(), any())).thenReturn(List.of(stepRec));
@@ -121,20 +120,20 @@ class JobExecutionServiceTest {
         val stepRecs = testData.getSecond();
 
         //2 steps ccomplete, one not yet
-        stepRecs.get(0).setStatus(ExecStatus.COMPLETE);
-        stepRecs.get(1).setStatus(ExecStatus.COMPLETE);
+        stepRecs.get(0).setStatus(ExecutionStatus.COMPLETE);
+        stepRecs.get(1).setStatus(ExecutionStatus.COMPLETE);
         val result1 = jobExecutionService.isCurrentStepComplete(jobRec, stepRecs);
         assertFalse(result1);
 
         //all steps now complete
-        stepRecs.get(2).setStatus(ExecStatus.COMPLETE);
+        stepRecs.get(2).setStatus(ExecutionStatus.COMPLETE);
         val result2 = jobExecutionService.isCurrentStepComplete(jobRec, stepRecs);
         assertTrue(result2);
 
         //***** Test single step *****
         jobRec.setCurrentStepPartitionCount(0);
         val onlyStepRec = List.of(stepRecs.get(0));
-        onlyStepRec.get(0).setStatus(ExecStatus.COMPLETE);
+        onlyStepRec.get(0).setStatus(ExecutionStatus.COMPLETE);
         val result3 = jobExecutionService.isCurrentStepComplete(jobRec, onlyStepRec);
         assertTrue(result3);
 
@@ -156,16 +155,16 @@ class JobExecutionServiceTest {
         val stepRecs = testData.getSecond();
 
         //2 steps ccomplete, 1 failed
-        stepRecs.get(0).setStatus(ExecStatus.COMPLETE);
-        stepRecs.get(1).setStatus(ExecStatus.COMPLETE);
-        stepRecs.get(2).setStatus(ExecStatus.FAILED);
+        stepRecs.get(0).setStatus(ExecutionStatus.COMPLETE);
+        stepRecs.get(1).setStatus(ExecutionStatus.COMPLETE);
+        stepRecs.get(2).setStatus(ExecutionStatus.FAILED);
         val result1 = jobExecutionService.hasCurrentStepFailed(jobRec, stepRecs);
         assertTrue(result1);
 
         //***** Test single step *****
         jobRec.setCurrentStepPartitionCount(0);
         val onlyStepRec = List.of(stepRecs.get(0));
-        onlyStepRec.get(0).setStatus(ExecStatus.FAILED);
+        onlyStepRec.get(0).setStatus(ExecutionStatus.FAILED);
         val result2 = jobExecutionService.hasCurrentStepFailed(jobRec, onlyStepRec);
         assertTrue(result2);
 
@@ -189,22 +188,22 @@ class JobExecutionServiceTest {
 
         val step = new MockStep1();
 
-        jobExecutionService.sendStepExecutionInstruction(step, new Arguments(), jobRec);
+        jobExecutionService.sendStepExecutionInstruction(step, new JobArguments(), jobRec);
 
         assertEquals(4, jobRec.getCurrentStepPartitionCount());
         verify(repository, times(4)).save(stepRecC.capture());
 
         val savedStepRecs = stepRecC.getAllValues();
-        assertEquals("{k1=k1v1, k2=k2v1}", savedStepRecs.get(0).getPartitionArguments().toString());
-        assertEquals("{k1=k1v2, k2=k2v1}", savedStepRecs.get(1).getPartitionArguments().toString());
-        assertEquals("{k1=k1v3, k2=k2v2}", savedStepRecs.get(2).getPartitionArguments().toString());
-        assertEquals("{k1=k1v4, k2=k2v2}", savedStepRecs.get(3).getPartitionArguments().toString());
+        assertEquals("{k1=k1v1, k2=k2v1}", savedStepRecs.get(0).getPartition().toString());
+        assertEquals("{k1=k1v2, k2=k2v1}", savedStepRecs.get(1).getPartition().toString());
+        assertEquals("{k1=k1v3, k2=k2v2}", savedStepRecs.get(2).getPartition().toString());
+        assertEquals("{k1=k1v4, k2=k2v2}", savedStepRecs.get(3).getPartition().toString());
 
 
         assertTrueForAll(savedStepRecs, sr -> sr.getJobRecordId().equals("jrid1"));
         assertTrueForAll(savedStepRecs, sr -> sr.getJobName().equals("Job"));
         assertTrueForAll(savedStepRecs, sr -> sr.getStepName().equals("Step1"));
-        assertTrueForAll(savedStepRecs, sr -> sr.getStatus() == ExecStatus.NEW);
+        assertTrueForAll(savedStepRecs, sr -> sr.getStatus() == ExecutionStatus.NEW);
     }
 
 
@@ -215,12 +214,12 @@ class JobExecutionServiceTest {
         val clInfo = new NodeInfo();
         clInfo.deadNodeIds = List.of("node1_id", "node2_id");
 
-        val sr1 = StepRecord.of("jobrecid1", "Job", "Step1", new Arguments());
+        val sr1 = StepRecord.of("jobrecid1", "Job", "Step1", new JobArguments());
         sr1.setClaimed(true);
         sr1.setNodeId("node1_id");
         when(repository.getStepRecordsClaimedByNode("node1_id")).thenReturn(List.of(sr1));
 
-        val sr2 = StepRecord.of("jobrecid1", "Job", "Step2", new Arguments());
+        val sr2 = StepRecord.of("jobrecid1", "Job", "Step2", new JobArguments());
         sr2.setClaimed(true);
         sr2.setNodeId("node2_id");
         when(repository.getStepRecordsClaimedByNode("node2_id")).thenReturn(List.of(sr2));
@@ -249,7 +248,7 @@ class JobExecutionServiceTest {
         verify(repository, times(1)).save((StepRecord) any());
 
         val sr = stepRecs.get(0);
-        assertEquals(ExecStatus.NEW, sr.getStatus());
+        assertEquals(ExecutionStatus.NEW, sr.getStatus());
         assertEquals(false, sr.isClaimed());
         assertEquals(1, sr.getRetryCount());
         assertEquals(now, sr.getLastUpdateAt());
@@ -267,13 +266,13 @@ class JobExecutionServiceTest {
 
     //----------------------------------------------------------------
     private Pair<JobRecord, List<StepRecord>> createTestJobAndStepRecords(){
-        val jobRec = JobRecord.of("Job", new Arguments(), now);
+        val jobRec = JobRecord.of("Job", new JobArguments(), now);
         jobRec.setId("jrid1");
         jobRec.setCurrentStepName("Step1");
         jobRec.setCurrentStepPartitionCount(3);
-        val stepRec1 =StepRecord.of("jrid1", "Job", "Step1", new Arguments());
-        val stepRec2 =StepRecord.of("jrid1", "Job", "Step1", new Arguments());
-        val stepRec3 =StepRecord.of("jrid1", "Job", "Step1", new Arguments());
+        val stepRec1 =StepRecord.of("jrid1", "Job", "Step1", new JobArguments());
+        val stepRec2 =StepRecord.of("jrid1", "Job", "Step1", new JobArguments());
+        val stepRec3 =StepRecord.of("jrid1", "Job", "Step1", new JobArguments());
         return Pair.of(jobRec, List.of(stepRec1, stepRec2, stepRec3));
     }
 

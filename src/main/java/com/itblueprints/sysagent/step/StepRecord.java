@@ -1,7 +1,7 @@
 package com.itblueprints.sysagent.step;
 
-import com.itblueprints.sysagent.Arguments;
-import com.itblueprints.sysagent.ExecStatus;
+import com.itblueprints.sysagent.ExecutionStatus;
+import com.itblueprints.sysagent.job.JobArguments;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -27,13 +27,9 @@ public class StepRecord {
     @Indexed
     private String stepName;
 
-    private Arguments partitionArguments;
+    private Partition partition;
 
-    private Integer partitionNum;
-
-    private int partitionCount = 0;
-
-    private Arguments jobArguments;
+    private JobArguments jobArguments;
 
     private boolean claimed;
 
@@ -52,9 +48,9 @@ public class StepRecord {
     private int retryCount = 0;
 
     @Indexed
-    private ExecStatus status = ExecStatus.NEW;
+    private ExecutionStatus status = ExecutionStatus.NEW;
 
-    public static StepRecord of(String jobRecordId, String jobName, String stepName, Arguments jobArguments){
+    public static StepRecord of(String jobRecordId, String jobName, String stepName, JobArguments jobArguments){
         val sr = new StepRecord();
         sr.jobRecordId = jobRecordId;
         sr.jobName = jobName;

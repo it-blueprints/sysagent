@@ -41,7 +41,7 @@ public class JobExecutionService {
     //--------------------------------------------------------
     // Starts off a Job
     // Called either by the SchedulerService or via API
-    public void runJob(String jobName, Arguments jobArgs) {
+    public void runJob(String jobName, JobArguments jobArgs) {
 
         if(!jobsMap.containsKey(jobName)){
             throw new SysAgentException("Job with name '"+jobName+"' not found");
@@ -90,7 +90,7 @@ public class JobExecutionService {
                         else { //No more steps, job complete
                             jobItem.job.onComplete(jobArgs);
                             log.debug("Job complete - "+jobRec.getJobName());
-                            jobRec.setStatus(ExecStatus.COMPLETE);
+                            jobRec.setStatus(ExecutionStatus.COMPLETE);
                             jobRec.setCompletedAt(now);
                         }
                         jobRec.setLastUpdateAt(now);
@@ -98,7 +98,7 @@ public class JobExecutionService {
                     }
                     else if(hasCurrentStepFailed(jobRec, stepRecs)){
                         //Mark job as failed
-                        jobRec.setStatus(ExecStatus.FAILED);
+                        jobRec.setStatus(ExecutionStatus.FAILED);
                         jobRec.setLastUpdateAt(now);
                         repository.save(jobRec);
                     }
@@ -122,14 +122,14 @@ public class JobExecutionService {
         if(jobRec.getCurrentStepPartitionCount() > 0){
             val completedCount = stepRecs.stream()
                     .filter(sr -> sr.getStepName().equals(currentStepName)
-                            && sr.getStatus() == ExecStatus.COMPLETE)
+                            && sr.getStatus() == ExecutionStatus.COMPLETE)
                     .count();
             jobRec.setCurrentStepPartitionsCompletedCount(Math.toIntExact(completedCount));
             log.debug("partitions completed = "+completedCount+" of "+jobRec.getCurrentStepPartitionCount());
             completed = completedCount == jobRec.getCurrentStepPartitionCount();
         }
         else {
-            completed = (stepRecs.size() == 1) && (stepRecs.get(0).getStatus() == ExecStatus.COMPLETE);
+            completed = (stepRecs.size() == 1) && (stepRecs.get(0).getStatus() == ExecutionStatus.COMPLETE);
         }
         return completed;
     }
@@ -144,24 +144,24 @@ public class JobExecutionService {
         boolean failed = false;
         if(jobRec.getCurrentStepPartitionCount() > 0){
             val completeCount = stepRecs.stream()
-                    .filter(sr -> sr.getStatus() == ExecStatus.COMPLETE)
+                    .filter(sr -> sr.getStatus() == ExecutionStatus.COMPLETE)
                     .count();
 
             val failedCount = stepRecs.stream()
-                    .filter(sr -> sr.getStatus() == ExecStatus.FAILED )
+                    .filter(sr -> sr.getStatus() == ExecutionStatus.FAILED )
                     .count();
 
             failed = (completeCount+failedCount == jobRec.getCurrentStepPartitionCount()) && failedCount > 0;
         }
         else {
-            failed = stepRecs.get(0).getStatus() == ExecStatus.FAILED;
+            failed = stepRecs.get(0).getStatus() == ExecutionStatus.FAILED;
         }
         return failed;
     }
 
     //----------------------------------------------------------------------
     void sendStepExecutionInstruction(Step step,
-                                      Arguments jobArgs,
+                                      JobArguments jobArgs,
                                       JobRecord jobRecord){
 
         log.debug("Sending step execution instruction for step - " + step.getName());
@@ -170,23 +170,23 @@ public class JobExecutionService {
         if(step instanceof Partitioned) {
 
             val prtned = (Partitioned) step;
-            val partArgs = prtned.getPartitionArgumentsList(jobArgs);
+            val partitions = prtned.getPartitions(jobArgs);
 
             int prtnCount = 0;
-            if (partArgs != null && !partArgs.isEmpty()) {
-                if (partArgs.size() < 2) throw new SysAgentException("Minimum partitions is 2");
-                prtnCount = partArgs.size();
+            if (partitions != null && !partitions.isEmpty()) {
+                if (partitions.size() < 2) throw new SysAgentException("Minimum partitions is 2");
+                prtnCount = partitions.size();
             }
             jobRecord.setCurrentStepPartitionCount(prtnCount);
             jobRecord.setCurrentStepPartitionsCompletedCount(0);
             log.debug("Total partitions = " + prtnCount);
 
             for(int i=0; i < prtnCount; i++){
+                val prtn = partitions.get(i);
+                prtn.setPartitionNum(i);
+                prtn.setPartitionCount(prtnCount);
                 val stepRecord = StepRecord.of(jobRecord.getId(), jobRecord.getJobName(), step.getName(), jobArgs);
-                val partArg = partArgs.get(i);
-                stepRecord.setPartitionArguments(partArg);
-                stepRecord.setPartitionNum(i);
-                stepRecord.setPartitionCount(prtnCount);
+                stepRecord.setPartition(prtn);
                 repository.save(stepRecord);
             }
 
@@ -221,7 +221,7 @@ public class JobExecutionService {
         log.debug("Retrying "+jobName);
         val failedStepRecs = repository.getFailedStepRecordsForJob(failedJobRec.getId());
         for(val failedSr : failedStepRecs){
-            failedSr.setStatus(ExecStatus.NEW);
+            failedSr.setStatus(ExecutionStatus.NEW);
             failedSr.setClaimed(false);
             failedSr.setRetryCount(failedSr.getRetryCount()+1);
             failedSr.setLastUpdateAt(now);

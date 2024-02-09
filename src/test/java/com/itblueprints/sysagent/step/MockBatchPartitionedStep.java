@@ -1,6 +1,6 @@
 package com.itblueprints.sysagent.step;
 
-import com.itblueprints.sysagent.Arguments;
+import com.itblueprints.sysagent.job.JobArguments;
 import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -71,8 +71,8 @@ public class MockBatchPartitionedStep implements PartitionedBatchStep<String, St
     }
 
     @Override
-    public List<Arguments> getPartitionArgumentsList(Arguments jobArguments) {
-        return List.of(1,2,3).stream().map(i -> Arguments.from(Map.of("partition", i))).collect(Collectors.toList());
+    public List<Partition> getPartitions(JobArguments jobArguments) {
+        return List.of(1,2,3).stream().map(i -> Partition.from(Map.of("partition", i))).collect(Collectors.toList());
     }
 
     @Override

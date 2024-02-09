@@ -2,6 +2,7 @@ package com.itblueprints.sysagent.scheduling;
 
 import com.itblueprints.sysagent.*;
 import com.itblueprints.sysagent.cluster.NodeInfo;
+import com.itblueprints.sysagent.job.JobArguments;
 import com.itblueprints.sysagent.job.JobExecutionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +55,7 @@ public class SchedulerService {
                 threadManager.getExecutor().submit(() -> {
                     try {
                         Utils.sleepFor(gap < 0 ? 0 : (gap+1)*1000);
-                        val args = new Arguments();
+                        val args = new JobArguments();
                         args.put(SysAgentService.DataKeys.jobStartedAt, nextRunAt);
                         jobExecutionService.runJob(item.jobName, args);
                     }

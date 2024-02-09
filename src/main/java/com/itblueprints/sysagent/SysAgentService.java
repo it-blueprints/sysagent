@@ -1,5 +1,6 @@
 package com.itblueprints.sysagent;
 
+import com.itblueprints.sysagent.job.JobArguments;
 import com.itblueprints.sysagent.job.JobExecutionService;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +22,11 @@ public class SysAgentService {
 
     //--------------------------------
     public void runJob(String jobName){
-        runJob(jobName, new Arguments());
+        runJob(jobName, new JobArguments());
     }
 
     //--------------------------------
-    public void runJob(String jobName, Arguments jobArguments){
+    public void runJob(String jobName, JobArguments jobArguments){
         jobExecutionService.runJob(jobName, jobArguments);
     }
 

@@ -1,12 +1,11 @@
 package com.itblueprints.sysagent.step;
 
-import com.itblueprints.sysagent.Arguments;
-import lombok.val;
+import com.itblueprints.sysagent.job.JobArguments;
 
 import java.util.List;
 
 public interface Partitioned {
 
-    List<Arguments> getPartitionArgumentsList(Arguments jobArguments);
+    List<Partition> getPartitions(JobArguments jobArguments);
 
 }

@@ -1,6 +1,6 @@
 package com.itblueprints.sysagent.repository;
 
-import com.itblueprints.sysagent.ExecStatus;
+import com.itblueprints.sysagent.ExecutionStatus;
 import com.itblueprints.sysagent.cluster.ManagerNodeRecord;
 import com.itblueprints.sysagent.cluster.BaseNodeRecord;
 import com.itblueprints.sysagent.cluster.NodeRecord;
@@ -18,7 +18,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -93,7 +92,7 @@ public class MongoRecordRepository implements RecordRepository {
     public List<JobRecord> getRunningJobRecords() {
         val executingJobsQuery = new Query();
         executingJobsQuery.addCriteria(Criteria
-                .where("status").is(ExecStatus.RUNNING));
+                .where("status").is(ExecutionStatus.RUNNING));
         return mongoTemplate.find(executingJobsQuery, JobRecord.class);
     }
 
@@ -113,7 +112,7 @@ public class MongoRecordRepository implements RecordRepository {
         val query = new Query();
         query.addCriteria(Criteria
                 .where("jobName").is(jobName)
-                .and("status").is(ExecStatus.FAILED));
+                .and("status").is(ExecutionStatus.FAILED));
         return mongoTemplate.findOne(query, JobRecord.class);
     }
 
@@ -141,7 +140,7 @@ public class MongoRecordRepository implements RecordRepository {
         val query = new Query();
         query.addCriteria(Criteria
                 .where("nodeId").is(nodeRecordId)
-                .and("status").is(ExecStatus.RUNNING)
+                .and("status").is(ExecutionStatus.RUNNING)
         );
        return mongoTemplate.find(query, StepRecord.class);
     }
@@ -152,7 +151,7 @@ public class MongoRecordRepository implements RecordRepository {
         val query = new Query();
         query.addCriteria(Criteria
                 .where("jobRecordId").is(jobRecordId)
-                .and("status").is(ExecStatus.FAILED)
+                .and("status").is(ExecutionStatus.FAILED)
         );
         return mongoTemplate.find(query, StepRecord.class);
     }

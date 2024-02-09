@@ -1,7 +1,6 @@
 package com.itblueprints.sysagent.job;
 
-import com.itblueprints.sysagent.Arguments;
-import com.itblueprints.sysagent.ExecStatus;
+import com.itblueprints.sysagent.ExecutionStatus;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
@@ -22,9 +21,9 @@ public class JobRecord {
     private String jobName;
 
     @Indexed
-    private ExecStatus status;
+    private ExecutionStatus status;
 
-    private Arguments jobArguments;
+    private JobArguments jobArguments;
 
     private LocalDateTime startedAt;
 
@@ -41,10 +40,10 @@ public class JobRecord {
     private int currentStepRetryCount = 0;
 
     //------------------------------------------
-    public static JobRecord of(String jobName, Arguments jobArguments, LocalDateTime startedAt) {
+    public static JobRecord of(String jobName, JobArguments jobArguments, LocalDateTime startedAt) {
         val jr = new JobRecord();
         jr.jobName = jobName;
-        jr.status = ExecStatus.RUNNING;
+        jr.status = ExecutionStatus.RUNNING;
         jr.jobArguments = jobArguments;
         jr.startedAt = startedAt;
         jr.lastUpdateAt = startedAt;

@@ -1,10 +1,10 @@
 package com.itblueprints.sysagent.step;
 
-import com.itblueprints.sysagent.Arguments;
 import com.itblueprints.sysagent.Config;
-import com.itblueprints.sysagent.ExecStatus;
+import com.itblueprints.sysagent.ExecutionStatus;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.cluster.NodeInfo;
+import com.itblueprints.sysagent.job.JobArguments;
 import com.itblueprints.sysagent.job.JobExecutionService;
 import com.itblueprints.sysagent.repository.RecordRepository;
 import lombok.val;
@@ -64,22 +64,24 @@ class StepExecutionServiceTest {
     @Test
     void processStep() {
         val stepRec = createStepRecord();
-        stepRec.setPartitionCount(3);
-        stepRec.setPartitionNum(1);
+        val prtn = new Partition();
+        prtn.setPartitionCount(3);
+        prtn.setPartitionNum(1);
+        stepRec.setPartition(prtn);
         val step = new MockPartitionedStep();
         when(jobExecutionService.getStep("Job", "Step")).thenReturn(step);
 
         stepExecutionService.processStep(stepRec, now);
 
-        assertEquals(ExecStatus.COMPLETE, stepRec.getStatus());
+        assertEquals(ExecutionStatus.COMPLETE, stepRec.getStatus());
         assertEquals(now, stepRec.getStartedAt());
         verify(threadManager, times(1)).setNodeBusy(true);
         verify(threadManager, times(1)).setNodeBusy(false);
         verify(repository,times(2)).save(stepRec);
         assertTrue(step.runCalled);
         val ctx = step.stepContext;
-        assertEquals(stepRec.getPartitionCount(), ctx.getPartitionCount());
-        assertEquals(stepRec.getPartitionNum(), ctx.getPartitionNum());
+        assertEquals(stepRec.getPartition().getPartitionCount(), ctx.getPartition().getPartitionCount());
+        assertEquals(stepRec.getPartition().getPartitionNum(), ctx.getPartition().getPartitionNum());
     }
 
     //------------------------------------
@@ -109,16 +111,16 @@ class StepExecutionServiceTest {
         stepRec.setJobName("Job");
         stepRec.setStepName("Step");
         stepRec.setClaimed(true);
-        val jobArgs = new Arguments();
+        val jobArgs = new JobArguments();
         jobArgs.put("procDate", LocalDate.of(2024, 1, 12));
         jobArgs.put("pmtProfile", "state_pension");
         stepRec.setJobArguments(jobArgs);
-        val prtArgs = new Arguments();
-        prtArgs.put("custProfile", "resident_GB");
-        prtArgs.put("partition", 1);
-        stepRec.setPartitionArguments(prtArgs);
-        stepRec.setPartitionNum(0);
-        stepRec.setPartitionCount(10);
+        val prtn = new Partition();
+        prtn.put("custProfile", "resident_GB");
+        prtn.put("partition", 1);
+        prtn.setPartitionNum(0);
+        prtn.setPartitionCount(10);
+        stepRec.setPartition(prtn);
         return stepRec;
     }
 

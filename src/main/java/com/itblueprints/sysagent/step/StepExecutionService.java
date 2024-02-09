@@ -1,6 +1,6 @@
 package com.itblueprints.sysagent.step;
 
-import com.itblueprints.sysagent.ExecStatus;
+import com.itblueprints.sysagent.ExecutionStatus;
 import com.itblueprints.sysagent.SysAgentException;
 import com.itblueprints.sysagent.ThreadManager;
 import com.itblueprints.sysagent.Utils;
@@ -55,20 +55,17 @@ public class StepExecutionService {
     //-------------------------------------------------------------
     void processStep(StepRecord stepRec, LocalDateTime now){
         threadManager.setNodeBusy(true);
-        stepRec.setStatus(ExecStatus.RUNNING);
+        stepRec.setStatus(ExecutionStatus.RUNNING);
         stepRec.setStartedAt(now);
         repository.save(stepRec);
 
         val step = jobExecutionService.getStep(stepRec.getJobName(), stepRec.getStepName());
         val ctx = step instanceof Batched? new BatchStepContext() : new StepContext();
-        ctx.getArguments().add(stepRec.getJobArguments());
-        if(stepRec.getPartitionCount() > 0) {
-            ctx.getArguments().add(stepRec.getPartitionArguments());
-            ctx.setPartitionNum(stepRec.getPartitionNum());
-            ctx.setPartitionCount(stepRec.getPartitionCount());
-        }
+        ctx.setJobArguments(stepRec.getJobArguments());
+        ctx.setPartition(stepRec.getPartition());
 
-        log.debug("Executing step '"+stepRec.getStepName() + "' with arguments "+ctx.getArguments());
+        log.debug("Executing step '"+stepRec.getStepName() + "' with jobArguments="+ctx.getJobArguments()
+                + " and partition="+ctx.getPartition());
 
         try {
             if(step instanceof Batched){
@@ -79,11 +76,11 @@ public class StepExecutionService {
             else if(step instanceof SimpleStep){
                 ((SimpleStep) step).run(ctx);
             }
-            stepRec.setStatus(ExecStatus.COMPLETE);
+            stepRec.setStatus(ExecutionStatus.COMPLETE);
             stepRec.setCompletedAt(LocalDateTime.now());
         }
         catch (Exception e){
-            stepRec.setStatus(ExecStatus.FAILED);
+            stepRec.setStatus(ExecutionStatus.FAILED);
             stepRec.setLastUpdateAt(LocalDateTime.now());
             throw new SysAgentException("Batch step failed - "+step.getName(), e);
         }

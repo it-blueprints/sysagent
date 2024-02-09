@@ -1,14 +1,12 @@
 package com.itblueprints.sysagent.job;
 
-import com.itblueprints.sysagent.Arguments;
-
 public interface Job {
 
     JobPipeline getPipeline();
 
-    default void onStart(Arguments jobArguments){};
+    default void onStart(JobArguments jobArguments){};
 
-    default void onComplete(Arguments jobArguments){};
+    default void onComplete(JobArguments jobArguments){};
 
     //-----------------------------------
     default String getName(){

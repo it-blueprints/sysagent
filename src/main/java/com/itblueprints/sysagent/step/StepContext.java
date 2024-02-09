@@ -1,17 +1,16 @@
 package com.itblueprints.sysagent.step;
 
-import com.itblueprints.sysagent.Arguments;
+import com.itblueprints.sysagent.job.JobArguments;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter(AccessLevel.PACKAGE)
 public class StepContext {
 
-    private final Arguments arguments = new Arguments();
+    private JobArguments jobArguments;
 
-    private Integer partitionNum;
-    void setPartitionNum(Integer partitionNum) {this.partitionNum = partitionNum;}
-
-    private Integer partitionCount;
-    void setPartitionCount(Integer partitionCount) {this.partitionCount = partitionCount;}
+    private Partition partition;
 
 }
