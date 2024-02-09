@@ -45,7 +45,7 @@ public class ClusterService {
     NodeRecord nodeRecord = new NodeRecord();
     NodeRecord managerNodeRecord;
 
-    //-----------------------------------------------------
+
     /**
      * Initialises the scheduled executor which then triggers every
      * heartbeat number of seconds
@@ -74,7 +74,7 @@ public class ClusterService {
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
 
-    //------------------------------------------------------------------
+
     /**
      * Called by the scheduled executor everytime heartBeatSecs elapses.
      * Main method that carries out all the cluster related activities
@@ -107,7 +107,7 @@ public class ClusterService {
 
     private static final int CLEANUP_HEARTBEATS = 600;
 
-    //---------------------------------------------------------------
+
     /**
      * Figures out the state of the cluster
      * @param heartBeatSecs the number of seconds between each heart beat
@@ -188,6 +188,7 @@ public class ClusterService {
             }
         }
 
+        //Finally return the result
         val ci = new ClusterInfo();
         ci.timeNow = Utils.toDateTime(timeNow);
         ci.nodeId = nodeRecord.getId();
@@ -197,7 +198,11 @@ public class ClusterService {
         return ci;
     }
 
-    //----------------------
+    /**
+     * Checks if this node is the manager by comparing its own NodeRecord with
+     * the manager NodeRecord
+     * @return If this node is the manager
+     */
     public boolean isManager(){
         return managerNodeRecord.getManagerNodeId().equals(nodeRecord.getId());
     }
