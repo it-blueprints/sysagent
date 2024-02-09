@@ -3,6 +3,7 @@ package com.itblueprints.sysagent.step;
 import com.itblueprints.sysagent.Arguments;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MockPartitionedStep implements PartitionedStep {
@@ -13,7 +14,7 @@ public class MockPartitionedStep implements PartitionedStep {
 
     @Override
     public List<Arguments> getPartitionArgumentsList(Arguments jobArguments) {
-        return List.of(1,2,3).stream().map(i -> Arguments.of("partition", i)).collect(Collectors.toList());
+        return List.of(1,2,3).stream().map(i -> Arguments.from(Map.of("partition", i))).collect(Collectors.toList());
     }
 
     @Override

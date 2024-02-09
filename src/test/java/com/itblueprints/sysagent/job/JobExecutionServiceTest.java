@@ -58,7 +58,7 @@ class JobExecutionServiceTest {
     @Test
     void runJob() {
 
-        val jobRec = JobRecord.of("Job", Arguments.of(), now);
+        val jobRec = JobRecord.of("Job", new Arguments(), now);
         jobRec.setId("jrid1");
         jobRec.setStatus(ExecStatus.RUNNING);
 
@@ -95,7 +95,7 @@ class JobExecutionServiceTest {
     //------------------------------------
     @Test
     void processExecutingJobs() {
-        val jobRec = JobRecord.of("Job", Arguments.of(), now);
+        val jobRec = JobRecord.of("Job", new Arguments(), now);
         jobRec.setId("jrid1");
         jobRec.setStatus(ExecStatus.RUNNING);
         jobRec.setCurrentStepName("Step");
@@ -189,7 +189,7 @@ class JobExecutionServiceTest {
 
         val step = new MockStep1();
 
-        jobExecutionService.sendStepExecutionInstruction(step, Arguments.of(), jobRec);
+        jobExecutionService.sendStepExecutionInstruction(step, new Arguments(), jobRec);
 
         assertEquals(4, jobRec.getCurrentStepPartitionCount());
         verify(repository, times(4)).save(stepRecC.capture());
@@ -215,12 +215,12 @@ class JobExecutionServiceTest {
         val clInfo = new NodeInfo();
         clInfo.deadNodeIds = List.of("node1_id", "node2_id");
 
-        val sr1 = StepRecord.of("jobrecid1", "Job", "Step1", Arguments.of());
+        val sr1 = StepRecord.of("jobrecid1", "Job", "Step1", new Arguments());
         sr1.setClaimed(true);
         sr1.setNodeId("node1_id");
         when(repository.getStepRecordsClaimedByNode("node1_id")).thenReturn(List.of(sr1));
 
-        val sr2 = StepRecord.of("jobrecid1", "Job", "Step2", Arguments.of());
+        val sr2 = StepRecord.of("jobrecid1", "Job", "Step2", new Arguments());
         sr2.setClaimed(true);
         sr2.setNodeId("node2_id");
         when(repository.getStepRecordsClaimedByNode("node2_id")).thenReturn(List.of(sr2));
@@ -267,13 +267,13 @@ class JobExecutionServiceTest {
 
     //----------------------------------------------------------------
     private Pair<JobRecord, List<StepRecord>> createTestJobAndStepRecords(){
-        val jobRec = JobRecord.of("Job", Arguments.of(), now);
+        val jobRec = JobRecord.of("Job", new Arguments(), now);
         jobRec.setId("jrid1");
         jobRec.setCurrentStepName("Step1");
         jobRec.setCurrentStepPartitionCount(3);
-        val stepRec1 =StepRecord.of("jrid1", "Job", "Step1", Arguments.of());
-        val stepRec2 =StepRecord.of("jrid1", "Job", "Step1", Arguments.of());
-        val stepRec3 =StepRecord.of("jrid1", "Job", "Step1", Arguments.of());
+        val stepRec1 =StepRecord.of("jrid1", "Job", "Step1", new Arguments());
+        val stepRec2 =StepRecord.of("jrid1", "Job", "Step1", new Arguments());
+        val stepRec3 =StepRecord.of("jrid1", "Job", "Step1", new Arguments());
         return Pair.of(jobRec, List.of(stepRec1, stepRec2, stepRec3));
     }
 

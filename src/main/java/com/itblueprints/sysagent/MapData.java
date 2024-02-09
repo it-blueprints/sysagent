@@ -2,6 +2,7 @@ package com.itblueprints.sysagent;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
@@ -22,6 +23,9 @@ public abstract class MapData implements TypedAccessor {
 
     public void loadFrom(MapData other){
         data = new ConcurrentHashMap<>(other.data);
+    }
+    public void loadFrom(Map<String, Object> map){
+        data = new ConcurrentHashMap<>(map);
     }
 
     @Override
