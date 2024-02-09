@@ -13,7 +13,7 @@ public class Partition extends MapData {
 
     private Integer partitionNum;
 
-    private Integer partitionCount;
+    private Integer totalPartitions;
 
     @Override
     public String toString() {

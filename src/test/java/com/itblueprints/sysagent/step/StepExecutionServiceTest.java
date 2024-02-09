@@ -65,7 +65,7 @@ class StepExecutionServiceTest {
     void processStep() {
         val stepRec = createStepRecord();
         val prtn = new Partition();
-        prtn.setPartitionCount(3);
+        prtn.setTotalPartitions(3);
         prtn.setPartitionNum(1);
         stepRec.setPartition(prtn);
         val step = new MockPartitionedStep();
@@ -80,7 +80,7 @@ class StepExecutionServiceTest {
         verify(repository,times(2)).save(stepRec);
         assertTrue(step.runCalled);
         val ctx = step.stepContext;
-        assertEquals(stepRec.getPartition().getPartitionCount(), ctx.getPartition().getPartitionCount());
+        assertEquals(stepRec.getPartition().getTotalPartitions(), ctx.getPartition().getTotalPartitions());
         assertEquals(stepRec.getPartition().getPartitionNum(), ctx.getPartition().getPartitionNum());
     }
 
@@ -119,7 +119,7 @@ class StepExecutionServiceTest {
         prtn.put("custProfile", "resident_GB");
         prtn.put("partition", 1);
         prtn.setPartitionNum(0);
-        prtn.setPartitionCount(10);
+        prtn.setTotalPartitions(10);
         stepRec.setPartition(prtn);
         return stepRec;
     }

@@ -184,7 +184,7 @@ public class JobExecutionService {
             for(int i=0; i < prtnCount; i++){
                 val prtn = partitions.get(i);
                 prtn.setPartitionNum(i);
-                prtn.setPartitionCount(prtnCount);
+                prtn.setTotalPartitions(prtnCount);
                 val stepRecord = StepRecord.of(jobRecord.getId(), jobRecord.getJobName(), step.getName(), jobArgs);
                 stepRecord.setPartition(prtn);
                 repository.save(stepRecord);
