@@ -2,6 +2,7 @@ package com.itblueprints.sysagent;
 
 import com.itblueprints.sysagent.repository.MongoRecordRepository;
 import com.itblueprints.sysagent.repository.RecordRepository;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import lombok.val;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -21,17 +22,16 @@ public class TestUtils {
     }
 
     //------------------------------------------------------------
-    private static MongoRecordRepository repository;
-    public static RecordRepository getRecordRepository(){
-        if(repository == null) {
+    private static MongoClient mongoClient;
+    public static RecordRepository getRecordRepository(Class clazz){
+        if(mongoClient == null) {
             val mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:latest"));
             mongoDBContainer.start();
             val host = mongoDBContainer.getHost();
             val port = mongoDBContainer.getMappedPort(27017);
-            val mongoClient = MongoClients.create("mongodb://" + host + ":" + port);
-            val mongoTemplate = new MongoTemplate(mongoClient, "test");
-            repository = new MongoRecordRepository(mongoTemplate);
+            mongoClient = MongoClients.create("mongodb://" + host + ":" + port);
         }
-        return repository;
+        val mongoTemplate = new MongoTemplate(mongoClient, clazz.getSimpleName());
+        return new MongoRecordRepository(mongoTemplate);
     }
 }

@@ -2,10 +2,10 @@ package com.itblueprints.sysagent.job;
 
 import lombok.Getter;
 import lombok.Setter;
-
+//NOT NEEDED ??
 @Getter
 @Setter
-public class CurrentStepDetails {
+public class _CurrentStepDetails {
 
     private String stepName;
 

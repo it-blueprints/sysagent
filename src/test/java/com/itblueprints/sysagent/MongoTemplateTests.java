@@ -12,7 +12,7 @@ public class MongoTemplateTests {
     @Test
     void testIdConstraint(){
 
-        val repository = TestUtils.getRecordRepository();
+        val repository = TestUtils.getRecordRepository(this.getClass());
 
         //Node 1 writes the manager record
         val nodeRec1 = new ManagerNodeRecord();

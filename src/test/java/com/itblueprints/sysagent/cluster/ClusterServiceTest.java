@@ -35,7 +35,7 @@ class ClusterServiceTest {
     //-------------------------------------
     @BeforeEach
     void beforeEach() {
-        val repository = TestUtils.getRecordRepository();
+        val repository = TestUtils.getRecordRepository(this.getClass());
         nodes = List.of(
                 new ClusterService(repository, schedulerService, jobExecutionService, stepExecutionService, config, threadManager),
                 new ClusterService(repository, schedulerService, jobExecutionService, stepExecutionService, config, threadManager),
