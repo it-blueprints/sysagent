@@ -13,3 +13,23 @@ partitions.
 
 SysAgent also  has a built it scheduler for scheduled jobs. The manager node is responsible for executing the job at the
 scheduled time. In the event the current manager goes down, the next manager node ensures that the job is triggered.
+
+Here is a typical setup
+
+
+
+![cluster](https://github.com/it-blueprints/sysagent/assets/22591521/5bf86c58-4010-4f24-887c-80265b8ac9d3)
+
+
+
+## Getting started
+
+Add dependency to POM
+
+```
+<dependency>
+  <groupId>com.itblueprints</groupId>
+  <artifactId>sysagent</artifactId>
+  <version>0.0.4</version>
+</dependency>
+```
