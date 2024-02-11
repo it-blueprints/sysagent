@@ -13,3 +13,5 @@ partitions.
 
 SysAgent also  has a built it scheduler for scheduled jobs. The manager node is responsible for executing the job at the
 scheduled time. In the event the current manager goes down, the next manager node ensures that the job is triggered.
+
+![cluster](./docs/img/sysagent.drawio.png)
