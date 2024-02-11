@@ -17,7 +17,9 @@ scheduled time. In the event the current manager goes down, the next manager nod
 Here is a typical setup
 
 
+
 ![cluster](https://github.com/it-blueprints/sysagent/assets/22591521/5bf86c58-4010-4f24-887c-80265b8ac9d3)
+
 
 
 ## Getting started
