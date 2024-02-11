@@ -80,8 +80,8 @@ class StepExecutionServiceTest {
         verify(repository,times(2)).save(stepRec);
         assertTrue(step.runCalled);
         val ctx = step.stepContext;
-        assertEquals(stepRec.getPartition().getTotalPartitions(), ctx.getPartition().getTotalPartitions());
-        assertEquals(stepRec.getPartition().getPartitionNum(), ctx.getPartition().getPartitionNum());
+        assertEquals(stepRec.getPartition().getTotalPartitions(), ctx.getTotalPartitions());
+        assertEquals(stepRec.getPartition().getPartitionNum(), ctx.getPartitionNum());
     }
 
     //------------------------------------

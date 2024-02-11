@@ -1,6 +1,7 @@
 package com.itblueprints.sysagent;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import lombok.val;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +23,9 @@ public abstract class MapData implements TypedAccessor {
     public boolean contains(String key) { return data.containsKey(key); }
 
     public void loadFrom(MapData other){
+        val conflictingKeys = data.keySet().stream().filter(k -> other.data.containsKey(k)).toList();
+        if(!conflictingKeys.isEmpty()) throw new SysAgentException("Cannot load from other MapData as there are conflicting keys - "
+        + conflictingKeys);
         data = new ConcurrentHashMap<>(other.data);
     }
     public void loadFrom(Map<String, Object> map){

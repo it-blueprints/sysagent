@@ -10,7 +10,7 @@
   </parent>
   <groupId>com.itblueprints</groupId>
   <artifactId>sysagent</artifactId>
-  <version>0.0.4-SNAPSHOT</version>
+  <version>0.0.5-SNAPSHOT</version>
   <name>sysagent</name>
   <description>Spring library for execution of system tasks in a cluster backed by MongoDB</description>
   <url>https://github.com/it-blueprints/sysagent</url>

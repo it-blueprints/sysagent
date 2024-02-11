@@ -10,6 +10,4 @@ public class BatchStepContext extends StepContext{
         this.itemsProcessed = itemsProcessed;
     }
 
-    private final DataHolder dataHolder = new DataHolder();
-
 }

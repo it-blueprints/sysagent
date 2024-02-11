@@ -60,12 +60,18 @@ public class StepExecutionService {
         repository.save(stepRec);
 
         val step = jobExecutionService.getStep(stepRec.getJobName(), stepRec.getStepName());
-        val ctx = step instanceof Batched? new BatchStepContext() : new StepContext();
-        ctx.setJobArguments(stepRec.getJobArguments());
-        ctx.setPartition(stepRec.getPartition());
 
-        log.debug("Executing step '"+stepRec.getStepName() + "' with jobArguments="+ctx.getJobArguments()
-                + " and partition="+ctx.getPartition());
+        //Prepare step contextss
+        StepContext ctx = step instanceof Batched? new BatchStepContext() : new StepContext();
+        ctx.loadFrom(stepRec.getJobArguments());
+        if(stepRec.getPartition() != null) {
+            val prtn = stepRec.getPartition();
+            ctx.loadFrom(prtn);
+            ctx.setPartitionNum(prtn.getPartitionNum());
+            ctx.setTotalPartitions(prtn.getTotalPartitions());
+        }
+
+        log.debug("Executing step '"+stepRec.getStepName() + "' with arguments="+ctx);
 
         try {
             if(step instanceof Batched){
