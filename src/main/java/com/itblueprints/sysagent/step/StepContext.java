@@ -1,14 +1,13 @@
 package com.itblueprints.sysagent.step;
 
-import com.itblueprints.sysagent.MapData;
-import com.itblueprints.sysagent.job.JobArguments;
+import com.itblueprints.sysagent.internal.MapData;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
 @Getter
-@Setter(AccessLevel.PACKAGE)
+@Setter
 @ToString(callSuper = true)
 public class StepContext extends MapData {
 

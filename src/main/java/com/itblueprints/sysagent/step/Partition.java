@@ -1,6 +1,6 @@
 package com.itblueprints.sysagent.step;
 
-import com.itblueprints.sysagent.MapData;
+import com.itblueprints.sysagent.internal.MapData;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;

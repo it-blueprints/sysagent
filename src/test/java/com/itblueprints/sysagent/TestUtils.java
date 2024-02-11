@@ -1,7 +1,7 @@
 package com.itblueprints.sysagent;
 
-import com.itblueprints.sysagent.repository.MongoRecordRepository;
-import com.itblueprints.sysagent.repository.RecordRepository;
+import com.itblueprints.sysagent.internal.repository.MongoRecordRepository;
+import com.itblueprints.sysagent.internal.repository.RecordRepository;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import lombok.val;

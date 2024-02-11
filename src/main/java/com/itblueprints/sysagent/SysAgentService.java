@@ -1,8 +1,8 @@
 package com.itblueprints.sysagent;
 
 import com.itblueprints.sysagent.job.JobArguments;
-import com.itblueprints.sysagent.job.JobExecutionService;
-import com.itblueprints.sysagent.repository.RecordRepository;
+import com.itblueprints.sysagent.internal.job.JobExecutionService;
+import com.itblueprints.sysagent.internal.repository.RecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

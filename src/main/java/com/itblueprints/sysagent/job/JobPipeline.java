@@ -1,6 +1,7 @@
 package com.itblueprints.sysagent.job;
 
-import com.itblueprints.sysagent.SysAgentException;
+import com.itblueprints.sysagent.internal.SysAgentException;
+import com.itblueprints.sysagent.internal.job.PipelineStep;
 import com.itblueprints.sysagent.step.Step;
 import lombok.Getter;
 import lombok.val;

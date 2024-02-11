@@ -1,6 +1,6 @@
 package com.itblueprints.sysagent.job;
 
-import com.itblueprints.sysagent.MapData;
+import com.itblueprints.sysagent.internal.MapData;
 import lombok.val;
 
 import java.util.Map;
