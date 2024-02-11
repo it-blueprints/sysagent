@@ -38,7 +38,7 @@ public class MongoRecordRepository implements RecordRepository {
 
         val query = new Query();
         query.addCriteria(Criteria
-                .where("isManagerNodeRecord").is(true));
+                .where("unique").is(true));
         return mongoTemplate.findOne(query, ManagerNodeRecord.class);
     }
 
@@ -56,7 +56,7 @@ public class MongoRecordRepository implements RecordRepository {
     public ManagerNodeRecord tryGetLockedManagerNodeRecord() {
         val mgrQuery = new Query();
         mgrQuery.addCriteria(Criteria
-                .where("isManagerNodeRecord").is(true)
+                .where("unique").is(true)
                 .and("locked").is(false));
         val update = new Update();
         update.set("locked", true);
