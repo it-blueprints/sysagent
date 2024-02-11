@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 @Getter @Setter
 public class Config {
 
-    private Integer heartBeatSecs;
-    private Integer workerThreads;
-    private Integer batchPageSize;
+    private int heartBeatSecs = 10;
+    private int workerThreads = 4;
+    private int batchPageSize = 200;
 }       

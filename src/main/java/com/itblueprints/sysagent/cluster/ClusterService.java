@@ -65,7 +65,7 @@ public class ClusterService {
                 throw new SysAgentException("Error on heartbeat", e);
             }
         };
-        log.debug("Starting cluster service with hearbeat = "+hb);
+        log.info("Starting cluster service with heartBeatSecs = "+hb);
         scheduler.scheduleAtFixedRate(r, hb, hb, TimeUnit.SECONDS);
     }
 
