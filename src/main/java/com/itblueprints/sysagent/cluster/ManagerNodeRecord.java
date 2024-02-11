@@ -17,7 +17,7 @@ public class ManagerNodeRecord extends BaseNodeRecord {
      * create a new instance (perhaps by another node), then it fails at the DB level.
      */
     @Indexed(unique = true)
-    protected final boolean isManagerNodeRecord = true;
+    private final boolean isManagerNodeRecord = true;
 
     /**
      * The id of the node that is the current manager
