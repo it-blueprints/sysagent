@@ -8,13 +8,18 @@ then
         ./mvnw clean source:jar install
         OK=1
     fi
-      if [[ "$2" == "sign" ]]
-      then
-          gpg -ab target/sysagent-0.0.3.jar
-          gpg -ab target/sysagent-0.0.3-javadoc.jar
-          gpg -ab target/sysagent-0.0.3-sources.jar
-          OK=1
-      fi
+    if [[ "$2" == "deploy" ]]
+    then
+        ./mvnw clean deploy
+        OK=1
+    fi
+    if [[ "$2" == "sign" ]]
+    then
+        gpg -ab target/sysagent-0.0.3.jar
+        gpg -ab target/sysagent-0.0.3-javadoc.jar
+        gpg -ab target/sysagent-0.0.3-sources.jar
+        OK=1
+    fi
 
     if [[ "$2" == "mvnw" ]]
     then
@@ -27,8 +32,10 @@ if [[ "$1" == "" ]]
 then
     echo run
     echo "    lib"
-    echo "        install             Build and install the library"
-    echo "        mvnw                Install the maven wrapper"
+    echo "        install             Build, package and install the library to the local repo"
+    echo "        deploy              Build, package, sign and deploy the library to maven central"
+    echo "        mvnw                Install maven wrapper"
+    echo "        sign                Sign the deployable jar files"
     OK=1
 fi
 
