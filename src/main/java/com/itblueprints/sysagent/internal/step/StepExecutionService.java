@@ -63,7 +63,7 @@ public class StepExecutionService {
         val step = jobExecutionService.getStep(stepRec.getJobName(), stepRec.getStepName());
 
         //Prepare step contextss
-        StepContext ctx = step instanceof Batched ? new BatchStepContext() : new StepContext();
+        StepContext ctx = new StepContext();
         ctx.loadFrom(stepRec.getJobArguments());
         if(stepRec.getPartition() != null) {
             val prtn = stepRec.getPartition();
@@ -76,9 +76,8 @@ public class StepExecutionService {
 
         try {
             if(step instanceof Batched){
-                val batchCtx = (BatchStepContext) ctx;
-                runBatched((Batched) step, batchCtx);
-                stepRec.setBatchItemsProcessed(batchCtx.getItemsProcessed());
+                runBatched((Batched) step, ctx);
+                stepRec.setBatchItemsProcessed(ctx.getBatchItemsProcessed());
             }
             else if(step instanceof SimpleStep){
                 ((SimpleStep) step).run(ctx);
@@ -98,7 +97,7 @@ public class StepExecutionService {
     }
 
     //----------------------------------------------------------------------
-    <IN, OUT> void runBatched(Batched<IN, OUT> batchStep, BatchStepContext context){
+    <IN, OUT> void runBatched(Batched<IN, OUT> batchStep, StepContext context){
         //This is the number future submissions allowed at a time
         int lotSize = threadManager.getTaskQueueSize();
 
@@ -162,7 +161,7 @@ public class StepExecutionService {
         }
 
         log.debug("Num items processed = "+itemsProcessed);
-        context.setItemsProcessed(itemsProcessed);
+        context.setBatchItemsProcessed(itemsProcessed);
 
         //Call post process()
         batchStep.onComplete(context);

@@ -7,7 +7,7 @@ import com.itblueprints.sysagent.internal.cluster.NodeInfo;
 import com.itblueprints.sysagent.job.JobArguments;
 import com.itblueprints.sysagent.internal.job.JobExecutionService;
 import com.itblueprints.sysagent.internal.repository.RecordRepository;
-import com.itblueprints.sysagent.step.BatchStepContext;
+import com.itblueprints.sysagent.step.StepContext;
 import com.itblueprints.sysagent.step.Partition;
 import lombok.val;
 import org.junit.jupiter.api.BeforeEach;
@@ -94,10 +94,10 @@ class StepExecutionServiceTest {
         when(threadManager.getTaskQueueSize()).thenReturn(2);
 
         val step = new MockBatchPartitionedStep();
-        val ctx = new BatchStepContext();
+        val ctx = new StepContext();
         stepExecutionService.runBatched(step, ctx);
 
-        assertEquals(11, ctx.getItemsProcessed());
+        assertEquals(11, ctx.getBatchItemsProcessed());
         assertEquals(3, step.totalPages);
         assertEquals(true, step.onStartCalled);
         assertEquals(true, step.onCompleteCalled);

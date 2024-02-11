@@ -1,9 +1,9 @@
 package com.itblueprints.sysagent.internal.step;
 
 import com.itblueprints.sysagent.job.JobArguments;
-import com.itblueprints.sysagent.step.BatchStepContext;
 import com.itblueprints.sysagent.step.Partition;
 import com.itblueprints.sysagent.step.PartitionedBatchStep;
+import com.itblueprints.sysagent.step.StepContext;
 import lombok.val;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -25,7 +25,7 @@ public class MockBatchPartitionedStep implements PartitionedBatchStep<String, St
     public List<String> result = new ArrayList<>();
 
     @Override
-    public Page<String> readPageOfItems(Pageable pageRequest, BatchStepContext context) {
+    public Page<String> readPageOfItems(Pageable pageRequest, StepContext context) {
         readPageOfItems_TimesCalled++;
         if(pageRequest.getPageNumber() == 0) {
             val items = List.of("A", "B", "C", "D");
@@ -45,26 +45,26 @@ public class MockBatchPartitionedStep implements PartitionedBatchStep<String, St
     }
 
     @Override
-    public String processItem(String item, BatchStepContext context) {
+    public String processItem(String item, StepContext context) {
         processItem_TimesCalled++;
         return item+"_X";
     }
 
     @Override
-    public void writePageOfItems(Page<String> page, BatchStepContext context) {
+    public void writePageOfItems(Page<String> page, StepContext context) {
         writePageOfItems_TimesCalled++;
         result.addAll(page.toList());
         totalPages = page.getTotalPages();
     }
 
     @Override
-    public void onStart(BatchStepContext context) {
+    public void onStart(StepContext context) {
         onStartCalled = true;
     }
 
 
     @Override
-    public void onComplete(BatchStepContext context) {
+    public void onComplete(StepContext context) {
         onCompleteCalled = true;
     }
 
