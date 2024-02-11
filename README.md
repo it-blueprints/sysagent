@@ -25,11 +25,9 @@ Here is a typical setup
 Add dependency to POM
 
 ```
-<dependencies>
-  ...
-    <dependency>
-			<groupId>com.itblueprints</groupId>
-			<artifactId>sysagent</artifactId>
-			<version>0.0.4</version>
-		</dependency>
+<dependency>
+  <groupId>com.itblueprints</groupId>
+  <artifactId>sysagent</artifactId>
+  <version>0.0.4</version>
+</dependency>
 ```
