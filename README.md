@@ -39,9 +39,9 @@ Annotate your main application class with ``@SysAgent``
 @SpringBootApplication
 @SysAgent
 public class YourApplication {
-	public static void main(String[] args) {
-		SpringApplication.run(YourApplication.class, args);
-	}
+  public static void main(String[] args) {
+    SpringApplication.run(YourApplication.class, args);
+  }
 }
 ```
 
@@ -115,8 +115,8 @@ public class MyJob implements Job {
 ```
 
 ### Defining a scheduled jobs
-If it is a job that runs on a schedule, then define a scheduled job class instead by implementing the ``ScheduledJob`` interface
-The only difference is that you have to override the ``getCron()`` method now
+If your job needs to be scheduled to run at a specific time of the day, you can specify a CRON expression for it. All you need is for your job
+to implement the ``ScheduledJob`` interface. Now you are expected to implement the ``getCron()`` method like so
 ```
 public class MyJob implements ScheduledJob {
 
@@ -127,7 +127,7 @@ public class MyJob implements ScheduledJob {
 
   @Override
   public String getCron() {
-    //This job will be triggered at midnight everyday. Note the leftmost value is for a minute.
+    //This job will be triggered at midnight everyday.
     return "0 0 * * *";
   }
 ```
