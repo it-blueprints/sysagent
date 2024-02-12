@@ -87,7 +87,7 @@ public class MyJob implements Job {
   ...
 ```
 
-### A multistep job
+### A multi-step job
 Extending the above example, if you did want this to be a 2 step job, you can define another step like this 
 ```
 @Component
@@ -114,7 +114,7 @@ public class MyJob implements Job {
  ...
 ```
 
-### Defining a scheduled jobs
+### A scheduled jobs
 If your job needs to be scheduled to run at a specific time of the day, you can specify a CRON expression for it. All you need is for your job
 to implement the ``ScheduledJob`` interface. Now you are expected to implement the ``getCron()`` method like so
 ```
