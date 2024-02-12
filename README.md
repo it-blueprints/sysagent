@@ -33,3 +33,58 @@ Add dependency to POM
   <version>0.0.4</version>
 </dependency>
 ```
+
+Annotate your main application class with ``@SysAgent``
+```
+@SpringBootApplication
+@SysAgent
+public class YourApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(YourApplication.class, args);
+	}
+}
+```
+
+### Setting up a job
+Next we need define a job. A job is a sequence of steps that are executed one after the other. 
+Define your job class by implementing the ``Job`` interface
+```
+@Component
+public class ProcessPaymentsJob implements Job {
+  @Override
+  public JobPipeline getPipeline() {
+    // Your job pipeline i.e. the sequence of steps goes here
+    // Leave this blank for now. Will populate once we have defined the steps of the job
+  }
+}
+```
+
+If it is a job that runs on a schedule, then define a scheduled job class instead by implementing the ``ScheduledJob`` interface
+The only difference is that you have to override the ``getCron()`` method now
+```
+public class ProcessPaymentsJob implements ScheduledJob {
+
+@Override
+public JobPipeline getPipeline() {
+  ...
+}
+
+@Override
+public String getCron() {
+  //This job will be triggered at midnight everyday. Note the leftmost value is for a minute.
+  return "0 0 * * *";
+}
+```
+## Setting up the steps of a job
+Now we need to define the steps of a job. Steps are where you define your own implementation logic.
+
+Let's start with the simplest scenario where only once action needs to be carried out. In that
+case define a simple step by implementing the ``SimpleStep`` interface
+```
+@Component
+public class MySimpleStep implements SimpleStep {
+  @Override
+  public void run(StepContext context) {
+    //Implement your step logic here      
+  }
+}
