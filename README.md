@@ -51,10 +51,11 @@ Define your job class by implementing the ``Job`` interface
 ```
 @Component
 public class MyJob implements Job {
+
   @Override
   public JobPipeline getPipeline() {
     // Your job pipeline i.e. the sequence of steps goes here
-    // Leave this blank for now. Will populate once we have defined the steps of the job
+    // Will populate this once we have defined the steps of the job
   }
 }
 ```
