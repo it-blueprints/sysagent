@@ -104,14 +104,14 @@ public class MyJob implements Job {
 
   @Autowired private MySimpleStep mySimpleStep;
 
-  @Autowired private MyNextSimpleStep myNextSimple; //the new step
+  @Autowired private MyNextSimpleStep myNextSimpleStep; //the second step
 
   @Override
   public JobPipeline getPipeline() {
     //The pipeline with 2 steps
     return JobPipeline.create()
       .firstStep(mySimpleStep)
-      .nextStep(myNextSimple); 
+      .nextStep(myNextSimpleStep); 
   }
  ...
 ```
