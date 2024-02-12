@@ -79,12 +79,12 @@ Once this step has been defined, we need to go back to the job and define its pi
 @Component
 public class MyJob implements Job {
 
-  @Autowired private MySimpleStep mySimpleStep;
+  @Autowired private MySimpleStep step1;
 
   @Override
   public JobPipeline getPipeline() {
     //The pipeline with only one step
-    return JobPipeline.create().firstStep(mySimpleStep); 
+    return JobPipeline.create().firstStep(step1); 
   }
   ...
 ```
@@ -102,16 +102,16 @@ and then set up the pipeline in ``MyJob`` like this to include the second step
 @Component
 public class MyJob implements Job {
 
-  @Autowired private MySimpleStep mySimpleStep;
+  @Autowired private MySimpleStep step1;
 
-  @Autowired private MyNextSimpleStep myNextSimpleStep; //the second step
+  @Autowired private MyNextSimpleStep step2; //the second step
 
   @Override
   public JobPipeline getPipeline() {
     //The pipeline with 2 steps
     return JobPipeline.create()
-      .firstStep(mySimpleStep)
-      .nextStep(myNextSimpleStep); 
+      .firstStep(step1)
+      .nextStep(step2); 
   }
  ...
 ```
