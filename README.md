@@ -116,7 +116,7 @@ public class MyJob implements Job {
  ...
 ```
 
-### A scheduled jobs
+### A scheduled job
 If your job needs to be scheduled to run at a specific time of the day, you can specify a CRON expression for it. All you need is for your job
 to implement the ``ScheduledJob`` interface. Now you are expected to implement the ``getCron()`` method like so
 ```
