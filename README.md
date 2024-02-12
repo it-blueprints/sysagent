@@ -66,6 +66,7 @@ that step has some logic that needs to be run. In that case define a step by imp
 ```
 @Component
 public class MySimpleStep implements SimpleStep {
+
   @Override
   public void run(StepContext context) {
     //Implement your step logic here      
