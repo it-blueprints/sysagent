@@ -132,4 +132,5 @@ public class MyJob implements ScheduledJob {
     //This job will be triggered at midnight everyday.
     return "0 0 * * *";
   }
+}
 ```
