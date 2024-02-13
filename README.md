@@ -27,7 +27,8 @@ Here are the important concepts of SysAgent
 
 ![cluster](https://github.com/it-blueprints/sysagent/blob/main/docs/img/sysagent-domain.drawio.png)
 
-All of these are Java interfaces. In your code you would provide implementions of these. The only exception is Step, which is an abstract concept 
+All of these are Java interfaces. In your code you would provide implementions of these. The only exception to this is the ``Step``
+interface, which is an abstract concept and should not be used directly
 
 |Entity                | Description|
 |----------------------|--------------------------------------------------------------------------------------------|
