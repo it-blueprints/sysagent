@@ -43,7 +43,19 @@ interface, which is an abstract concept and should not be used directly
 
 ## Getting started
 
-Add dependency to POM
+Prerequisites: Your project must already be using spring-data-mongodb i.e. have the dependency in the POM like this
+```
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-data-mongodb</artifactId>
+</dependency>
+```
+and have the appropriate entries in application.properties like this
+```
+spring.data.mongodb.uri=mongodb://localhost:27017/mydb
+```
+
+To use SysAgent, first we add a dependency to the POM
 
 ```
 <dependency>
