@@ -16,9 +16,10 @@ scheduled time. In the event the current manager goes down, the next manager nod
 
 Here is a typical setup
 
+![cluster](https://github.com/it-blueprints/sysagent/blob/main/docs/img/sysagent-cluster.drawio.png)
 
-
-![cluster](https://github.com/it-blueprints/sysagent/blob/main/docs/img/sysagent.drawio.png)
+One of the nodes in the cluster becomes the Manager. It then carries out certain duties on top of the duties of a 
+Worker, which is to basically execute system activities. All activities are coordinated via the database
 
 ### The domain model
 Here are the important concepts of SysAgent
