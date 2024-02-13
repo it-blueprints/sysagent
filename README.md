@@ -45,7 +45,7 @@ public class YourApplication {
 }
 ```
 
-### A single step job
+### A simple job
 Next we need define a job. A job is a sequence of steps that are executed one after the other. 
 Define your job class by implementing the ``Job`` interface
 ```
@@ -54,8 +54,7 @@ public class MyJob implements Job {
 
   @Override
   public JobPipeline getPipeline() {
-    // Your job pipeline i.e. the sequence of steps goes here
-    // Will populate this once we have defined the steps of the job
+    // Your job pipeline i.e. the sequence of steps goes here (see below)
   }
 }
 ```
@@ -115,7 +114,6 @@ public class MyJob implements Job {
   }
  ...
 ```
-
 ### A scheduled job
 If your job needs to be scheduled to run at a specific time of the day, you can specify a CRON expression for it. All you need is for your job
 to implement the ``ScheduledJob`` interface. Now you are expected to implement the ``getCron()`` method like so
@@ -134,3 +132,10 @@ public class MyJob implements ScheduledJob {
   }
 }
 ```
+
+### Partitioned steps
+
+
+### Batched steps
+
+
