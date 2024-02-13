@@ -18,9 +18,11 @@ Here is a typical setup
 
 
 
-![cluster](https://github.com/it-blueprints/sysagent/assets/22591521/5bf86c58-4010-4f24-887c-80265b8ac9d3)
+![cluster](https://github.com/it-blueprints/sysagent/blob/main/docs/img/sysagent.drawio.png)
 
+### The domain model
 
+![cluster](https://github.com/it-blueprints/sysagent/blob/main/docs/img/sysagent-domain.drawio.png)
 
 ## Getting started
 
