@@ -43,19 +43,19 @@ interface, which is an abstract concept and should not be used directly
 
 ## Getting started
 
-Prerequisites: Your project must already be using spring-data-mongodb i.e. have the dependency in the POM like this
+Ensure that your project already is using spring-data-mongodb i.e. has the dependency in the POM like this
 ```
 <dependency>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-starter-data-mongodb</artifactId>
 </dependency>
 ```
-and have the appropriate entries in application.properties like this
+and have the related entries in application.properties, for example
 ```
 spring.data.mongodb.uri=mongodb://localhost:27017/mydb
 ```
 
-To use SysAgent, first we add a dependency to the POM
+Next, we add a dependency to the POM
 
 ```
 <dependency>
@@ -65,7 +65,7 @@ To use SysAgent, first we add a dependency to the POM
 </dependency>
 ```
 
-Annotate your main application class with ``@SysAgent``
+Then annotate your main application class with ``@SysAgent``
 ```
 @SpringBootApplication
 @SysAgent
@@ -77,7 +77,7 @@ public class YourApplication {
 ```
 
 ### A simple job
-Next we need define a job. A job is a sequence of steps that are executed one after the other. 
+Next we need to define a job. A job is a sequence of steps that are executed one after the other. 
 Define your job class by implementing the ``Job`` interface
 ```
 @Component
