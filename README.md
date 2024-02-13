@@ -21,8 +21,22 @@ Here is a typical setup
 ![cluster](https://github.com/it-blueprints/sysagent/blob/main/docs/img/sysagent.drawio.png)
 
 ### The domain model
+Here are the important concepts of SysAgent
 
 ![cluster](https://github.com/it-blueprints/sysagent/blob/main/docs/img/sysagent-domain.drawio.png)
+
+All of these are Java interfaces. In your implementation you would implement one of these (except Step) 
+
+|Entity                | Description|
+|----------------------|--------------------------------------------------------------------------------------------|
+|Job                   |An activity that needs to be carried out by the system. Acts as a container for one or more steps that need to be executed|
+|ScheduledJob          |A Job that needs to start executing at a predefined time                                    |
+|Step                  |A step in the job. Contains the actual logic of what needs to be done. You implement one of the subtypes of Step|
+|SimpleStep            |A step for a simple action.You implement the run() method which contains the business logic. The step is executed on one node in the cluster|
+|PartitionedStep       |Same as simple step, except you have to also  implement the getPartitions() method. This allows data to be divided into partitions and distributed among different worker nodes to execute. Each worker node processes data from one partition|
+|BatchStep             |A step that provides a setup such that items can be processed using multiple threads. The step is executed on one node in the cluster|
+|PartitionedBatchStep  |A combination of PartitionedStep and BatchStep. That is, the work itself is partitioned and distributed among worker nodes. Each node processes one partition and the items in the partition are processed using multiple threads|
+
 
 ## Getting started
 
