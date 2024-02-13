@@ -43,19 +43,12 @@ interface, which is an abstract concept and should not be used directly
 
 ## Getting started
 
-Ensure that your project already is using spring-data-mongodb i.e. has the dependency in the POM like this
-```
-<dependency>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-starter-data-mongodb</artifactId>
-</dependency>
-```
-and have the related entries in application.properties, for example
+Ensure that your project's application.properties is correctly setup to use MongoDB. For example it has something like this
 ```
 spring.data.mongodb.uri=mongodb://localhost:27017/mydb
 ```
 
-Next, we add a dependency to the POM
+Next, we add this to the POM
 
 ```
 <dependency>
