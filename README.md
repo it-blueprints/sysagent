@@ -62,9 +62,9 @@ Then annotate your main application class with ``@SysAgent``
 ```
 @SpringBootApplication
 @SysAgent
-public class YourApplication {
+public class MyApplication {
   public static void main(String[] args) {
-    SpringApplication.run(YourApplication.class, args);
+    SpringApplication.run(MyApplication.class, args);
   }
 }
 ```
