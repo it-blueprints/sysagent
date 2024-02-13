@@ -70,7 +70,7 @@ public class MyApplication {
 ```
 
 ### A simple job
-Next we need to define a job. A job is a sequence of steps that are executed one after the other. 
+Next we need to define a job bean. A job is a sequence of steps that are executed one after the other. 
 Define your job class by implementing the ``Job`` interface
 ```
 @Component
@@ -82,7 +82,7 @@ public class MyJob implements Job {
   }
 }
 ```
-Now we need to define the steps of a job. Steps are where you define your own implementation logic.
+Now we need to define the steps of a job. Steps beans are where you define your own implementation logic.
 
 Let's start with the simplest scenario where only one action needs to be carried out i.e. the job only has a single step and
 that step has some logic that needs to be run. In that case define a step by implementing the ``SimpleStep`` interface
@@ -113,7 +113,7 @@ public class MyJob implements Job {
 ```
 
 ### A multi-step job
-Extending the above example, if you did want this to be a 2 step job, you can define another step like this 
+Extending the above example, if you did want this to be a 2 step job, you can define another step bean like this 
 ```
 @Component
 public class MyNextSimpleStep implements SimpleStep {
