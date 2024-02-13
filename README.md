@@ -18,15 +18,16 @@ Here is a typical setup
 
 ![cluster](https://github.com/it-blueprints/sysagent/blob/main/docs/img/sysagent-cluster.drawio.png)
 
-One of the nodes in the cluster becomes the Manager. It then carries out certain duties on top of the duties of a 
-Worker, which is to basically execute system activities. All activities are coordinated via the database
+One of the nodes in the cluster becomes the Manager. It then carries out certain duties such as starting scheduled jobs
+reclaiming work from dead nodes etc. The Manager Nodes along with the other nodes makes up the Worker pool. The job of
+the Worker is to basically execute system activities of your choice. All this is coordinated via the database
 
 ### The domain model
 Here are the important concepts of SysAgent
 
 ![cluster](https://github.com/it-blueprints/sysagent/blob/main/docs/img/sysagent-domain.drawio.png)
 
-All of these are Java interfaces. In your implementation you would implement one of these (except Step) 
+All of these are Java interfaces. In your code you would provide implementions of these. The only exception is Step, which is an abstract concept 
 
 |Entity                | Description|
 |----------------------|--------------------------------------------------------------------------------------------|
