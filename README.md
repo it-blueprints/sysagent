@@ -178,17 +178,17 @@ public List<Partition> getPartitions(JobArguments jobArgs) {
   );
 }
 ```
-A Parition object is just a ``Map<String, Object>`` which holds all partition keys for a partition. When SysAgent comes to execute this step it first invokes
-``getPartitions()`` to get the list of Partition objects and then puts them as independent tasks in the database. When a worker node finds this task
-it it starts executing it by invoking the ``run()`` method. A StepContext object is passed in as an argument to ``run()``. This object (which is also a 
-``Map<String, Object>`` contains information for a partition. You can then use this information to decide which section of the data set to process. Typically
-the pseudocode of your ``run()`` method will be as follows -
+A ``Parition`` is just a ``Map<String, Object>`` which holds the keys for a partition (unique name-value pairs that define a partition). When SysAgent comes to 
+execute this step it first invokes ``getPartitions()`` to get the list of Partition objects and then puts them as independently executable tasks in the database. 
+When a worker node finds one of these tasks it it starts executing the step by invoking the ``run()`` method. A StepContext object is passed in as an argument to 
+``run()``. This object (which is also a ``Map<String, Object>``) contains information for one of the 3 partition. You can then use this information to decide which 
+subset of the data to process. Typically the pseudocode of your ``run()`` will be 
 ```
 let cat = context.getString("category")
 get all records from the database where record.category == cat
 process these records
 ```
-So each of the 3 nodes in the cluster will end up processing one of the categories
+Thus each of the 3 nodes in the cluster will end up processing the records in one of the 3 categories
 
 ### Batched steps
 
