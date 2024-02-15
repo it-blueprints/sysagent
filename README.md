@@ -157,7 +157,7 @@ public class MyJob implements ScheduledJob {
 }
 ```
 
-### Partitioned steps
+### PartitionedStep
 So far we have come across the ``SimpleStep``, which just has a ``run()`` method that you need to override. And this step gets executed on one of the
 worker nodes. However if you data set can be partitioned i.e. it has one or more attributes allows it to be grouped into smaller sets, then we can make 
 use of a ``ParitionedStep``. 
@@ -190,6 +190,7 @@ process these records
 ```
 Thus each of the 3 nodes in the cluster will end up processing the records in one of the 3 categories
 
-### Batched steps
+### BatchStep
 
 
+### PartitionedBatchStep
