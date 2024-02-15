@@ -25,10 +25,10 @@ the Worker is to basically execute system activities of your choice. All this is
 ### The domain model
 Here are the important concepts of SysAgent
 
-![cluster](https://github.com/it-blueprints/sysagent/blob/main/docs/img/sysagent-domain.drawio.png)
+![cluster](https://github.com/it-blueprints/sysagent/blob/main/docs/img/sysagent-domain.drawio.png)  
 
 All of these are Java interfaces. In your code you would provide implementions of these. The only exception to this is the ``Step``
-interface, which is an abstract concept and should not be used directly
+interface, which is an abstract concept and should not be used directly  
 
 |Entity                | Description|
 |----------------------|--------------------------------------------------------------------------------------------|
@@ -68,7 +68,7 @@ public class MyApplication {
   }
 }
 ```
-
+  
 ### A simple job
 Next we need to define a job bean. A job is a sequence of steps that are executed one after the other. 
 Define your job class by implementing the ``Job`` interface
@@ -111,7 +111,7 @@ public class MyJob implements Job {
   }
   ...
 ```
-
+  
 ### A multi-step job
 Extending the above example, if you did want this to be a 2 step job, you can define another step bean like this 
 ```
@@ -138,6 +138,7 @@ public class MyJob implements Job {
   }
  ...
 ```
+  
 ### A scheduled job
 If your job needs to be scheduled to run at a specific time of the day, you can specify a CRON expression for it. All you need is for your job
 to implement the ``ScheduledJob`` interface. Now you are expected to implement the ``getCron()`` method like so
@@ -189,8 +190,8 @@ get all records from the database where record.category == cat
 process these records
 ```
 Thus each of the 3 nodes in the cluster will end up processing the records in one of the 3 categories
-
+  
 ### BatchStep
 
-
+  
 ### PartitionedBatchStep
