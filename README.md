@@ -187,7 +187,8 @@ the pseudocode of your ``run()`` method will be as follows -
 let cat = context.getString("category")
 get all records from the database where record.category == cat
 process these records
-``` 
+```
+So each of the 3 nodes in the cluster will end up processing one of the categories
 
 ### Batched steps
 
