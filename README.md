@@ -196,6 +196,7 @@ get all records from the database where record.category == cat
 process these records
 ```
 Thus each of the 3 nodes in the cluster will end up processing the records in one of the 3 categories
+
 <br>
 
 ### BatchStep
