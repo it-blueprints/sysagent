@@ -166,8 +166,21 @@ To illustrate how it works, let us say you are processing a 1000 records from th
 has one of the following values - A, B and C. Further, the number of records in each category are in the same ballpark, say around 300. Assuming you have 
 3 nodes in your cluster it would make sense to process each category on a different node, thus utilising all the nodes to complete the job faster. 
 
-A ``PartitionedStep`` along with the ``run()`` method has one for method you need to override - ``getPartitions()``
-
+A ``PartitionedStep`` along with the ``run()`` method has one for method you need to override - ``getPartitions()``. And your implmentation will be along
+the lines of
+```
+@Override
+public List<Partition> getPartitions(JobArguments jobArgs) {
+  return List.of(
+    Partition.from(Map.of("category", "A")),
+    Partition.from(Map.of("category", "B")),
+    Partition.from(Map.of("category", "C"))
+  );
+}
+```
+A Parition object is just a Map<String, Object> which holds all partition keys for a partition. When SysAgent comes to execute this step it first invokes
+``getPartitions()`` to get the list of Partition objects and then puts them as independent tasks in the database. When a worker node finds it it starts 
+executing the ``run()`` method to which a StepContext object containing the parition information is passed.
 
 ### Batched steps
 
