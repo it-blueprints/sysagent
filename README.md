@@ -41,7 +41,7 @@ interface, which is an abstract concept and should not be used directly
 |BatchStep             |A step that provides a setup such that items can be processed using multiple threads. The step is executed on one node in the cluster|
 |PartitionedBatchStep  |A combination of PartitionedStep and BatchStep. That is, the work itself is partitioned and distributed among worker nodes. Each node processes one partition and the items in the partition are processed using multiple threads|
 
-<br><br>
+<br>
 ## Getting started
 
 Ensure that your project's application.properties is correctly setup to use MongoDB. For example it has something like this
@@ -69,7 +69,7 @@ public class MyApplication {
   }
 }
 ```
-<br><br>
+<br>
 
 ### Job
 Next we need to define a job bean. A job is a sequence of steps that are executed one after the other. 
@@ -113,7 +113,7 @@ public class MyJob implements Job {
   }
   ...
 ```
-<br><br>
+<br>
 
 ### Multi-step Job
 Extending the above example, if you did want this to be a 2 step job, you can define another step bean like this 
@@ -141,7 +141,7 @@ public class MyJob implements Job {
   }
  ...
 ```
-<br><br>
+<br>
 
 ### ScheduledJob
 If your job needs to be scheduled to run at a specific time of the day, you can specify a CRON expression for it. All you need is for your job
@@ -161,7 +161,7 @@ public class MyJob implements ScheduledJob {
   }
 }
 ```
-<br><br>
+<br>
 
 ### PartitionedStep
 So far we have come across the ``SimpleStep``, which just has a ``run()`` method that you need to override. And this step gets executed on one of the
@@ -195,9 +195,9 @@ get all records from the database where record.category == cat
 process these records
 ```
 Thus each of the 3 nodes in the cluster will end up processing the records in one of the 3 categories
-<br><br>
+<br>
 
 ### BatchStep
-<br><br>
+<br>
 
 ### PartitionedBatchStep
