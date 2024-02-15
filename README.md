@@ -21,7 +21,8 @@ Here is a typical setup
 One of the nodes in the cluster becomes the Manager. It then carries out certain duties such as starting scheduled jobs
 reclaiming work from dead nodes etc. The Manager Nodes along with the other nodes makes up the Worker pool. The job of
 the Worker is to basically execute system activities of your choice. All this is coordinated via the database
-
+  
+  
 ### The domain model
 Here are the important concepts of SysAgent
 
@@ -39,8 +40,8 @@ interface, which is an abstract concept and should not be used directly
 |PartitionedStep       |Same as simple step, except you have to also  implement the ``getPartitions()`` method. This allows data to be divided into partitions and distributed among different worker nodes to execute. Each worker node processes data from one partition|
 |BatchStep             |A step that provides a setup such that items can be processed using multiple threads. The step is executed on one node in the cluster|
 |PartitionedBatchStep  |A combination of PartitionedStep and BatchStep. That is, the work itself is partitioned and distributed among worker nodes. Each node processes one partition and the items in the partition are processed using multiple threads|
-
-
+  
+  
 ## Getting started
 
 Ensure that your project's application.properties is correctly setup to use MongoDB. For example it has something like this
@@ -68,6 +69,7 @@ public class MyApplication {
   }
 }
 ```
+
   
 ### A simple job
 Next we need to define a job bean. A job is a sequence of steps that are executed one after the other. 
@@ -111,6 +113,7 @@ public class MyJob implements Job {
   }
   ...
 ```
+
   
 ### A multi-step job
 Extending the above example, if you did want this to be a 2 step job, you can define another step bean like this 
@@ -138,6 +141,7 @@ public class MyJob implements Job {
   }
  ...
 ```
+
   
 ### A scheduled job
 If your job needs to be scheduled to run at a specific time of the day, you can specify a CRON expression for it. All you need is for your job
@@ -158,6 +162,7 @@ public class MyJob implements ScheduledJob {
 }
 ```
 
+  
 ### PartitionedStep
 So far we have come across the ``SimpleStep``, which just has a ``run()`` method that you need to override. And this step gets executed on one of the
 worker nodes. However if you data set can be partitioned i.e. it has one or more attributes allows it to be grouped into smaller sets, then we can make 
@@ -190,8 +195,9 @@ get all records from the database where record.category == cat
 process these records
 ```
 Thus each of the 3 nodes in the cluster will end up processing the records in one of the 3 categories
+
   
 ### BatchStep
-
+  
   
 ### PartitionedBatchStep
