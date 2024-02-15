@@ -21,7 +21,7 @@ Here is a typical setup
 One of the nodes in the cluster becomes the Manager. It then carries out certain duties such as starting scheduled jobs
 reclaiming work from dead nodes etc. The Manager Nodes along with the other nodes makes up the Worker pool. The job of
 the Worker is to basically execute system activities of your choice. All this is coordinated via the database
-  
+<br><br>
   
 ### The domain model
 Here are the important concepts of SysAgent
