@@ -185,7 +185,7 @@ Map<String, Object>() contains information for a partition. You can then use thi
 the pseudocode of your ``run()`` method will be as follows -
 ```
 let cat = context.getString("category")
-get all records from the database where record.category = cat
+get all records from the database where record.category == cat
 process these records
 ``` 
 
