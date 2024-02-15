@@ -184,7 +184,7 @@ it it starts executing it by invoking the ``run()`` method. A StepContext object
 Map<String, Object>() contains information for a partition. You can then use this information to decide which section of the data set to process. Typically
 the pseudocode of your ``run()`` method will be as follows -
 ```
-cat = context.getString("category")
+let cat = context.getString("category")
 get all records from the database where record.category = cat
 process these records
 ``` 
