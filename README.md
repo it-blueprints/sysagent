@@ -42,6 +42,7 @@ interface, which is an abstract concept and should not be used directly
 |PartitionedBatchStep  |A combination of PartitionedStep and BatchStep. That is, the work itself is partitioned and distributed among worker nodes. Each node processes one partition and the items in the partition are processed using multiple threads|
 
 <br>
+
 ## Getting started
 
 Ensure that your project's application.properties is correctly setup to use MongoDB. For example it has something like this
