@@ -179,8 +179,15 @@ public List<Partition> getPartitions(JobArguments jobArgs) {
 }
 ```
 A Parition object is just a Map<String, Object> which holds all partition keys for a partition. When SysAgent comes to execute this step it first invokes
-``getPartitions()`` to get the list of Partition objects and then puts them as independent tasks in the database. When a worker node finds it it starts 
-executing the ``run()`` method to which a StepContext object containing the parition information is passed.
+``getPartitions()`` to get the list of Partition objects and then puts them as independent tasks in the database. When a worker node finds this task
+it it starts executing it by invoking the ``run()`` method. A StepContext object is passed in as an argument to ``run()``. This object (which is also a 
+Map<String, Object>() contains information for a partition. You can then use this information to decide which section of the data set to process. Typically
+the pseudocode of your ``run()`` method will be as follows -
+```
+cat = context.getString("category")
+get all records from the database where record.category = cat
+process these records
+``` 
 
 ### Batched steps
 
