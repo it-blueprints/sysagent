@@ -40,7 +40,8 @@ interface, which is an abstract concept and should not be used directly
 |PartitionedStep       |Same as simple step, except you have to also  implement the ``getPartitions()`` method. This allows data to be divided into partitions and distributed among different worker nodes to execute. Each worker node processes data from one partition|
 |BatchStep             |A step that provides a setup such that items can be processed using multiple threads. The step is executed on one node in the cluster|
 |PartitionedBatchStep  |A combination of PartitionedStep and BatchStep. That is, the work itself is partitioned and distributed among worker nodes. Each node processes one partition and the items in the partition are processed using multiple threads|
-<br><br><br>  
+
+<br><br>  
 
 ## Getting started
 
