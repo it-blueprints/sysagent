@@ -40,7 +40,7 @@ interface, which is an abstract concept and should not be used directly
 |PartitionedStep       |Same as simple step, except you have to also  implement the ``getPartitions()`` method. This allows data to be divided into partitions and distributed among different worker nodes to execute. Each worker node processes data from one partition|
 |BatchStep             |A step that provides a setup such that items can be processed using multiple threads. The step is executed on one node in the cluster|
 |PartitionedBatchStep  |A combination of PartitionedStep and BatchStep. That is, the work itself is partitioned and distributed among worker nodes. Each node processes one partition and the items in the partition are processed using multiple threads|
-<br><br>  
+<br><br><br>  
 
 ## Getting started
 
@@ -71,7 +71,7 @@ public class MyApplication {
 ```
 <br><br>  
 
-### A simple job
+### Job
 Next we need to define a job bean. A job is a sequence of steps that are executed one after the other. 
 Define your job class by implementing the ``Job`` interface
 ```
@@ -115,7 +115,7 @@ public class MyJob implements Job {
 ```
 <br><br>  
 
-### A multi-step job
+### Multi-step Job
 Extending the above example, if you did want this to be a 2 step job, you can define another step bean like this 
 ```
 @Component
@@ -143,7 +143,7 @@ public class MyJob implements Job {
 ```
 <br><br>  
 
-### A scheduled job
+### ScheduledJob
 If your job needs to be scheduled to run at a specific time of the day, you can specify a CRON expression for it. All you need is for your job
 to implement the ``ScheduledJob`` interface. Now you are expected to implement the ``getCron()`` method like so
 ```
