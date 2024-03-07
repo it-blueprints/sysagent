@@ -36,6 +36,11 @@ public abstract class MapData implements TypedAccessor {
         data.put(key, value);
     }
 
+    protected static <T extends MapData> T put(String key, Object value, T data){
+        data.put(key, value);
+        return data;
+    }
+
     public boolean contains(String key) { return data.containsKey(key); }
 
     public void loadFrom(MapData other){
