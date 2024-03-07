@@ -16,7 +16,6 @@
 
 package com.itblueprints.sysagent.internal;
 
-import com.itblueprints.sysagent.internal.Utils;
 import lombok.val;
 
 import java.time.LocalDate;
